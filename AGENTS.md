@@ -102,6 +102,15 @@ un detalle del proyecto, revisar aquí primero.
       `main.tex`).
 - [ ] Correo @uc.cl de Estefanía Pakarati (bloque de autores en
       `main.tex`, hoy con placeholder `correo1@uc.cl`).
+- [x] Abstract redactado (`main.tex`): lidera con la mejora
+      perceptual (juicio de tamaño/distancia) como aporte medible, y
+      plantea el menor riesgo en clases prácticas como hipótesis a
+      futuro, no como promesa — decisión explícita del usuario tras
+      cuestionar que "menos sesiones" sea una consecuencia segura
+      (practicar más en VR podría generar más interés en seguir
+      practicando, no menos). Menciona Quest 3 + Unity explícitamente
+      (a la espera de ejemplos del usuario sobre qué tan específico
+      debería ser, por si se ajusta después).
 - [ ] Fechas de compromiso para Entrega 2 (prototipo lo-fi) y Entrega 3
       (prototipo final), para la sección "Plan de trabajo". Sin fecha
       real disponible aún — el informe usa placeholders `[FECHA]` a
