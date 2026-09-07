@@ -218,9 +218,29 @@ espacial, no leyendo un número.
 % \end{figure}
 
 \subsection{Tecnologías y alcance}
-% Justificación técnica del hardware/software (alternativas consideradas,
-% criterios de selección, limitaciones) y qué queda dentro/fuera de
-% alcance del prototipo.
+
+Como hardware objetivo se eligió Meta Quest 3 por sobre alternativas
+como Apple Vision Pro o un sistema PC VR con base stations (p. ej.
+Valve Index): es standalone (no depende de un PC dedicado ni de
+sensores externos, lo que facilita su uso en un contexto de escuela
+de manejo), cuenta con controles físicos que permiten mapear input de
+aceleración/freno/giro (a diferencia de Vision Pro, que solo ofrece
+manos y ojos como input), y tiene un costo significativamente menor
+que ambas alternativas — relevante para un proyecto de curso. Como
+motor se eligió Unity con XR Interaction Toolkit, por su soporte
+maduro y nativo para Quest y su documentación extensa para
+interacción en VR.
+
+Dentro del alcance del prototipo de este curso están: la simulación
+de manejo básica (acelerar, frenar, girar en un circuito simple), la
+percepción de escala 1:1 del vehículo, y los tres casos de uso
+descritos (juicio de esquinas, estacionamiento/obstáculo, manejo en
+circuito). Quedan fuera de alcance: la simulación de tránsito con
+otros vehículos o peatones, la física vehicular avanzada (transmisión,
+tracción, condiciones climáticas), y el cumplimiento de reglas de
+tránsito complejas — funcionalidades propias de un simulador de
+manejo completo, no del enfoque de este proyecto en percepción
+espacial.
 
 % ============================================================
 % IV. PLAN DE TRABAJO (~0.5 pág.)
@@ -228,20 +248,40 @@ espacial, no leyendo un número.
 \section{Plan de trabajo}
 \label{sec:plan}
 
-% Ejemplo de tabla de hitos:
-% \begin{table}[htbp]
-% \caption{Cronograma hacia las próximas entregas}
-% \begin{center}
-% \begin{tabular}{|l|l|l|}
-% \hline
-% \textbf{Actividad} & \textbf{Responsable(s)} & \textbf{Fecha} \\
-% \hline
-% \dots & \dots & \dots \\
-% \hline
-% \end{tabular}
-% \label{tab:cronograma}
-% \end{center}
-% \end{table}
+Hacia el prototipo lo-fi (Entrega 2) el foco es validar la
+interacción básica (movimiento, HUD, un caso de uso) sin arte final;
+hacia el prototipo final (Entrega 3) se integran los 3 casos de uso,
+el entorno completo y las pruebas con usuarios. La Tabla
+\ref{tab:cronograma} detalla las actividades comprometidas; las
+fechas y responsables exactos quedan sujetos a lo que defina el
+equipo (marcados como \texttt{[FECHA]} mientras no estén
+confirmados).
+
+\begin{table}[htbp]
+\caption{Cronograma hacia las próximas entregas}
+\begin{center}
+\begin{tabular}{|p{3.4cm}|p{1.6cm}|p{1.6cm}|}
+\hline
+\textbf{Actividad} & \textbf{Resp.} & \textbf{Fecha} \\
+\hline
+Prototipo Unity: escena base + movimiento del vehículo & Equipo & [FECHA] \\
+\hline
+Implementar CU1 (juicio de esquinas) + HUD de distancia & Equipo & [FECHA] \\
+\hline
+Entrega 2 --- prototipo lo-fi & Equipo & [FECHA] \\
+\hline
+Implementar CU2 y CU3 & Equipo & [FECHA] \\
+\hline
+Arte final (storyboard, entorno) e integración & Equipo & [FECHA] \\
+\hline
+Pruebas con usuarios y ajustes & Equipo & [FECHA] \\
+\hline
+Entrega 3 --- prototipo final & Equipo & [FECHA] \\
+\hline
+\end{tabular}
+\label{tab:cronograma}
+\end{center}
+\end{table}
 
 % ============================================================
 % REFERENCIAS (no cuentan para el límite de 5 páginas)
