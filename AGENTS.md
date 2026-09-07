@@ -94,8 +94,10 @@ un detalle del proyecto, revisar aquí primero.
 
 ## Pendiente (requiere al equipo, no a Claude)
 
-- [ ] Nombres y correos de los integrantes del equipo (bloque de
-      autores IEEE en `main.tex`, hoy con placeholders "Integrante 1/2/3").
+- [x] Nombres de los integrantes: Estefanía Pakarati, Emmanuel
+      Norambuena, Matías Harriason (ya en `main.tex`).
+- [ ] Correos @uc.cl reales de cada integrante (bloque de autores en
+      `main.tex`, hoy con placeholders `correo1/2/3@uc.cl`).
 - [ ] Fechas de compromiso para Entrega 2 (prototipo lo-fi) y Entrega 3
       (prototipo final), para la sección "Plan de trabajo". Sin fecha
       real disponible aún — el informe usa placeholders `[FECHA]` a
