@@ -66,20 +66,45 @@ un detalle del proyecto, revisar aquí primero.
 ## Assets vendorizados
 
 - `report/IEEEtran.cls` — clase oficial IEEE, extraída de
-  `IEEE_Conference_Template.zip` (provisto por el usuario) y
-  vendorizada en el repo para poder compilar localmente sin depender
-  de una instalación TeX Live completa. El zip original se descartó
-  tras extraer el `.cls` (no aporta nada que no esté ya en
-  `report/template/conference_101719.tex` como referencia).
+  `IEEE_Conference_Template.zip` y vendorizada en el repo para poder
+  compilar localmente sin depender de una instalación TeX Live
+  completa.
+- `IEEE_Conference_Template.zip` (raíz del repo) — archivo original
+  completo (`IEEEtran.cls`, `fig1.png`, `conference_101719.pdf`,
+  `IEEEtran_HOWTO.pdf`, `conference_101719.tex`), tal como lo provee
+  IEEE. Se mantiene commiteado porque el sitio de IEEE bloquea
+  descargas no-navegador (CloudFront WAF challenge) — no se puede
+  re-descargar programáticamente si se vuelve a borrar.
 
-## Pendiente (ver drill en la conversación)
+## Plan de implementación (Hito 1)
+
+- El plan spec-driven que completó el informe está en
+  `docs/superpowers/plans/2026-09-07-hito1-informe-xr.md` (todas las
+  tareas de contenido — referencias, casos de uso, diagramas,
+  tecnologías/alcance, plan de trabajo, README — ya ejecutadas).
+- Las 5 referencias en `report/references.bib` son reales,
+  verificadas por búsqueda web (autor/venue/DOI confirmados), no
+  inventadas.
+- Verificación estructural hecha sin compilador LaTeX disponible en
+  este entorno (no hay `pdflatex`/`tectonic`): claves `\cite{}` vs.
+  `references.bib`, `\ref{}` vs. `\label{}`, y balance de entornos
+  (`figure`/`table`/`tikzpicture`/`itemize`) — todo consistente. La
+  compilación real y el conteo de páginas (límite 5, sin referencias)
+  **deben verificarse en Overleaf** antes de subir el PDF al buzón.
+
+## Pendiente (requiere al equipo, no a Claude)
 
 - [ ] Nombres y correos de los integrantes del equipo (bloque de
       autores IEEE en `main.tex`, hoy con placeholders "Integrante 1/2/3").
 - [ ] Fechas de compromiso para Entrega 2 (prototipo lo-fi) y Entrega 3
       (prototipo final), para la sección "Plan de trabajo". Sin fecha
-      real disponible aún — el plan usa placeholders `[FECHA]` a
+      real disponible aún — el informe usa placeholders `[FECHA]` a
       reemplazar por el equipo.
 - [ ] Responsable(s) por actividad en el plan de trabajo (por ahora
       genérico "el equipo" — reemplazar por integrante si se reparten
       tareas).
+- [ ] Arte final del storyboard: `report/figures/storyboard.png` (ver
+      `report/figures/STORYBOARD.md`), y luego descomentar la figura
+      en `report/main.tex`.
+- [ ] Compilar en Overleaf, confirmar ≤5 páginas (sin referencias), y
+      subir el PDF resultante al buzón.
