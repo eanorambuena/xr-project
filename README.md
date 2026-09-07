@@ -14,8 +14,9 @@ se adquiere dentro del vehículo real, con costo y riesgo asociados. La VR
 permite replicar esa percepción espacial antes de la primera clase
 práctica.
 
-Ver [`specs.md`](./specs.md) para la pauta del Hito 1 y
-[`report/`](./report) para el informe en LaTeX/IEEE.
+Ver [`specs.md`](./specs.md) para la pauta del Hito 1,
+[`AGENTS.md`](./AGENTS.md) para las decisiones de diseño/alcance del
+proyecto, y [`report/`](./report) para el informe en LaTeX/IEEE.
 
 ## Estructura del repositorio
 
@@ -24,19 +25,22 @@ report/
   main.tex               # informe (nuestro contenido, formato IEEE conference)
   references.bib         # bibliografía
   figures/                # diagramas, wireframes, storyboard
+  IEEEtran.cls            # clase oficial IEEE, vendorizada para compilar sin TeX Live completo
   template/
     conference_101719.tex  # plantilla oficial IEEE sin modificar (referencia)
 specs.md                  # pauta de la entrega (Hito 1)
+AGENTS.md                  # decisiones del proyecto (hardware, alcance, etc.)
 ```
 
 ## Compilar el informe
 
 El informe usa la clase `IEEEtran` (plantilla oficial IEEE conference:
 https://www.ieee.org/content/dam/ieee-org/ieee/web/org/pubs/conference-latex-template_10-17-19.zip,
-copia sin modificar en `report/template/conference_101719.tex`).
-La forma más simple es subir `report/` a [Overleaf](https://www.overleaf.com/),
-que ya incluye la clase. Localmente, con una distribución TeX completa
-(TeX Live/MiKTeX):
+copia de la plantilla sin modificar en `report/template/conference_101719.tex`,
+y `report/IEEEtran.cls` vendorizada en el repo para no depender de una
+instalación TeX Live completa). La forma más simple es subir `report/` a
+[Overleaf](https://www.overleaf.com/), que ya incluye la clase.
+Localmente, con `pdflatex`/`bibtex` instalados:
 
 ```bash
 cd report
