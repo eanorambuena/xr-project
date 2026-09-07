@@ -14,6 +14,10 @@ se adquiere dentro del vehículo real, con costo y riesgo asociados. La VR
 permite replicar esa percepción espacial antes de la primera clase
 práctica.
 
+La propuesta técnica (hardware Meta Quest 3, motor Unity, alcance del
+prototipo) está detallada en la Sección III del informe
+(`report/main.tex`) y registrada en [`AGENTS.md`](./AGENTS.md).
+
 Ver [`specs.md`](./specs.md) para la pauta del Hito 1,
 [`AGENTS.md`](./AGENTS.md) para las decisiones de diseño/alcance del
 proyecto, y [`report/`](./report) para el informe en LaTeX/IEEE.
