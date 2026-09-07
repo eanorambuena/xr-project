@@ -98,9 +98,10 @@ un detalle del proyecto, revisar aquí primero.
       Norambuena, Matías Harrison (ya en `main.tex`).
 - [x] Correo de Emmanuel Norambuena: `eanorambuena@uc.cl` (ya en
       `main.tex`).
-- [ ] Correos @uc.cl de Estefanía Pakarati y Matías Harrison (bloque
-      de autores en `main.tex`, hoy con placeholders
-      `correo1@uc.cl` / `correo3@uc.cl`).
+- [x] Correo de Matías Harrison: `matiasharrison@uc.cl` (ya en
+      `main.tex`).
+- [ ] Correo @uc.cl de Estefanía Pakarati (bloque de autores en
+      `main.tex`, hoy con placeholder `correo1@uc.cl`).
 - [ ] Fechas de compromiso para Entrega 2 (prototipo lo-fi) y Entrega 3
       (prototipo final), para la sección "Plan de trabajo". Sin fecha
       real disponible aún — el informe usa placeholders `[FECHA]` a
