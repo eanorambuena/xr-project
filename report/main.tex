@@ -81,12 +81,39 @@ distancia.
 \section{Trabajos relacionados y marco teórico}
 \label{sec:relacionados}
 
-% TODO: citar con \cite{} y completar report/references.bib
-% - Simuladores de conducción existentes (2D y VR) y sus limitaciones.
-% - Literatura de percepción de profundidad y escala en VR (estereopsis,
-%   presencia, propiocepción).
-% - Brecha que aborda este proyecto: escala 1:1 + juicio corporal de
-%   distancias, no solo reacción a reglas de tránsito.
+Los simuladores de conducción en VR existentes se han enfocado
+mayoritariamente en el entrenamiento de reglas de tránsito y en la
+anticipación de riesgos: \cite{agrawal2018} muestra que un
+entrenamiento con visor VR mejora la capacidad de conductores
+jóvenes de anticipar peligros latentes en comparación con
+entrenamiento tradicional, y \cite{chidambaram2025} presenta
+DriveSimQuest, una plataforma de simulación de conducción en Meta
+Quest con Unity orientada a capturar señales conductuales (mirada,
+gestos) del usuario. Ninguno de estos sistemas, sin embargo, evalúa
+ni entrena explícitamente el juicio de tamaño del vehículo o de
+distancias a escala 1:1, que es el problema que aborda este proyecto.
+
+El sustento teórico de por qué la VR permite abordar esta brecha
+mejor que un simulador 2D proviene de tres líneas de investigación.
+Primero, la teoría de \textit{presencia} de Slater~\cite{slater2018}
+distingue entre inmersión (una propiedad objetiva del sistema, p. ej.
+campo de visión, tracking) y presencia (la sensación subjetiva de
+``estar ahí''), y sostiene que mayor inmersión habilita mayor
+presencia — un monitor 2D, con bajo campo de visión y sin tracking de
+cabeza, limita estructuralmente cuánta presencia espacial puede
+generar. Segundo, la literatura de percepción de profundidad en
+visores VR~\cite{eljamiy2019} documenta que, si bien los HMD
+subestiman distancias respecto del mundo físico en cierto grado,
+proveen estereopsis y paralaje de movimiento — señales de profundidad
+ausentes en una pantalla plana — que son las que permiten a una
+persona juzgar corporalmente qué tan cerca pasa de un obstáculo.
+Tercero, el efecto de \textit{escalamiento corporal}
+\cite{pouke2022} muestra que el propio cuerpo del usuario actúa como
+referencia perceptual para estimar tamaños y distancias del entorno
+virtual — lo que explica por qué experimentar el habitáculo del
+vehículo a escala 1:1, con el propio cuerpo como referencia, es
+necesario para que el usuario internalice el tamaño real del auto de
+una forma que una vista en tercera persona en pantalla no logra.
 
 % ============================================================
 % III. PROPUESTA DE SOLUCIÓN (~2.5 pág.)
@@ -96,25 +123,35 @@ distancia.
 
 \subsection{Casos de uso}
 
-\textbf{Caso de uso 1: Nombre.}
+\textbf{Caso de uso 1: Juicio de esquinas.}
 \begin{itemize}
-    \item \textbf{Usuario:} \dots
-    \item \textbf{Acción:} \dots
-    \item \textbf{Objetivo:} \dots
+    \item \textbf{Usuario:} alumno de escuela de manejo, sentado en el
+    asiento del conductor dentro del simulador.
+    \item \textbf{Acción:} conducir el vehículo a través de un espacio
+    angosto (p. ej. entre conos o un portón) sin golpear las esquinas
+    del auto.
+    \item \textbf{Objetivo:} internalizar, con el propio cuerpo,
+    dónde terminan físicamente las esquinas del vehículo.
 \end{itemize}
 
-\textbf{Caso de uso 2: Nombre.}
+\textbf{Caso de uso 2: Estacionamiento y aproximación a un obstáculo.}
 \begin{itemize}
-    \item \textbf{Usuario:} \dots
-    \item \textbf{Acción:} \dots
-    \item \textbf{Objetivo:} \dots
+    \item \textbf{Usuario:} alumno de escuela de manejo.
+    \item \textbf{Acción:} estacionar o detener el vehículo a una
+    distancia segura de un obstáculo (otro auto, un muro, una
+    persona), tanto en maniobras frontales como en reversa.
+    \item \textbf{Objetivo:} practicar el juicio de distancia
+    frontal/trasera antes de enfrentarlo en un vehículo real.
 \end{itemize}
 
-\textbf{Caso de uso 3: Nombre.}
+\textbf{Caso de uso 3: Manejo básico en circuito.}
 \begin{itemize}
-    \item \textbf{Usuario:} \dots
-    \item \textbf{Acción:} \dots
-    \item \textbf{Objetivo:} \dots
+    \item \textbf{Usuario:} alumno de escuela de manejo.
+    \item \textbf{Acción:} acelerar, frenar y girar en un circuito
+    simple con curvas y un cruce.
+    \item \textbf{Objetivo:} practicar el control básico del
+    vehículo junto con la percepción de escala en movimiento, no solo
+    en situaciones estáticas.
 \end{itemize}
 
 \subsection{Descripción del sistema}
