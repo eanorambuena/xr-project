@@ -95,7 +95,7 @@ un detalle del proyecto, revisar aquí primero.
 ## Pendiente (requiere al equipo, no a Claude)
 
 - [x] Nombres de los integrantes: Estefanía Pakarati, Emmanuel
-      Norambuena, Matías Harriason (ya en `main.tex`).
+      Norambuena, Matías Harrison (ya en `main.tex`).
 - [ ] Correos @uc.cl reales de cada integrante (bloque de autores en
       `main.tex`, hoy con placeholders `correo1/2/3@uc.cl`).
 - [ ] Fechas de compromiso para Entrega 2 (prototipo lo-fi) y Entrega 3
