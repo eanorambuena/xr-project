@@ -7,6 +7,8 @@
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 \begin{document}
@@ -155,12 +157,62 @@ una forma que una vista en tercera persona en pantalla no logra.
 \end{itemize}
 
 \subsection{Descripción del sistema}
-% Interacciones principales, hardware y software previstos,
-% diagramas o wireframes, y un storyboard como figura.
 
-% Ejemplo de figura (storyboard):
+El usuario interactúa con el sistema sentado en un asiento físico
+(o silla) que hace de referencia postural, usando un Meta Quest 3
+para la vista estereoscópica y el seguimiento de cabeza, y los
+controles del Quest 3 para acelerar/frenar (gatillos) y girar
+(joystick), simulando un volante simplificado. La Figura
+\ref{fig:arquitectura} resume los componentes de hardware y software
+y su flujo de datos: el Quest 3 reporta pose de cabeza y controles a
+la aplicación Unity, que actualiza la física del vehículo (posición,
+colisiones) y renderiza el entorno 1:1 de vuelta al visor.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  node distance=8mm and 10mm,
+  block/.style={draw, rounded corners, align=center, minimum height=8mm, minimum width=24mm, font=\scriptsize},
+  arr/.style={-Stealth, thick}
+]
+\node[block] (hmd) {Meta Quest 3\\(visor + controles)};
+\node[block, right=of hmd] (unity) {Unity\\XR Interaction Toolkit};
+\node[block, below=of unity] (fisica) {Física del vehículo\\y colisiones};
+\node[block, left=of fisica] (render) {Render del entorno\\(escala 1:1)};
+
+\draw[arr] (hmd.east) -- node[above, font=\tiny]{pose cabeza + input} (unity.west);
+\draw[arr] (unity) -- (fisica);
+\draw[arr] (fisica) -- (render);
+\draw[arr] (render.west) -- (hmd.south west) node[midway, below, font=\tiny]{frames estéreo};
+\end{tikzpicture}
+\caption{Arquitectura de hardware y software del prototipo.}
+\label{fig:arquitectura}
+\end{figure}
+
+Durante la conducción, un indicador HUD minimalista (Figura
+\ref{fig:hud}), anclado al parabrisas virtual, muestra la distancia
+estimada al obstáculo más cercano en los casos de uso de
+estacionamiento, sin cubrir la vista directa del entorno — el juicio
+de distancia principal lo hace el usuario con su propia percepción
+espacial, no leyendo un número.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[font=\scriptsize]
+\draw (0,0) rectangle (5,3);
+\draw[dashed] (0.3,0.3) rectangle (4.7,2.4);
+\node at (2.5,1.35) {vista del entorno (cámara VR)};
+\node[draw, rounded corners, fill=white] at (2.5,2.7) {distancia: 0.8 m};
+\end{tikzpicture}
+\caption{Wireframe del HUD de distancia dentro del visor.}
+\label{fig:hud}
+\end{figure}
+
+% TODO(equipo): agregar report/figures/storyboard.png (ver
+% report/figures/STORYBOARD.md para la descripción de cada panel) y
+% descomentar esta figura antes de compilar el PDF final.
 % \begin{figure}[htbp]
-% \centerline{\includegraphics{figures/storyboard.png}}
+% \centerline{\includegraphics[width=0.9\linewidth]{figures/storyboard.png}}
 % \caption{Storyboard de interacción típica del usuario con el sistema.}
 % \label{fig:storyboard}
 % \end{figure}
