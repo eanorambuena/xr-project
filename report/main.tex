@@ -1,0 +1,163 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% La línea anterior solo es necesaria para identificar financiamiento en el
+% primer pie de página. Si no aplica, se puede comentar.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+\title{Percepción a Escala Real: un Simulador de Conducción en Realidad Virtual para el Aprendizaje del Tamaño y las Distancias del Vehículo}
+
+\author{
+\IEEEauthorblockN{1\textsuperscript{st} Integrante 1}
+\IEEEauthorblockA{\textit{Pontificia Universidad Católica de Chile} \\
+Santiago, Chile \\
+correo1@uc.cl}
+\and
+\IEEEauthorblockN{2\textsuperscript{nd} Integrante 2}
+\IEEEauthorblockA{\textit{Pontificia Universidad Católica de Chile} \\
+Santiago, Chile \\
+correo2@uc.cl}
+\and
+\IEEEauthorblockN{3\textsuperscript{rd} Integrante 3}
+\IEEEauthorblockA{\textit{Pontificia Universidad Católica de Chile} \\
+Santiago, Chile \\
+correo3@uc.cl}
+}
+
+\maketitle
+
+\begin{abstract}
+Resumen breve del proyecto: problema, enfoque XR propuesto y aporte esperado.
+\end{abstract}
+
+\begin{IEEEkeywords}
+realidad virtual, realidad extendida, simulación de conducción, percepción espacial, educación vial
+\end{IEEEkeywords}
+
+% ============================================================
+% I. INTRODUCCIÓN (~0.5 pág.)
+% ============================================================
+\section{Introducción}
+\label{sec:introduccion}
+
+Aprender a conducir exige que la persona construya, además del conocimiento
+de las reglas de tránsito, un sentido corporal del vehículo: cuánto mide,
+dónde terminan sus esquinas, qué tan cerca puede pasar de un obstáculo o de
+otro auto sin colisionar. Este componente propioceptivo suele adquirirse
+recién dentro del vehículo real, bajo la supervisión de un instructor, lo
+que concentra el aprendizaje en sesiones costosas, de disponibilidad
+limitada y con margen de error nulo ante cualquier equivocación de un
+conductor novato. Los simuladores de conducción en pantalla 2D (juegos de
+manejo, simuladores de escritorio) permiten practicar reglas y reacciones,
+pero al mostrarse en una pantalla plana y a una escala que no es 1:1,
+no logran transmitir el tamaño real del vehículo ni la profundidad
+necesaria para juzgar distancias con el cuerpo, que es precisamente la
+habilidad más difícil de enseñar fuera del auto real.
+
+Proponemos abordar este problema mediante un simulador de conducción en
+realidad virtual dirigido a personas que están aprendiendo a conducir
+(alumnos de escuelas de manejo, conductores primerizos), en el que la
+persona experimenta el habitáculo y el volumen del vehículo a escala 1:1
+mediante un visor de VR con seguimiento de cabeceo, en vez de una pantalla
+2D. A diferencia de un simulador tradicional, la realidad virtual permite
+que la persona perciba, con su propio cuerpo, dónde terminan las esquinas
+del auto y cuán cerca pasa de un obstáculo — una noción espacial que un
+monitor no puede transmitir porque no reproduce la estereopsis ni la
+escala real del entorno. Con esto se espera reducir la brecha de
+percepción espacial con la que los conductores novatos llegan a sus
+primeras clases prácticas, disminuyendo el número de sesiones necesarias
+con instructor y el riesgo asociado a los primeros errores de juicio de
+distancia.
+
+% ============================================================
+% II. TRABAJOS RELACIONADOS Y MARCO TEÓRICO (~1 pág.)
+% ============================================================
+\section{Trabajos relacionados y marco teórico}
+\label{sec:relacionados}
+
+% TODO: citar con \cite{} y completar report/references.bib
+% - Simuladores de conducción existentes (2D y VR) y sus limitaciones.
+% - Literatura de percepción de profundidad y escala en VR (estereopsis,
+%   presencia, propiocepción).
+% - Brecha que aborda este proyecto: escala 1:1 + juicio corporal de
+%   distancias, no solo reacción a reglas de tránsito.
+
+% ============================================================
+% III. PROPUESTA DE SOLUCIÓN (~2.5 pág.)
+% ============================================================
+\section{Propuesta de solución}
+\label{sec:propuesta}
+
+\subsection{Casos de uso}
+
+\textbf{Caso de uso 1: Nombre.}
+\begin{itemize}
+    \item \textbf{Usuario:} \dots
+    \item \textbf{Acción:} \dots
+    \item \textbf{Objetivo:} \dots
+\end{itemize}
+
+\textbf{Caso de uso 2: Nombre.}
+\begin{itemize}
+    \item \textbf{Usuario:} \dots
+    \item \textbf{Acción:} \dots
+    \item \textbf{Objetivo:} \dots
+\end{itemize}
+
+\textbf{Caso de uso 3: Nombre.}
+\begin{itemize}
+    \item \textbf{Usuario:} \dots
+    \item \textbf{Acción:} \dots
+    \item \textbf{Objetivo:} \dots
+\end{itemize}
+
+\subsection{Descripción del sistema}
+% Interacciones principales, hardware y software previstos,
+% diagramas o wireframes, y un storyboard como figura.
+
+% Ejemplo de figura (storyboard):
+% \begin{figure}[htbp]
+% \centerline{\includegraphics{figures/storyboard.png}}
+% \caption{Storyboard de interacción típica del usuario con el sistema.}
+% \label{fig:storyboard}
+% \end{figure}
+
+\subsection{Tecnologías y alcance}
+% Justificación técnica del hardware/software (alternativas consideradas,
+% criterios de selección, limitaciones) y qué queda dentro/fuera de
+% alcance del prototipo.
+
+% ============================================================
+% IV. PLAN DE TRABAJO (~0.5 pág.)
+% ============================================================
+\section{Plan de trabajo}
+\label{sec:plan}
+
+% Ejemplo de tabla de hitos:
+% \begin{table}[htbp]
+% \caption{Cronograma hacia las próximas entregas}
+% \begin{center}
+% \begin{tabular}{|l|l|l|}
+% \hline
+% \textbf{Actividad} & \textbf{Responsable(s)} & \textbf{Fecha} \\
+% \hline
+% \dots & \dots & \dots \\
+% \hline
+% \end{tabular}
+% \label{tab:cronograma}
+% \end{center}
+% \end{table}
+
+% ============================================================
+% REFERENCIAS (no cuentan para el límite de 5 páginas)
+% ============================================================
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
