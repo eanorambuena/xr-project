@@ -112,9 +112,9 @@ un detalle del proyecto, revisar aquí primero.
       (a la espera de ejemplos del usuario sobre qué tan específico
       debería ser, por si se ajusta después).
 - [x] Fechas oficiales de los 3 hitos del curso: Hito 1 (este informe)
-      **8 de septiembre de 2026** (hoy), Hito 2 (prototipo lo-fi) **13
-      de octubre de 2026**, Hito 3 (prototipo final) **24 de noviembre
-      de 2026**. La tabla de cronograma en `main.tex` ya usa fechas
+      **8 de septiembre de 2026**, Hito 2 (prototipo lo-fi) **13 de
+      octubre de 2026**, Hito 3 (prototipo final) **24 de noviembre de
+      2026**. La tabla de cronograma en `main.tex` ya usa fechas
       intermedias reales, espaciadas en martes (día de clases) entre
       esos hitos — el equipo puede ajustar las fechas intermedias, las
       de Entrega 2/3 son fijas (dadas por el curso).
