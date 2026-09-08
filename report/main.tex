@@ -8,6 +8,7 @@
 \usepackage{textcomp}
 \usepackage{xcolor}
 \usepackage{tikz}
+\usepackage{placeins}
 \graphicspath{{figures/}}
 \usetikzlibrary{arrows.meta, positioning}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
@@ -96,7 +97,7 @@ Más recientemente, el desarrollo de hardware standalone ha permitido arquitectu
 
 \subsection{Marco teórico: inmersión, presencia y percepción}
 
-El sustento teórico de por qué la VR permite abordar esta brecha de manera superior a un simulador tradicional de escritorio o pantalla 2D proviene de tres líneas principales de investigación. 
+El sustento teórico de por qué la VR permite abordar esta brecha de manera superior a un simulador tradicional de escritorio o pantalla 2D proviene de tres líneas principales de investigación.
 
 En primer lugar, es necesario comprender la naturaleza de la simulación inmersiva. LaValle~\cite{lavalle2016} define la realidad virtual como la inducción de un comportamiento dirigido en un organismo mediante estimulación sensorial artificial, mientras dicho organismo tiene poca o ninguna conciencia de esa interferencia — una definición centrada en el efecto perceptual buscado, no en un requisito técnico particular. El mismo texto identifica la interactividad como un componente crucial de la mayoría de los sistemas VR: cuando la estimulación sensorial responde a los movimientos del cuerpo del usuario (cabeza, manos, etc.), el sistema es de \textit{lazo cerrado}; en caso contrario, es de \textit{lazo abierto}. Un simulador de conducción 2D es, en este sentido, mayormente de lazo abierto respecto de la postura del usuario: si el usuario inclina su cuerpo para intentar mirar por un espejo retrovisor o asomarse por la ventana, la imagen en la pantalla permanece estática en relación con su punto de vista. El sistema propuesto, en cambio, cierra ese lazo mediante el \textit{tracking} continuo de la cabeza del usuario y el renderizado sincronizado del entorno, habilitando una exploración visual natural del habitáculo.
 
@@ -148,35 +149,35 @@ Finalmente, el proceso por el cual el conductor interioriza el volumen del vehí
 \subsection{Descripción del sistema}
 
 El usuario se sienta en una silla física que actúa como referencia
-postural del asiento del conductor y se coloca el Meta Quest 3.
-Antes de comenzar, una escena breve de calibración le pide ajustar la
-altura de ojos de la cámara virtual a la altura real de su cabeza
-sobre la silla, de modo que el punto de vista dentro del habitáculo
-coincida con su posición física; sin este ajuste, la escala 1:1 que
-el sistema busca transmitir quedaría distorsionada y el juicio de
-distancias perdería validez.
+postural del asiento del conductor y se coloca el Meta Quest~3. Antes de
+comenzar, una escena breve de calibración le pide ajustar la altura de
+ojos de la cámara virtual a la altura real de su cabeza sobre la silla,
+de modo que el punto de vista dentro del habitáculo coincida con su
+posición física; sin este ajuste, la escala 1:1 que el sistema busca
+transmitir quedaría distorsionada y el juicio de distancias perdería
+validez.
 
-Ya calibrado, el usuario queda situado dentro del habitáculo del
-vehículo y puede mirar libremente gracias al head tracking del visor
-—revisar los espejos, el borde del capó, los pilares, la esquina
-trasera—, tal como aprendería a hacerlo en un auto real. El vehículo
-se controla con los dos controles del Quest~3: el gatillo derecho
-acelera, el gatillo izquierdo frena, y el joystick derecho dirige,
-simulando un volante simplificado sin requerir hardware adicional.
+Ya calibrado, el usuario queda situado dentro del habitáculo y puede
+mirar libremente gracias al head tracking del visor —revisar los espejos,
+el borde del capó, los pilares, la esquina trasera—, tal como aprendería
+a hacerlo en un auto real. El vehículo se controla con los dos controles
+del Quest~3: el gatillo derecho acelera, el gatillo izquierdo frena, y el
+joystick derecho dirige, simulando un volante simplificado sin requerir
+hardware adicional.
 
 El sistema no incorpora ningún método de locomoción artificial propio de
-otras aplicaciones VR (teletransporte, \textit{dash}, etc.), ya que en un
+otras aplicaciones VR (teleportación, \textit{dash}, etc.), ya que en un
 simulador de manejo el movimiento visual continuo es inherente a la tarea
 y no puede evitarse como en una app de desplazamiento libre. La mitigación
 relevante para el mareo por movimiento (vección) no es entonces la ausencia
 de locomoción, sino que el usuario ve en todo momento el habitáculo del
 vehículo fijo en su campo visual periférico, actuando como marco de
-referencia visual estático —una estrategia de mitigación documentada en la
-literatura de simuladores de manejo y vuelo, que el diseño incorpora
-``gratis'' al modelar el interior completo del auto alrededor del usuario.
-Aun así, cierto riesgo de incomodidad es inherente a cualquier simulador
-de conducción, y queda como punto a evaluar en las pruebas de usuario
-hacia la Entrega 2.
+referencia visual estático —una estrategia de mitigación de vección
+documentada en la literatura de simuladores de manejo y vuelo, y que el
+diseño del sistema incorpora ``gratis'' al modelar el interior completo del
+auto alrededor del usuario. Aun así, cierto riesgo de incomodidad es
+inherente a cualquier simulador de conducción, y queda como punto a
+evaluar en las pruebas de usuario hacia la Entrega 2.
 
 \begin{figure}[t]
 \centering
@@ -207,13 +208,15 @@ desarrollo posterior de los otros dos casos de uso. La Fig.~\ref{fig:storyboard}
 ilustra este flujo completo para el Caso de uso 1, desde la calibración
 inicial hasta la detención segura frente a un obstáculo.
 
-\begin{figure*}[t]
+\begin{figure}[t]
 \centering
-\includegraphics[width=\textwidth]{fig3_storyboard.png}
+\includegraphics[width=\columnwidth]{figures/fig3_storyboard.png}
 \caption{Storyboard del Caso de uso 1 (juicio de esquinas): calibración,
 conducción, retroalimentación y detención segura.}
 \label{fig:storyboard}
-\end{figure*}
+\end{figure}
+
+\FloatBarrier
 
 \subsection{Tecnologías y alcance}
 
