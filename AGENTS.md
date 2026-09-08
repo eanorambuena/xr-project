@@ -38,6 +38,61 @@ un detalle del proyecto, revisar aquí primero.
   como candidatas en `report/references.bib` para que el equipo las
   revise antes de citarlas en el informe.
 
+### Deep research de verificación (post-integración)
+
+Tras integrar el texto de Matías, se pidió una verificación exhaustiva
+de las 6 citas contra las fuentes primarias (no solo snippets de
+búsqueda). Hallazgos:
+
+- **LaValle~\cite{lavalle2016} — corregido.** Se descargó y leyó el
+  Capítulo 1 completo del libro (gratis en msl.cs.uiuc.edu/vr/vrch1.pdf).
+  La definición que el informe le atribuía ("sustituye la percepción
+  sensorial... mediante tracking + renderizado sincronizado") **no es
+  la definición real de LaValle**. Su definición real: *"Inducing
+  targeted behavior in an organism by using artificial sensory
+  stimulation, while the organism has little or no awareness of the
+  interference."* El concepto de tracking+renderizado sí aparece en el
+  libro, pero como parte de la discusión de *interactividad*
+  (lazo abierto/cerrado), no como la definición de VR. Ya corregido en
+  `main.tex` para atribuir correctamente cada idea. También se corrigió
+  el año en `references.bib`: 2016 era el borrador, la edición impresa
+  de Cambridge University Press es de **2017** (ISBN 978-1-107-19893-7).
+- **Slater~\cite{slater2018} — confirmado.** Se descargó el PDF
+  completo (publicationslist.org/data/melslater, copia del propio
+  autor). La distinción inmersión/presencia y la cita de "Place
+  Illusion" son fieles al texto. Detalle menor: el paper sí menciona
+  resolución y estéreo como parte de inmersión, pero **no** menciona
+  latencia — el informe ya lo cubre bien con la frase genérica
+  "la literatura general del área", así que no fue necesario tocarlo.
+- **Agrawal et al.~\cite{agrawal2018} — confirmado con datos duros
+  no incluidos aún.** Se confirmó que el estudio comparó 3 grupos:
+  V-RAPT (VR), RAPT (entrenamiento tradicional de escritorio/pantalla
+  única) y placebo — validando la frase "métodos de entrenamiento en
+  simuladores tradicionales" del informe. Encontrado (vía fuente
+  secundaria, no verificado contra el PDF original por paywall):
+  V-RAPT 86.25% vs. RAPT 62.36% vs. placebo 30.97% de peligros
+  latentes anticipados. **No se agregó al informe** — el número viene
+  de un resumen de terceros, no del paper mismo; si el equipo quiere
+  usarlo, debería confirmarlo contra el PDF real antes de citarlo con
+  cifras exactas.
+- **El Jamiy \& Marsh~\cite{eljamiy2019}** — la subestimación de
+  distancias en HMD está ampliamente corroborada en la literatura
+  citante, aunque no se encontró el porcentaje exacto del paper
+  original (bloqueado por Wiley). El informe ya lo redacta sin
+  comprometerse a una cifra ("en cierto grado"), así que está a salvo.
+- **Chidambaram et al.~\cite{chidambaram2025} — confirmado**, con un
+  detalle curioso: el abstract dice que usaron **Meta Quest Pro**
+  (no Quest 3) como hardware. El informe solo dice "visores Meta
+  Quest" genérico, así que sigue siendo preciso — no hace falta tocar
+  nada, pero el equipo no debería asumir que el paper usó Quest 3.
+- **Pouke et al.~\cite{pouke2022} — confirmado.** El abstract completo
+  confirma que el estudio es sobre plausibilidad física con avatares
+  de escala corporal alterada (40 participantes, condición
+  sincrónica/asincrónica de estimulación visuo-táctil) — no es
+  específico de contextos automotrices, tal como ya se había señalado
+  al integrar el texto (el informe ya lo aplica "a nivel teórico",
+  correctamente acotado).
+
 ## Diagramas y assets visuales
 
 - La mayoría de los diagramas (arquitectura del sistema, diagrama de
