@@ -38,7 +38,84 @@ un detalle del proyecto, revisar aquí primero.
   como candidatas en `report/references.bib` para que el equipo las
   revise antes de citarlas en el informe.
 
-### Deep research de verificación (post-integración)
+### Segunda ronda de deep research (verificación exhaustiva)
+
+Segunda pasada, esta vez con acceso a **texto completo** de casi todas
+las fuentes y con los metadatos contrastados contra **Crossref** (el
+registro autoritativo de DOIs). Rutas que funcionaron cuando el editor
+bloquea (403): PDFs de arXiv vía `curl`, la API de Crossref, la API de
+Semantic Scholar (trae el abstract oficial), Unpaywall (encuentra
+copias legales en repositorios; así se obtuvo Slater desde Zenodo).
+
+**Errores encontrados y corregidos en esta ronda:**
+
+- **Agrawal et al.~\cite{agrawal2018} — error factual, corregido.** El
+  informe decía que la VR se comparó "con métodos de entrenamiento en
+  simuladores tradicionales". Falso: el grupo de comparación fue
+  **RAPT**, un programa de escritorio en pantalla 2D basado en vistas
+  en planta de la vía. El **simulador de conducción fue el instrumento
+  de evaluación** de los tres grupos, no de entrenamiento. La versión
+  correcta favorece más nuestro argumento (VR le ganó a una pantalla
+  plana con el mismo contenido). Se agregaron las cifras ya
+  confirmadas contra el abstract del editor: n=36, V-RAPT 86,25\,\%
+  vs. RAPT 62,36\,\% vs. placebo 30,97\,\%. Hardware del estudio:
+  Oculus Rift.
+- **Pouke et al.~\cite{pouke2022} — sobreatribución, corregida.** El
+  informe decía que Pouke et al. "revelan" que tamaño y distancia se
+  perciben de forma relativa al cuerpo. Eso es la *literatura previa
+  que ellos revisan* (van der Hoort \& Ehrsson, Linkenauger, Ogawa),
+  no su hallazgo. Su estudio **no logró replicar** el efecto sobre
+  estimación de tamaños y encontró un efecto significativo en sentido
+  contrario. Lo que sí confirmaron es el impacto sobre la
+  plausibilidad física. Reescrito para atribuir cada cosa a quien
+  corresponde e incluir la salvedad — es el mismo tipo de error que
+  el de LaValle.
+- **El Jamiy \& Marsh~\cite{eljamiy2019} — encuadre invertido,
+  corregido.** El abstract oficial arranca diciendo que el visor
+  "inevitablemente **disminuye** la percepción de profundidad". El
+  informe lo usaba primero como evidencia de que la VR da buenas
+  señales de profundidad y recién después concedía la subestimación.
+  Eso lee la fuente a contrapelo. Reescrito para asumir la tensión de
+  frente: **enseñamos juicio de distancias en un medio que se sabe que
+  las distorsiona**, y el sesgo residual queda como variable a medir
+  en las pruebas de usuario. Es la debilidad científica más obvia del
+  proyecto y ahora está declarada, no escondida.
+- **Slater~\cite{slater2018} — matizado.** Dos ajustes: (a) el informe
+  atribuía a "la literatura general" una definición de inmersión que
+  Slater da él mismo, y mejor — inmersión es el grado en que el
+  sistema sostiene las *contingencias sensomotoras naturales* de la
+  percepción; (b) "requisito estructural para habilitar presencia" era
+  más fuerte que lo que Slater afirma (él habla de correspondencia
+  entre niveles). Además se incorporó su propio contraejemplo de la
+  pantalla ("apenas giras la cabeza dejas de percibir el mundo
+  virtual"), que es exactamente nuestro argumento. Confirmado de nuevo:
+  Slater **no** menciona latencia; sí resolución y estéreo.
+
+**Confirmados sin cambios necesarios:**
+
+- **LaValle~\cite{lavalle2016}** — leído el Cap. 1 completo otra vez.
+  Definición verbatim: *"Inducing targeted behavior in an organism by
+  using artificial sensory stimulation, while the organism has little
+  or no awareness of the interference."* Y el pasaje de interactividad
+  verbatim: *"Does the sensory stimulation depend on actions taken by
+  the organism? If the answer is 'no', then the VR system is called
+  open-loop; otherwise, it is closed-loop."* Ambas cosas están hoy
+  correctamente atribuidas en el informe.
+- **Chidambaram et al.~\cite{chidambaram2025}** — leído el PDF completo
+  (7 pág.). Usa **Meta Quest Pro** (no Quest 3) más un volante y
+  pedales **Logitech G923**. Dato aprovechado: eligieron Unity antes
+  que Unreal y una arquitectura **standalone en vez de PC VR**,
+  priorizando despliegue por sobre calidad gráfica — exactamente
+  nuestras dos decisiones, así que ahora se cita en III.C para
+  respaldarlas.
+
+**Metadatos completados** (todos verificados contra Crossref):
+`agrawal2018` le faltaba `number = {33}`; `pouke2022` le faltaba
+volumen 3, artículo 869603 y su DOI (solo tenía el arXiv);
+`chidambaram2025` le faltaba el DOI `10.1145/3746058.3758372`, páginas
+y editorial. `slater2018` y `eljamiy2019` ya estaban completos.
+
+### Deep research de verificación (primera ronda, post-integración)
 
 Tras integrar el texto de Matías, se pidió una verificación exhaustiva
 de las 6 citas contra las fuentes primarias (no solo snippets de
@@ -168,8 +245,8 @@ búsqueda). Hallazgos:
       `main.tex`).
 - [x] Correo de Matías Harrison: `matiasharrison@uc.cl` (ya en
       `main.tex`).
-- [ ] Correo @uc.cl de Estefanía Pakarati (bloque de autores en
-      `main.tex`, hoy con placeholder `correo1@uc.cl`).
+- [x] Correo de Estefanía Pakarati: `estefania.pakarati@uc.cl` (ya en
+      `main.tex`, agregado por ella vía Overleaf).
 - [x] Abstract redactado (`main.tex`): lidera con la mejora
       perceptual (juicio de tamaño/distancia) como aporte medible, y
       plantea el menor riesgo en clases prácticas como hipótesis a
@@ -189,8 +266,20 @@ búsqueda). Hallazgos:
 - [ ] Responsable(s) por actividad en el plan de trabajo (por ahora
       genérico "el equipo" — reemplazar por integrante si se reparten
       tareas).
-- [ ] Arte final del storyboard: `report/figures/storyboard.png` (ver
-      `report/figures/STORYBOARD.md`), y luego descomentar la figura
-      en `report/main.tex`.
-- [ ] Compilar en Overleaf, confirmar ≤5 páginas (sin referencias), y
-      subir el PDF resultante al buzón.
+- [x] Arte final del storyboard: entregado por el equipo como
+      `report/figures/storyboard.jpg` (4 paneles) y ya activo en
+      `report/main.tex`.
+- [ ] **Compilar en Overleaf y confirmar ≤5 páginas** (sin
+      referencias). Estimación local: ~2.600 palabras de cuerpo
+      (~2,7 pág.) más 3 figuras, 1 tabla y el bloque de
+      título/autores/abstract ⇒ del orden de 4,5 pág. Debería entrar,
+      pero es la verificación pendiente de mayor riesgo. **Si sobra
+      texto, recortar la Sección II**: hoy ocupa ~1,2 pág. contra el
+      presupuesto de ~1 pág. del enunciado, y es la única sección por
+      encima de su cuota.
+- [ ] Subir el PDF compilado al buzón del curso.
+- [ ] Decisión del equipo: el abstract y las keywords están en inglés
+      y el resto del informe en español (traducción hecha por Matías).
+      Es una convención aceptada en papers en español, así que se dejó
+      como está — pero conviene que el equipo lo confirme
+      deliberadamente y no por inercia.
