@@ -36,7 +36,9 @@ report/
     conference_101719.tex  # plantilla oficial IEEE sin modificar (referencia)
 presentation/
   hito1-vrcar.pptx         # deck de la presentación oral
+.devcontainer/             # entorno del Codespace (instala TeX Live solo)
 .vscode/                   # extensiones y settings recomendados (LaTeX Workshop)
+Makefile                   # make setup / pdf / watch / clean
 specs.md                   # pauta de la entrega (Hito 1)
 AGENTS.md                  # decisiones del proyecto (hardware, alcance, etc.)
 ```
@@ -48,33 +50,36 @@ https://www.ieee.org/content/dam/ieee-org/ieee/web/org/pubs/conference-latex-tem
 copia sin modificar en `report/template/conference_101719.tex`, y
 `report/IEEEtran.cls` vendorizada en el repo).
 
-### En VS Code (recomendado)
+### Setup
+
+En un **Codespace nuevo no hay que hacer nada**: `.devcontainer/` instala
+todo al crearlo. En cualquier otro entorno Debian/Ubuntu, un comando:
+
+```bash
+make setup
+```
+
+Instala TeX Live y `latexmk`. (Detalle no obvio: `IEEEtran.bst` viene en
+el paquete `texlive-publishers`; sin él bibtex falla y *todas* las citas
+salen sin resolver. La `IEEEtran.cls` vendorizada no cubre el `.bst`.)
+
+### Compilar
+
+```bash
+make pdf      # compila -> report/.build/main.pdf
+make watch    # recompila solo cada vez que guardas
+make clean    # borra los auxiliares
+```
+
+`make` a secas lista los comandos disponibles.
+
+### En VS Code
 
 Al abrir el repo, VS Code ofrece instalar las extensiones de
 `.vscode/extensions.json`. Con **LaTeX Workshop** queda una experiencia
 equivalente a Overleaf: el PDF se abre en una pestaña al lado del `.tex`,
 se recompila al guardar, y con ctrl+click se salta entre el código y el
 PDF (SyncTeX). Los auxiliares van a `report/.build/` (ignorado por git).
-
-Requiere una distribución TeX Live local. En Debian/Ubuntu:
-
-```bash
-sudo apt-get install -y --no-install-recommends \
-  latexmk texlive-latex-recommended texlive-fonts-recommended \
-  texlive-latex-extra texlive-pictures texlive-publishers
-```
-
-`texlive-publishers` es el que trae `IEEEtran.bst`; sin él bibtex falla y
-las referencias salen sin resolver.
-
-### Desde la terminal
-
-```bash
-cd report
-latexmk -pdf -outdir=.build main.tex   # resuelve solo las pasadas de pdflatex + bibtex
-```
-
-El PDF queda en `report/.build/main.pdf`.
 
 ### En Overleaf
 
