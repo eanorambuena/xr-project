@@ -27,9 +27,5 @@
   "[latex]": {
     "editor.wordWrap": "on",
     "editor.rulers": [72]
-  },
-
-  "files.exclude": {
-    "**/.build": true
   }
 }
