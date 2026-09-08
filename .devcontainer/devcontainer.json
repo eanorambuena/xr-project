@@ -1,0 +1,24 @@
+{
+  "name": "xr-project — informe LaTeX",
+
+  // Misma imagen que Codespaces usa por defecto, para no perder nada de lo
+  // que ya venía (git, python, node, gh...).
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+
+  // Deja el entorno listo al crear el Codespace: instala TeX Live y todo lo
+  // necesario para compilar el informe. No hay que correr nada a mano.
+  "postCreateCommand": "make setup",
+
+  "customizations": {
+    "vscode": {
+      // Estas se instalan solas (en .vscode/extensions.json quedan además
+      // como recomendación para quien clone el repo sin devcontainer).
+      "extensions": [
+        "Anthropic.claude-code",
+        "james-yu.latex-workshop",
+        "streetsidesoftware.code-spell-checker",
+        "streetsidesoftware.code-spell-checker-spanish"
+      ]
+    }
+  }
+}

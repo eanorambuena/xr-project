@@ -247,6 +247,11 @@ búsqueda). Hallazgos:
 
 ## Entorno de desarrollo
 
+- **Setup en un comando:** `make setup` instala TeX Live y `latexmk`.
+  En un Codespace nuevo ni eso hace falta: `.devcontainer/devcontainer.json`
+  lo corre solo como `postCreateCommand` e instala las 4 extensiones.
+- **Compilar:** `make pdf` (o `make watch` para recompilar al guardar,
+  `make clean` para borrar auxiliares). `make` a secas lista los comandos.
 - `.vscode/extensions.json` recomienda **Claude Code**, **LaTeX
   Workshop** y el corrector ortográfico con diccionario español.
 - `.vscode/settings.json` deja LaTeX Workshop configurado como un
