@@ -230,12 +230,37 @@ búsqueda). Hallazgos:
 - Las 5 referencias en `report/references.bib` son reales,
   verificadas por búsqueda web (autor/venue/DOI confirmados), no
   inventadas.
-- Verificación estructural hecha sin compilador LaTeX disponible en
-  este entorno (no hay `pdflatex`/`tectonic`): claves `\cite{}` vs.
-  `references.bib`, `\ref{}` vs. `\label{}`, y balance de entornos
-  (`figure`/`table`/`tikzpicture`/`itemize`) — todo consistente. La
-  compilación real y el conteo de páginas (límite 5, sin referencias)
-  **deben verificarse en Overleaf** antes de subir el PDF al buzón.
+- **Compilación verificada localmente** (8-sep-2026). Se instaló TeX
+  Live en el entorno, así que ya no hace falta Overleaf para comprobar:
+
+  ```bash
+  cd report && latexmk -pdf -outdir=.build main.tex
+  ```
+
+  Resultado: `exit=0`, **sin ningún warning** en la pasada final (ni
+  referencias ni citas sin resolver), sin cajas desbordadas, y
+  **4 páginas incluyendo la bibliografía** — bajo el límite de 5.
+- Detalle a recordar: el paquete Debian que trae `IEEEtran.bst` es
+  **`texlive-publishers`**. Sin él, bibtex falla con "I couldn't open
+  style file IEEEtran.bst" y las referencias quedan sin resolver. El
+  `.cls` vendorizado en el repo no cubre el `.bst`.
+
+## Entorno de desarrollo
+
+- `.vscode/extensions.json` recomienda **Claude Code**, **LaTeX
+  Workshop** y el corrector ortográfico con diccionario español.
+- `.vscode/settings.json` deja LaTeX Workshop configurado como un
+  Overleaf local: recompila al guardar, PDF en pestaña al lado del
+  `.tex`, SyncTeX para saltar entre código y PDF, y auxiliares en
+  `report/.build/` (ignorado por git).
+- **Ojo con Overleaf y git:** Overleaf publica sus cambios como ramas
+  `overleaf-YYYY-MM-DD-HHMM`, no directamente en `main`. Un `git pull`
+  de `main` **no** las revela: hay que hacer `git fetch --all --prune` y
+  revisar cuáles faltan con
+  `git merge-base --is-ancestor <rama> main`. Tampoco hay que asumir que
+  un archivo está al día porque conserve el nombre — Overleaf reexporta
+  imágenes con el mismo nombre y distinto contenido; comparar con
+  `git hash-object`.
 
 ## Pendiente (requiere al equipo, no a Claude)
 
@@ -269,14 +294,10 @@ búsqueda). Hallazgos:
 - [x] Arte final del storyboard: entregado por el equipo como
       `report/figures/storyboard.jpg` (4 paneles) y ya activo en
       `report/main.tex`.
-- [ ] **Compilar en Overleaf y confirmar ≤5 páginas** (sin
-      referencias). Estimación local: ~2.600 palabras de cuerpo
-      (~2,7 pág.) más 3 figuras, 1 tabla y el bloque de
-      título/autores/abstract ⇒ del orden de 4,5 pág. Debería entrar,
-      pero es la verificación pendiente de mayor riesgo. **Si sobra
-      texto, recortar la Sección II**: hoy ocupa ~1,2 pág. contra el
-      presupuesto de ~1 pág. del enunciado, y es la única sección por
-      encima de su cuota.
+- [x] **Compilar y confirmar ≤5 páginas** — resuelto: compila limpio en
+      4 páginas incluyendo bibliografía (ver "Plan de implementación"
+      más arriba). Ya no es un riesgo abierto. Queda margen de ~1
+      página si alguien quiere ampliar algo.
 - [ ] Subir el PDF compilado al buzón del curso.
 - [ ] Decisión del equipo: el abstract y las keywords están en inglés
       y el resto del informe en español (traducción hecha por Matías).

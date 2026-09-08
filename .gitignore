@@ -1,2 +1,5 @@
 .claude/
 skills-lock.json
+
+# Auxiliares de compilacion LaTeX (latexmk -outdir=.build)
+report/.build/
