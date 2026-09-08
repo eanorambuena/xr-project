@@ -43,10 +43,23 @@ un detalle del proyecto, revisar aquí primero.
 - La mayoría de los diagramas (arquitectura del sistema, diagrama de
   bloques hardware/software, wireframes de interfaz) se harán en
   **TikZ** directamente en LaTeX — no requieren fotos.
-- El **storyboard** (ilustración de un usuario interactuando con el
-  sistema en una situación típica) sí requiere arte/foto real — se deja
-  como placeholder (`\includegraphics` comentado, con caption listo) en
-  `report/figures/` para que el equipo lo agregue.
+- El **storyboard** ya está resuelto: `report/figures/storyboard.jpg`
+  (4 paneles — Calibración, Conducción CU1, Retroalimentación,
+  Detención segura), agregado por el equipo y ya referenciado
+  (activo, no comentado) en `main.tex` como `fig:storyboard`.
+- La "Descripción del sistema" (III.B) fue reescrita por Matías con
+  más detalle técnico (calibración de altura de ojos, control por
+  gatillos/joystick, módulo de distancia por raycasting + HUD/audio,
+  3 escenas independientes por caso de uso) — integrada en `main.tex`
+  con 2 ajustes: el diagrama de arquitectura TikZ ahora incluye el
+  cálculo de distancia y el HUD/audio (antes solo física+render), y
+  la justificación de por qué no hay cybersickness se corrigió (el
+  argumento original decía que evitar teletransporte reduce el
+  mareo, lo cual no aplica bien a un simulador de manejo — se
+  reemplazó por el argumento correcto: el habitáculo fijo en el
+  campo visual periférico da un marco de referencia estático, mecanismo
+  real de reducción de vección; se dejó como riesgo residual a
+  evaluar en Entrega 2, no como problema resuelto).
 
 ## Casos de uso (aprobados)
 
