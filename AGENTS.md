@@ -111,10 +111,13 @@ un detalle del proyecto, revisar aquí primero.
       practicando, no menos). Menciona Quest 3 + Unity explícitamente
       (a la espera de ejemplos del usuario sobre qué tan específico
       debería ser, por si se ajusta después).
-- [ ] Fechas de compromiso para Entrega 2 (prototipo lo-fi) y Entrega 3
-      (prototipo final), para la sección "Plan de trabajo". Sin fecha
-      real disponible aún — el informe usa placeholders `[FECHA]` a
-      reemplazar por el equipo.
+- [x] Fechas oficiales de los 3 hitos del curso: Hito 1 (este informe)
+      **8 de septiembre de 2026** (hoy), Hito 2 (prototipo lo-fi) **13
+      de octubre de 2026**, Hito 3 (prototipo final) **24 de noviembre
+      de 2026**. La tabla de cronograma en `main.tex` ya usa fechas
+      intermedias reales, espaciadas en martes (día de clases) entre
+      esos hitos — el equipo puede ajustar las fechas intermedias, las
+      de Entrega 2/3 son fijas (dadas por el curso).
 - [ ] Responsable(s) por actividad en el plan de trabajo (por ahora
       genérico "el equipo" — reemplazar por integrante si se reparten
       tareas).
