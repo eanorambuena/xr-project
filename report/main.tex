@@ -11,6 +11,13 @@
 \usepackage{placeins}
 \graphicspath{{figures/}}
 \usetikzlibrary{arrows.meta, positioning}
+% El cuerpo del informe esta en espanol, asi que se traducen los rotulos
+% que IEEEtran define en ingles. El abstract y las keywords se dejan en
+% ingles a proposito (su contenido tambien lo esta), por lo que
+% \abstractname e \IEEEkeywordsname no se tocan. \figurename queda como
+% "Fig.", que es la abreviatura correcta tambien en espanol.
+\renewcommand{\refname}{Referencias}
+\renewcommand{\tablename}{TABLA}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 \begin{document}
