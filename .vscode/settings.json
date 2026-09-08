@@ -1,0 +1,35 @@
+{
+  // ---- LaTeX Workshop: experiencia tipo Overleaf ----------------------
+  // Los auxiliares (.aux, .log, .bbl...) van a report/.build/ para no
+  // ensuciar el repo; el PDF queda ahí también.
+  "latex-workshop.latex.outDir": "%DIR%/.build",
+
+  // latexmk resuelve solo las pasadas de pdflatex + bibtex que hagan falta.
+  "latex-workshop.latex.recipe.default": "latexmk",
+
+  // Recompila al guardar, como Overleaf.
+  "latex-workshop.latex.autoBuild.run": "onSave",
+
+  // El PDF se abre en una pestaña al lado del .tex.
+  "latex-workshop.view.pdf.viewer": "tab",
+
+  // SyncTeX: ctrl+click en el PDF salta al .tex y viceversa.
+  "latex-workshop.synctex.afterBuild.enabled": true,
+
+  // No abrir el panel de problemas en cada warning menor.
+  "latex-workshop.message.warning.show": false,
+
+  // ---- Corrector ortográfico ------------------------------------------
+  // El informe está en español; el abstract y las keywords en inglés.
+  "cSpell.language": "en,es",
+
+  // ---- Editor ----------------------------------------------------------
+  "[latex]": {
+    "editor.wordWrap": "on",
+    "editor.rulers": [72]
+  },
+
+  "files.exclude": {
+    "**/.build": true
+  }
+}

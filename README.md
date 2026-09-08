@@ -26,13 +26,18 @@ proyecto, y [`report/`](./report) para el informe en LaTeX/IEEE.
 
 ```
 report/
-  main.tex               # informe (nuestro contenido, formato IEEE conference)
-  references.bib         # bibliografía
-  figures/                # diagramas, wireframes, storyboard
-  IEEEtran.cls            # clase oficial IEEE, vendorizada para compilar sin TeX Live completo
+  main.tex                 # informe (nuestro contenido, formato IEEE conference)
+  references.bib           # bibliografía (6 referencias, verificadas contra fuente primaria)
+  figures/
+    fig1_arquitectura.png  # diagrama de arquitectura hardware/software
+    fig3_storyboard.png    # storyboard del Caso de uso 1 (4 paneles)
+  IEEEtran.cls             # clase oficial IEEE, vendorizada
   template/
     conference_101719.tex  # plantilla oficial IEEE sin modificar (referencia)
-specs.md                  # pauta de la entrega (Hito 1)
+presentation/
+  hito1-vrcar.pptx         # deck de la presentación oral
+.vscode/                   # extensiones y settings recomendados (LaTeX Workshop)
+specs.md                   # pauta de la entrega (Hito 1)
 AGENTS.md                  # decisiones del proyecto (hardware, alcance, etc.)
 ```
 
@@ -40,16 +45,45 @@ AGENTS.md                  # decisiones del proyecto (hardware, alcance, etc.)
 
 El informe usa la clase `IEEEtran` (plantilla oficial IEEE conference:
 https://www.ieee.org/content/dam/ieee-org/ieee/web/org/pubs/conference-latex-template_10-17-19.zip,
-copia de la plantilla sin modificar en `report/template/conference_101719.tex`,
-y `report/IEEEtran.cls` vendorizada en el repo para no depender de una
-instalación TeX Live completa). La forma más simple es subir `report/` a
-[Overleaf](https://www.overleaf.com/), que ya incluye la clase.
-Localmente, con `pdflatex`/`bibtex` instalados:
+copia sin modificar en `report/template/conference_101719.tex`, y
+`report/IEEEtran.cls` vendorizada en el repo).
+
+### En VS Code (recomendado)
+
+Al abrir el repo, VS Code ofrece instalar las extensiones de
+`.vscode/extensions.json`. Con **LaTeX Workshop** queda una experiencia
+equivalente a Overleaf: el PDF se abre en una pestaña al lado del `.tex`,
+se recompila al guardar, y con ctrl+click se salta entre el código y el
+PDF (SyncTeX). Los auxiliares van a `report/.build/` (ignorado por git).
+
+Requiere una distribución TeX Live local. En Debian/Ubuntu:
+
+```bash
+sudo apt-get install -y --no-install-recommends \
+  latexmk texlive-latex-recommended texlive-fonts-recommended \
+  texlive-latex-extra texlive-pictures texlive-publishers
+```
+
+`texlive-publishers` es el que trae `IEEEtran.bst`; sin él bibtex falla y
+las referencias salen sin resolver.
+
+### Desde la terminal
 
 ```bash
 cd report
-pdflatex main.tex
-bibtex main
-pdflatex main.tex
-pdflatex main.tex
+latexmk -pdf -outdir=.build main.tex   # resuelve solo las pasadas de pdflatex + bibtex
 ```
+
+El PDF queda en `report/.build/main.pdf`.
+
+### En Overleaf
+
+El repo está sincronizado con Overleaf, que ya incluye la clase y el
+estilo bibliográfico. Ojo: Overleaf publica sus cambios como ramas
+`overleaf-YYYY-MM-DD-HHMM`, así que un `git pull` de `main` no las
+muestra — hay que hacer `git fetch --all` y revisarlas.
+
+## Estado
+
+Compila limpio (sin warnings de referencias ni citas) en **4 páginas
+incluyendo la bibliografía**, dentro del límite de 5 páginas de la pauta.
