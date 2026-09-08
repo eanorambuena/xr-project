@@ -2,6 +2,10 @@
 \IEEEoverridecommandlockouts
 % La línea anterior solo es necesaria para identificar financiamiento en el
 % primer pie de página. Si no aplica, se puede comentar.
+% T1: sin esto el PDF guarda los acentos como "i sin punto + tilde", asi
+% que buscar o copiar texto acentuado desde el PDF sale roto, y LaTeX no
+% divide en silabas ninguna palabra con tilde (peor justificado).
+\usepackage[T1]{fontenc}
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{graphicx}
