@@ -8,6 +8,7 @@
 \usepackage{textcomp}
 \usepackage{xcolor}
 \usepackage{tikz}
+\graphicspath{{figures/}}
 \usetikzlibrary{arrows.meta, positioning}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
@@ -157,83 +158,62 @@ distancias perdería validez.
 
 Ya calibrado, el usuario queda situado dentro del habitáculo del
 vehículo y puede mirar libremente gracias al head tracking del visor
-— revisar los espejos, el borde del capó, los pilares, la esquina
-trasera —, tal como aprendería a hacerlo en un auto real. El
-vehículo se controla con los dos controles del Quest 3: el gatillo
-derecho acelera, el gatillo izquierdo frena, y el joystick derecho
-dirige, simulando un volante simplificado sin requerir hardware
-adicional. A diferencia de otras aplicaciones VR, el sistema no
-necesita resolver el problema de la locomoción artificial
-(teletransporte, \textit{dash}): el usuario permanece sentado y es el
-vehículo el que se desplaza. El habitáculo del auto, siempre visible
-en el campo de visión periférico, actúa como marco de referencia
-visual estático — un mecanismo conocido para reducir el mareo por
-movimiento (vección) inducido por el desplazamiento visual continuo
-sin el correspondiente estímulo vestibular; aun así, cierto riesgo de
-incomodidad es inherente a cualquier simulador de conducción y queda
-como punto a evaluar en las pruebas de usuario hacia la Entrega 2.
+—revisar los espejos, el borde del capó, los pilares, la esquina
+trasera—, tal como aprendería a hacerlo en un auto real. El vehículo
+se controla con los dos controles del Quest~3: el gatillo derecho
+acelera, el gatillo izquierdo frena, y el joystick derecho dirige,
+simulando un volante simplificado sin requerir hardware adicional.
 
-Como resume la Figura~\ref{fig:arquitectura}, el Quest 3 reporta pose
-de cabeza e input a Unity, que actualiza la física del vehículo —
-colisiones calculadas sobre las esquinas reales del modelo, el punto
-crítico para el Caso de uso 1 — y renderiza el entorno de vuelta al
-visor en estéreo. Un módulo adicional calcula en cada frame la
-distancia mínima entre las esquinas del vehículo y los obstáculos
-cercanos mediante \textit{raycasting}; ese valor alimenta el HUD de
-distancia (Figura~\ref{fig:hud}) y un tono audible cuya frecuencia
-aumenta al acercarse a un obstáculo, de modo que el usuario no
-necesite leer un número mientras conduce — la señal principal sigue
-siendo su propia percepción espacial del entorno, consistente con el
-marco teórico de la Sección II.
+El sistema no incorpora ningún método de locomoción artificial propio de
+otras aplicaciones VR (teletransporte, \textit{dash}, etc.), ya que en un
+simulador de manejo el movimiento visual continuo es inherente a la tarea
+y no puede evitarse como en una app de desplazamiento libre. La mitigación
+relevante para el mareo por movimiento (vección) no es entonces la ausencia
+de locomoción, sino que el usuario ve en todo momento el habitáculo del
+vehículo fijo en su campo visual periférico, actuando como marco de
+referencia visual estático —una estrategia de mitigación documentada en la
+literatura de simuladores de manejo y vuelo, que el diseño incorpora
+``gratis'' al modelar el interior completo del auto alrededor del usuario.
+Aun así, cierto riesgo de incomodidad es inherente a cualquier simulador
+de conducción, y queda como punto a evaluar en las pruebas de usuario
+hacia la Entrega 2.
 
-\begin{figure}[htbp]
+\begin{figure}[t]
 \centering
-\begin{tikzpicture}[
-  node distance=8mm and 10mm,
-  block/.style={draw, rounded corners, align=center, minimum height=10mm, minimum width=24mm, font=\scriptsize},
-  arr/.style={-Stealth, thick}
-]
-\node[block] (hmd) {Meta Quest 3\\(visor + controles)};
-\node[block, right=of hmd] (unity) {Unity\\XR Interaction Toolkit};
-\node[block, below=of unity] (fisica) {Física, colisiones\\y cálculo de distancia};
-\node[block, left=of fisica] (render) {Render 1:1\\+ HUD / audio};
-
-\draw[arr] (hmd.east) -- node[above, font=\tiny]{pose cabeza + input} (unity.west);
-\draw[arr] (unity) -- (fisica);
-\draw[arr] (fisica) -- (render);
-\draw[arr] (render.west) -- (hmd.south west) node[midway, below, font=\tiny]{frames estéreo};
-\end{tikzpicture}
+\includegraphics[width=\columnwidth]{fig1_arquitectura.png}
 \caption{Arquitectura de hardware y software del prototipo.}
 \label{fig:arquitectura}
 \end{figure}
 
-\begin{figure}[htbp]
+Como resume la Fig.~\ref{fig:arquitectura}, el Quest~3 reporta pose de
+cabeza e input a Unity, que actualiza la física del vehículo —colisiones
+calculadas sobre las esquinas reales del modelo, el punto crítico para el
+Caso de uso 1— y renderiza el entorno de vuelta al visor en estéreo. Un
+módulo adicional calcula en cada frame la distancia mínima entre las
+esquinas del vehículo y los obstáculos cercanos mediante
+\textit{raycasting}; ese valor alimenta un HUD de distancia anclado al
+parabrisas virtual y un tono audible cuya frecuencia aumenta al acercarse
+a un obstáculo (panel~3 de la Fig.~\ref{fig:storyboard}), de modo que el
+usuario no necesite leer un número mientras conduce —la señal principal
+sigue siendo su propia percepción espacial del entorno, consistente con el
+marco teórico de la Sección~II.
+
+El prototipo se organiza en tres escenas independientes, una por caso de
+uso —un espacio angosto delimitado por conos (CU1), un estacionamiento con
+un vehículo y un muro (CU2), y un circuito corto con curva y cruce (CU3)—,
+seleccionables desde un menú simple dentro del visor. Esta separación
+permite iterar CU1 de forma aislada hacia la Entrega 2 sin bloquear el
+desarrollo posterior de los otros dos casos de uso. La Fig.~\ref{fig:storyboard}
+ilustra este flujo completo para el Caso de uso 1, desde la calibración
+inicial hasta la detención segura frente a un obstáculo.
+
+\begin{figure*}[t]
 \centering
-\begin{tikzpicture}[font=\scriptsize]
-\draw (0,0) rectangle (5,3);
-\draw[dashed] (0.3,0.3) rectangle (4.7,2.4);
-\node at (2.5,1.35) {vista del entorno (cámara VR)};
-\node[draw, rounded corners, fill=white] at (2.5,2.7) {distancia: 0.8 m};
-\end{tikzpicture}
-\caption{Wireframe del HUD de distancia dentro del visor.}
-\label{fig:hud}
-\end{figure}
-
-El prototipo se organiza en tres escenas independientes, una por
-caso de uso — un espacio angosto delimitado por conos (CU1), un
-estacionamiento con un vehículo y un muro (CU2), y un circuito corto
-con curva y cruce (CU3) —, seleccionables desde un menú simple dentro
-del visor. Esta separación permite iterar CU1 de forma aislada hacia
-la Entrega 2 sin bloquear el desarrollo posterior de los otros dos
-casos de uso. La Figura~\ref{fig:storyboard} ilustra esta interacción
-típica, desde la calibración inicial hasta una detención segura
-frente a un obstáculo.
-
-\begin{figure}[htbp]
-\centerline{\includegraphics[width=\linewidth]{figures/storyboard.jpg}}
-\caption{Storyboard de interacción típica del usuario con el sistema.}
+\includegraphics[width=\textwidth]{fig3_storyboard.png}
+\caption{Storyboard del Caso de uso 1 (juicio de esquinas): calibración,
+conducción, retroalimentación y detención segura.}
 \label{fig:storyboard}
-\end{figure}
+\end{figure*}
 
 \subsection{Tecnologías y alcance}
 
