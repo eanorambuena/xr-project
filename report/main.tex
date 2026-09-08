@@ -83,43 +83,25 @@ distancia.
 \section{Trabajos relacionados y marco teórico}
 \label{sec:relacionados}
 
-Los simuladores de conducción en VR existentes se han enfocado
-mayoritariamente en el entrenamiento de reglas de tránsito y en la
-anticipación de riesgos: \cite{agrawal2018} muestra que un
-entrenamiento con visor VR mejora la capacidad de conductores
-jóvenes de anticipar peligros latentes en comparación con
-entrenamiento tradicional, y \cite{chidambaram2025} presenta
-DriveSimQuest, una plataforma de simulación de conducción en Meta
-Quest con Unity orientada a capturar señales conductuales (mirada,
-gestos) del usuario. Ninguno de estos sistemas, sin embargo, evalúa
-ni entrena explícitamente el juicio de tamaño del vehículo o de
-distancias a escala 1:1, que es el problema que aborda este proyecto.
+El desarrollo de simuladores de conducción ha experimentado una transición significativa desde configuraciones basadas en monitores bidimensionales (2D) hacia entornos inmersivos, impulsada por la necesidad de generar experiencias de entrenamiento más realistas y transferibles al mundo físico. El presente trabajo se enmarca en la intersección de dos áreas fundamentales: el estado actual de la simulación de conducción en Realidad Virtual (VR) y los fundamentos perceptuales y teóricos que justifican el uso de esta tecnología para el entrenamiento espacial.
 
-El sustento teórico de por qué la VR permite abordar esta brecha
-mejor que un simulador 2D proviene de tres líneas de investigación.
-Primero, siguiendo la caracterización de la realidad virtual de
-LaValle~\cite{lavalle2016} —un sistema que sustituye la percepción
-sensorial del usuario mediante \textit{tracking} de su movimiento y
-renderizado sincronizado del entorno—, la teoría de
-\textit{presencia} de Slater~\cite{slater2018} distingue entre
-inmersión (una propiedad objetiva del sistema, p. ej. campo de
-visión, tracking) y presencia (la sensación subjetiva de
-``estar ahí''), y sostiene que mayor inmersión habilita mayor
-presencia — un monitor 2D, con bajo campo de visión y sin tracking de
-cabeza, limita estructuralmente cuánta presencia espacial puede
-generar. Segundo, la literatura de percepción de profundidad en
-visores VR~\cite{eljamiy2019} documenta que, si bien los HMD
-subestiman distancias respecto del mundo físico en cierto grado,
-proveen estereopsis y paralaje de movimiento — señales de profundidad
-ausentes en una pantalla plana — que son las que permiten a una
-persona juzgar corporalmente qué tan cerca pasa de un obstáculo.
-Tercero, el efecto de \textit{escalamiento corporal}
-\cite{pouke2022} muestra que el propio cuerpo del usuario actúa como
-referencia perceptual para estimar tamaños y distancias del entorno
-virtual — lo que explica por qué experimentar el habitáculo del
-vehículo a escala 1:1, con el propio cuerpo como referencia, es
-necesario para que el usuario internalice el tamaño real del auto de
-una forma que una vista en tercera persona en pantalla no logra.
+\subsection{Simuladores de Conducción en Realidad Virtual}
+
+Históricamente, los simuladores de conducción en VR existentes se han enfocado de manera casi exclusiva en el entrenamiento de reglas de tránsito, la evaluación cognitiva y la anticipación de riesgos, dejando en un segundo plano la propiocepción vehicular del usuario. En esta línea, Agrawal et al.~\cite{agrawal2018} demostraron empíricamente que el entrenamiento basado en visores de VR mejora de forma sustancial la capacidad de los conductores jóvenes para anticipar peligros latentes y desarrollar habilidades de mitigación de riesgos, en comparación con métodos de entrenamiento en simuladores tradicionales. Su investigación subraya que la inmersión visual permite a los novatos experimentar escenarios de riesgo de forma segura, facilitando la retención de rutinas de escaneo visual (dónde mirar). Sin embargo, dicho enfoque es eminentemente cognitivo y atencional; no evalúa ni entrena explícitamente el juicio geométrico del tamaño del vehículo ni la estimación de distancias a escala real (1:1), elementos críticos para maniobras de baja velocidad como el estacionamiento o el paso por vías estrechas.
+
+Más recientemente, el desarrollo de hardware standalone ha permitido arquitecturas de simulación más ágiles. Chidambaram et al.~\cite{chidambaram2025} presentan \textit{DriveSimQuest}, una plataforma de simulación de conducción e investigación construida específicamente sobre visores Meta Quest utilizando el motor Unity. Este trabajo es altamente relevante desde el punto de vista arquitectónico, ya que demuestra la viabilidad de utilizar este hardware específico para simulaciones vehiculares complejas. No obstante, el propósito de \textit{DriveSimQuest} está fuertemente orientado a capturar señales conductuales e interacciones multimodales del usuario, tales como el seguimiento de la mirada (gaze) y el reconocimiento de gestos para la investigación en interacción humano-computadora en el vehículo. Al igual que el trabajo de Agrawal et al.~\cite{agrawal2018}, ninguno de estos sistemas aborda el problema perceptual del juicio de dimensiones del habitáculo ni la calibración del esquema corporal extendido hacia los límites del chasis del automóvil, lo cual constituye la brecha fundamental que este proyecto busca resolver.
+
+\subsection{Marco Teórico: Inmersión, Presencia y Percepción}
+
+El sustento teórico de por qué la VR permite abordar esta brecha de manera superior a un simulador tradicional de escritorio o pantalla 2D proviene de tres líneas principales de investigación. 
+
+En primer lugar, es necesario comprender la naturaleza de la simulación inmersiva. Siguiendo la caracterización canónica de LaValle~\cite{lavalle2016}, la realidad virtual se define como un sistema que sustituye la percepción sensorial del usuario hacia el mundo físico por un entorno sintético. Esto se logra mediante el \textit{tracking} continuo de los movimientos físicos del usuario y el renderizado sincronizado del entorno virtual. En un simulador de conducción 2D, si el usuario inclina su cuerpo para intentar mirar por un espejo retrovisor o asomarse por la ventana, la imagen en la pantalla permanece estática en relación con su punto de vista. En contraste, el sistema propuesto aborda esta sustitución sensorial habilitando un acoplamiento coherente que permite una exploración visual natural del habitáculo. 
+
+Esta capacidad técnica se traduce directamente en respuestas psicológicas. En esta línea, teóricos como Slater~\cite{slater2018} establecen una distinción fundamental entre \textit{inmersión} y \textit{presencia}. La literatura general del área suele describir la inmersión como una propiedad objetiva del hardware y del software (por ejemplo, el campo de visión, la resolución, la latencia y los grados de libertad del tracking). La presencia, por otro lado, es la respuesta subjetiva y psicológica del usuario: la ilusión de ``estar ahí'' (Place Illusion) en el entorno virtual. Slater argumenta que un mayor nivel de inmersión técnica es un requisito estructural para habilitar altos niveles de presencia. Un monitor 2D tradicional posee limitaciones estructurales (bajo campo de visión, ausencia de tracking de cabeza) que restringen severamente la cantidad de presencia espacial que puede inducir. Al utilizar un visor de VR, el conductor reacciona a las dimensiones del vehículo como si fueran reales.
+
+En segundo lugar, la literatura especializada en percepción de profundidad es clave para entender el juicio de distancias vehiculares. El Jamiy y Marsh~\cite{eljamiy2019} documentan extensamente los mecanismos de estimación de distancia en pantallas montadas en la cabeza (HMDs). Su revisión subraya que la VR provee dos señales de profundidad críticas que están ausentes en una pantalla plana: la estereopsis (la disparidad binocular de recibir imágenes ligeramente diferentes en cada ojo) y el paralaje de movimiento (el cambio de perspectiva al mover la cabeza). Estas son precisamente las señales fisiológicas que permiten a una persona calcular corporalmente qué tan cerca pasa el parachoques de un obstáculo. Si bien El Jamiy y Marsh~\cite{eljamiy2019} advierten que los HMDs históricamente tienden a inducir una subestimación de las distancias egocéntricas respecto del mundo físico, la provisión de un entorno a escala 1:1 rico en señales de profundidad sigue siendo drásticamente superior a la planitud del 2D para calibrar la percepción espacial del conductor novato.
+
+Finalmente, el proceso por el cual el conductor interioriza el volumen del vehículo depende de factores propioceptivos. El trabajo de Pouke et al.~\cite{pouke2022} sobre el efecto de \textit{escalamiento corporal} (body scaling effect) revela que la percepción del tamaño y de las distancias en un entorno virtual no se procesa de forma absoluta, sino relativa. El usuario utiliza su propio cuerpo (sus manos en el volante virtual, su altura relativa respecto al techo del auto, la extensión de sus brazos) como una métrica de referencia fundamental. Este efecto impacta directamente en la plausibilidad física del entorno~\cite{pouke2022}. Esto explica a nivel teórico por qué experimentar el habitáculo del vehículo a escala 1:1 en primera persona es un requisito indispensable; al usar su propio cuerpo como ancla perceptual, el usuario logra internalizar el tamaño real del auto y sus límites geométricos, una internalización cognitiva y corporal que resulta imposible de adquirir mediante una vista en tercera persona o a través de un monitor tradicional.
 
 % ============================================================
 % III. PROPUESTA DE SOLUCIÓN (~2.5 pág.)
