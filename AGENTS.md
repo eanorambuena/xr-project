@@ -6,6 +6,18 @@ informe (Hito 1) y planificar el desarrollo. Este archivo es la fuente
 de verdad para cualquier agente que trabaje en el repo — antes de asumir
 un detalle del proyecto, revisar aquí primero.
 
+## Revisión de PRs con subagents
+
+Cuando se pida "lanzar revieweres"/"reviewers" sobre un PR: usar el
+prompt estándar de `docs/pr-review-prompt.md`, lanzando **dos subagents
+independientes**, cada uno con nombre propio distinto (ej. Abel, Bert),
+revisando el mismo PR desde cero (no confiar en resúmenes previos).
+
+Un PR se considera listo solo cuando **ambos** reviewers devuelven
+"Approval Recommended". Si alguno devuelve "Needs Further Review" o
+"Changes Requested", evaluar qué es pertinente y corregir la PR antes
+de cerrarla.
+
 ## Proyecto
 
 - **Título tentativo:** Percepción a Escala Real: un Simulador de
