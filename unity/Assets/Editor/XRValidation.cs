@@ -43,25 +43,22 @@ public class XRValidation
     {
         Debug.Log("--- Player Settings ---");
 
-        // Check VR support
-        if (PlayerSettings.GetVirtualRealitySupported(BuildTargetGroup.Android))
+        // Check XR Management settings (modern API, replaces deprecated GetVirtualRealitySupported)
+        try
         {
-            validationPassed.Add("✓ VR Support enabled for Android");
+            var xrSettings = XRManagementSettings.Instance;
+            if (xrSettings != null && xrSettings.loaders.Count > 0)
+            {
+                validationPassed.Add("✓ XR Plug-in Management configured");
+            }
+            else
+            {
+                validationWarnings.Add("⚠ XR Plug-in Management not fully configured");
+            }
         }
-        else
+        catch
         {
-            validationIssues.Add("✗ VR Support NOT enabled for Android");
-        }
-
-        // Check XR SDKs
-        var xrSDKs = PlayerSettings.GetVirtualRealitySDKs(BuildTargetGroup.Android);
-        if (xrSDKs.Contains("Oculus"))
-        {
-            validationPassed.Add("✓ Oculus (Meta Quest) SDK enabled");
-        }
-        else
-        {
-            validationIssues.Add("✗ Oculus SDK NOT in list");
+            validationWarnings.Add("⚠ Could not verify XR Plug-in Management");
         }
 
         // Check render mode

@@ -77,10 +77,10 @@ public class BuildAutomation
             PlayerSettings.Android.bundleVersionCode = 1;
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeLeft;
 
-            // XR Settings for Meta Quest 3
-            PlayerSettings.SetVirtualRealitySupported(targetGroup, true);
-            string[] xrDevices = { "Oculus" };
-            PlayerSettings.SetVirtualRealitySDKs(targetGroup, xrDevices);
+            // XR Settings for Meta Quest 3 (modern API via XR Plug-in Management)
+            // Note: Legacy PlayerSettings.SetVirtualRealitySupported/SetVirtualRealitySDKs
+            // were removed in Unity 6000; configuration is now done via XR Manager Settings.
+            // See Assets/Editor/XRValidation.cs CheckPlayerSettings() for XR setup validation.
 
             // Build options
             BuildOptions buildOptions = BuildOptions.None;
