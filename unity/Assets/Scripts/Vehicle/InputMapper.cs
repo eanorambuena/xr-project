@@ -64,7 +64,7 @@ namespace VRCar.Vehicle
             }
         }
 
-        private void Update()
+        public void Update()
         {
             if (vehiclePhysics == null) return;
 

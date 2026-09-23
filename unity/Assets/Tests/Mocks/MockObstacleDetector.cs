@@ -7,7 +7,7 @@ namespace VRCar.Tests.Mocks
     /// Mock de ObstacleDetector para testing de HUDManager
     /// Simula detección de obstáculos sin necesidad de raycasts reales
     /// </summary>
-    public class MockObstacleDetector : MonoBehaviour
+    public class MockObstacleDetector : MonoBehaviour, IObstacleDetector
     {
         private float mockDistance = float.MaxValue;
 

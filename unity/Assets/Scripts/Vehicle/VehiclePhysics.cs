@@ -56,7 +56,7 @@ namespace VRCar.Vehicle
             currentVelocity = Vector3.zero;
         }
 
-        private void FixedUpdate()
+        public void FixedUpdate()
         {
             ApplyMotorForce();
             ApplySteering();

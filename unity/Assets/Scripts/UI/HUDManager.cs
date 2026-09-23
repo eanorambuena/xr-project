@@ -1,6 +1,6 @@
 using UnityEngine;
 using TMPro;
-using VRCar.Tests.Mocks;
+using VRCar.Obstacles;
 
 namespace VRCar.UI
 {
@@ -19,7 +19,7 @@ namespace VRCar.UI
         private TextMeshProUGUI speedText;
 
         // Referencias a sistema
-        private MockObstacleDetector obstacleDetector;
+        private IObstacleDetector obstacleDetector;
         private Rigidbody vehicleRigidbody;
 
         // Parámetros de color por distancia
@@ -31,7 +31,7 @@ namespace VRCar.UI
         /// Asignar referencias (usado por tests y setup)
         /// </summary>
         public void SetReferences(TextMeshProUGUI distText, TextMeshProUGUI speedTxt,
-                                 MockObstacleDetector detector, Rigidbody rb)
+                                 IObstacleDetector detector, Rigidbody rb)
         {
             distanceText = distText;
             speedText = speedTxt;
@@ -52,7 +52,7 @@ namespace VRCar.UI
             }
             if (obstacleDetector == null)
             {
-                obstacleDetector = FindObjectOfType<MockObstacleDetector>();
+                obstacleDetector = FindObjectOfType<ObstacleDetector>();
             }
             if (vehicleRigidbody == null)
             {
@@ -60,7 +60,7 @@ namespace VRCar.UI
             }
         }
 
-        private void Update()
+        public void Update()
         {
             UpdateDistance();
             UpdateSpeed();

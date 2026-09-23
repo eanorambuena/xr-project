@@ -18,17 +18,20 @@ namespace VRCar.Obstacles
 
         private void Start()
         {
+            // Auto-find componentes si no fueron asignados en SetReferences
+            if (vehicleRenderer == null)
+            {
+                vehicleRenderer = GetComponent<Renderer>();
+            }
+            if (audioSource == null)
+            {
+                audioSource = GetComponent<AudioSource>();
+            }
+
             // Guardar color original
             if (vehicleRenderer != null)
             {
                 originalColor = vehicleRenderer.material.color;
-            }
-
-            // Intentar cargar sonido de colisión (placeholder)
-            if (audioSource != null)
-            {
-                // En una aplicación real, esto sería asignado desde el inspector
-                // o cargado desde un archivo de sonido
             }
         }
 

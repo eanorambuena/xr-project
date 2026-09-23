@@ -31,8 +31,10 @@ namespace VRCar.Core
 
         private void Start()
         {
-            ValidateAllSystems();
-            StartGame();
+            if (ValidateAllSystems())
+            {
+                StartGame();
+            }
         }
 
         /// <summary>
@@ -66,7 +68,8 @@ namespace VRCar.Core
         /// <summary>
         /// Validar que todos los sistemas estén configurados correctamente
         /// </summary>
-        private void ValidateAllSystems()
+        /// <returns>true si el juego puede iniciarse</returns>
+        private bool ValidateAllSystems()
         {
             bool allSystemsValid = true;
 
@@ -98,6 +101,8 @@ namespace VRCar.Core
                 Debug.LogError("Algunos sistemas no están configurados. El juego no puede iniciarse.");
                 enabled = false;
             }
+
+            return allSystemsValid;
         }
 
         /// <summary>

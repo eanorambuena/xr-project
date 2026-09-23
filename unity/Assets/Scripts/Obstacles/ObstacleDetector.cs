@@ -12,7 +12,7 @@ namespace VRCar.Obstacles
     /// - SPEC 3.5: Detección lateral desde corners
     /// - SPEC 3.6: Rango de detección máximo (10m)
     /// </summary>
-    public class ObstacleDetector : MonoBehaviour
+    public class ObstacleDetector : MonoBehaviour, IObstacleDetector
     {
         // Parámetros de detección
         public float detectionRange = 10f;           // Rango máximo de detección (m)
@@ -23,7 +23,7 @@ namespace VRCar.Obstacles
         private float closestDistance = float.MaxValue;
         private Collider closestObstacle;
 
-        private void FixedUpdate()
+        public void FixedUpdate()
         {
             DetectClosestObstacle();
         }
