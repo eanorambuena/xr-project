@@ -65,7 +65,20 @@ public static class EditorCommandBridge
             case "stop": EditorApplication.isPlaying = false; break;
             case "snap": Snap(); break;
             case "autodrive": AutoDrive(); break;
-            default: throw new ArgumentException("Comando desconocido");
+            default:
+                if (cmd.StartsWith("wsl "))
+                {
+                    // Ejecuta en WSL (donde están las llaves SSH del usuario) dentro del repo
+                    string repo = "/mnt/" + char.ToLower(Path.GetFullPath("..")[0]) + Path.GetFullPath("..").Substring(2).Replace('\\', '/');
+                    RunProcess("wsl", $"-e bash -lc \"cd '{repo}' && {cmd.Substring(4)}\"");
+                    break;
+                }
+                if (cmd.StartsWith("git "))
+                {
+                    RunGit(cmd.Substring(4));
+                    break;
+                }
+                throw new ArgumentException("Comando desconocido");
         }
     }
 
@@ -109,6 +122,27 @@ public static class EditorCommandBridge
         if (mapper != null) mapper.enabled = false;
         physics.accelerationInput = 0.6f;
         Log($"autodrive: speed={physics.GetCurrentSpeedKmh():F1} km/h pos={physics.transform.position}");
+    }
+
+    /// <summary>Ejecuta git en la raíz del repositorio (carpeta padre del proyecto Unity)</summary>
+    static void RunGit(string args) => RunProcess("git", args);
+
+    static void RunProcess(string exe, string args)
+    {
+        var psi = new System.Diagnostics.ProcessStartInfo(exe, args)
+        {
+            WorkingDirectory = Path.GetFullPath(".."),
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        using (var p = System.Diagnostics.Process.Start(psi))
+        {
+            string output = p.StandardOutput.ReadToEnd() + p.StandardError.ReadToEnd();
+            p.WaitForExit(120000);
+            Log($"{exe} {args} (exit {p.ExitCode}):\n{output}");
+        }
     }
 
     static void Log(string msg)
