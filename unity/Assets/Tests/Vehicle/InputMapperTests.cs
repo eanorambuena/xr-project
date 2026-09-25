@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using UnityEngine;
 using VRCar.Tests.Mocks;
+using VRCar.Vehicle;
 
 namespace VRCar.Tests.Vehicle
 {
@@ -38,7 +39,7 @@ namespace VRCar.Tests.Vehicle
         [TearDown]
         public void TearDown()
         {
-            Object.Destroy(vehicleGameObject);
+            Object.DestroyImmediate(vehicleGameObject);
         }
 
         // ============================================================

@@ -10,6 +10,11 @@ namespace VRCar.Obstacles
     /// </summary>
     public class CollisionFeedback : MonoBehaviour
     {
+        /// <summary>
+        /// Material del vehículo: instancia propia en Play Mode, sharedMaterial en Edit Mode (tests)
+        /// </summary>
+        private Material VehicleMaterial => vehicleRenderer == null ? null : (Application.isPlaying ? vehicleRenderer.material : vehicleRenderer.sharedMaterial);
+
         private Renderer vehicleRenderer;
         private AudioSource audioSource;
         private AudioClip collisionClip;
@@ -21,7 +26,7 @@ namespace VRCar.Obstacles
             // Auto-find componentes si no fueron asignados en SetReferences
             if (vehicleRenderer == null)
             {
-                vehicleRenderer = GetComponent<Renderer>();
+                vehicleRenderer = GetComponentInChildren<Renderer>();
             }
             if (audioSource == null)
             {
@@ -31,7 +36,7 @@ namespace VRCar.Obstacles
             // Guardar color original
             if (vehicleRenderer != null)
             {
-                originalColor = vehicleRenderer.material.color;
+                if (VehicleMaterial != null) originalColor = VehicleMaterial.color;
             }
         }
 
@@ -42,7 +47,7 @@ namespace VRCar.Obstacles
         {
             vehicleRenderer = renderer;
             audioSource = audio;
-            originalColor = renderer.material.color;
+            if (VehicleMaterial != null) originalColor = VehicleMaterial.color;
         }
 
         /// <summary>
@@ -76,10 +81,11 @@ namespace VRCar.Obstacles
         /// </summary>
         private void ApplyCollisionFeedback()
         {
-            // Cambiar color a rojo
-            if (vehicleRenderer != null)
+            // Cambiar color a rojo (guardando el color actual si recién empieza la colisión)
+            if (VehicleMaterial != null)
             {
-                vehicleRenderer.material.color = Color.red;
+                if (!isColliding) originalColor = VehicleMaterial.color;
+                VehicleMaterial.color = Color.red;
             }
 
             // Reproducir sonido de colisión
@@ -95,9 +101,9 @@ namespace VRCar.Obstacles
         private void RestoreCollisionFeedback()
         {
             // Restaurar color original
-            if (vehicleRenderer != null)
+            if (VehicleMaterial != null)
             {
-                vehicleRenderer.material.color = originalColor;
+                VehicleMaterial.color = originalColor;
             }
         }
 

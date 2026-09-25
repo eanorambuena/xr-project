@@ -48,8 +48,8 @@ namespace VRCar.Tests.Core
         [TearDown]
         public void TearDown()
         {
-            Object.Destroy(gameManagerGO);
-            Object.Destroy(vehicleGO);
+            Object.DestroyImmediate(gameManagerGO);
+            Object.DestroyImmediate(vehicleGO);
         }
 
         // ============================================================
@@ -66,7 +66,7 @@ namespace VRCar.Tests.Core
         public void GameManager_Initialize_FindsVehiclePhysics()
         {
             // Simular inicialización (Awake)
-            gameManager.SendMessage("InitializeGameSystems");
+            gameManager.Initialize();
 
             // Assert: obtener referencias debe funcionar
             VehiclePhysics physics = gameManager.GetVehiclePhysics();
@@ -80,7 +80,7 @@ namespace VRCar.Tests.Core
         [Test]
         public void GameManager_Initialize_FindsInputMapper()
         {
-            gameManager.SendMessage("InitializeGameSystems");
+            gameManager.Initialize();
 
             InputMapper mapper = gameManager.GetInputMapper();
             Assert.IsNotNull(mapper, "GameManager debe encontrar InputMapper");
@@ -92,7 +92,7 @@ namespace VRCar.Tests.Core
         [Test]
         public void GameManager_Initialize_FindsObstacleDetector()
         {
-            gameManager.SendMessage("InitializeGameSystems");
+            gameManager.Initialize();
 
             ObstacleDetector detector = gameManager.GetObstacleDetector();
             Assert.IsNotNull(detector, "GameManager debe encontrar ObstacleDetector");
@@ -104,7 +104,7 @@ namespace VRCar.Tests.Core
         [Test]
         public void GameManager_Initialize_FindsCollisionFeedback()
         {
-            gameManager.SendMessage("InitializeGameSystems");
+            gameManager.Initialize();
 
             CollisionFeedback feedback = gameManager.GetCollisionFeedback();
             Assert.IsNotNull(feedback, "GameManager debe encontrar CollisionFeedback");
@@ -124,8 +124,8 @@ namespace VRCar.Tests.Core
         public void GameManager_GameState_StartsRunning()
         {
             // Ejecutar inicialización e inicio
-            gameManager.SendMessage("InitializeGameSystems");
-            gameManager.SendMessage("StartGame");
+            gameManager.Initialize();
+            gameManager.StartGame();
 
             Assert.IsTrue(gameManager.IsGameRunning, "Juego debe estar corriendo");
         }
@@ -136,8 +136,8 @@ namespace VRCar.Tests.Core
         [Test]
         public void GameManager_GameState_PauseResume()
         {
-            gameManager.SendMessage("InitializeGameSystems");
-            gameManager.SendMessage("StartGame");
+            gameManager.Initialize();
+            gameManager.StartGame();
 
             // Pausar
             gameManager.PauseGame();

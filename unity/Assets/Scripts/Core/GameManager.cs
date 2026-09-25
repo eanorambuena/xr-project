@@ -40,6 +40,13 @@ namespace VRCar.Core
         /// <summary>
         /// Inicializar todos los sistemas del juego
         /// </summary>
+        public void Initialize() => InitializeGameSystems();
+
+        private void EnsureInitialized()
+        {
+            if (vehicleGameObject == null) InitializeGameSystems();
+        }
+
         private void InitializeGameSystems()
         {
             // Encontrar vehículo
@@ -57,7 +64,7 @@ namespace VRCar.Core
             collisionFeedback = vehicleGameObject.GetComponent<CollisionFeedback>();
 
             // Encontrar HUD
-            hudManager = FindObjectOfType<HUDManager>();
+            hudManager = FindFirstObjectByType<HUDManager>();
 
             if (hudManager == null)
             {
@@ -108,7 +115,7 @@ namespace VRCar.Core
         /// <summary>
         /// Iniciar el juego
         /// </summary>
-        private void StartGame()
+        public void StartGame()
         {
             isGameRunning = true;
             Debug.Log("VR Car Hito 1: Juicio de Esquinas iniciado");
@@ -150,10 +157,10 @@ namespace VRCar.Core
         /// </summary>
         public bool IsGameRunning => isGameRunning;
 
-        public VehiclePhysics GetVehiclePhysics() => vehiclePhysics;
-        public InputMapper GetInputMapper() => inputMapper;
-        public ObstacleDetector GetObstacleDetector() => obstacleDetector;
-        public CollisionFeedback GetCollisionFeedback() => collisionFeedback;
-        public HUDManager GetHUDManager() => hudManager;
+        public VehiclePhysics GetVehiclePhysics() { EnsureInitialized(); return vehiclePhysics; }
+        public InputMapper GetInputMapper() { EnsureInitialized(); return inputMapper; }
+        public ObstacleDetector GetObstacleDetector() { EnsureInitialized(); return obstacleDetector; }
+        public CollisionFeedback GetCollisionFeedback() { EnsureInitialized(); return collisionFeedback; }
+        public HUDManager GetHUDManager() { EnsureInitialized(); return hudManager; }
     }
 }

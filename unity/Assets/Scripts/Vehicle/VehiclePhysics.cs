@@ -36,6 +36,12 @@ namespace VRCar.Vehicle
 
         private void Start()
         {
+            Initialize();
+        }
+
+        /// <summary>Configura el Rigidbody (llamado en Start; público para tests)</summary>
+        public void Initialize()
+        {
             rb = GetComponent<Rigidbody>();
 
             // Validar que existe Rigidbody
@@ -48,8 +54,8 @@ namespace VRCar.Vehicle
 
             // Configurar Rigidbody
             rb.mass = 1200f;
-            rb.drag = 0.5f;
-            rb.angularDrag = 0.5f;
+            rb.linearDamping = 0.5f;
+            rb.angularDamping = 0.5f;
             rb.constraints = RigidbodyConstraints.FreezeRotationX |
                            RigidbodyConstraints.FreezeRotationZ;
 
@@ -58,6 +64,8 @@ namespace VRCar.Vehicle
 
         public void FixedUpdate()
         {
+            if (rb == null) rb = GetComponent<Rigidbody>();
+            if (rb == null) return;
             ApplyMotorForce();
             ApplySteering();
             ApplyBraking();
@@ -86,9 +94,9 @@ namespace VRCar.Vehicle
         /// </summary>
         private void ApplyBraking()
         {
-            if (brakeInput > 0f && rb.velocity.magnitude > 0.1f)
+            if (brakeInput > 0f && rb.linearVelocity.magnitude > 0.1f)
             {
-                Vector3 brakingDirection = -rb.velocity.normalized;
+                Vector3 brakingDirection = -rb.linearVelocity.normalized;
                 Vector3 brakeForce = brakingDirection * brakeInput * brakingForce;
                 rb.AddForce(brakeForce, ForceMode.Force);
             }
@@ -105,6 +113,8 @@ namespace VRCar.Vehicle
             {
                 float steerRotation = steerInput * 2f; // grados por frame
                 transform.Rotate(0, steerRotation, 0);
+                // El auto no derrapa: la velocidad gira junto con la carrocería
+                if (rb != null) rb.linearVelocity = Quaternion.Euler(0, steerRotation, 0) * rb.linearVelocity;
             }
         }
 
@@ -114,15 +124,17 @@ namespace VRCar.Vehicle
         /// </summary>
         private void LimitSpeed()
         {
-            if (rb.velocity.magnitude > maxSpeed)
+            if (rb.linearVelocity.magnitude > maxSpeed)
             {
-                rb.velocity = rb.velocity.normalized * maxSpeed;
+                rb.linearVelocity = rb.linearVelocity.normalized * maxSpeed;
             }
         }
 
         public float GetCurrentSpeed()
         {
-            return rb.velocity.magnitude;
+            if (rb == null) rb = GetComponent<Rigidbody>();
+            if (rb == null) return 0f;
+            return rb.linearVelocity.magnitude;
         }
 
         public float GetCurrentSpeedKmh()

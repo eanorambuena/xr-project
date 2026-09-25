@@ -27,7 +27,7 @@ namespace VRCar.Tests.Obstacles
             var meshFilter = vehicleGameObject.AddComponent<MeshFilter>();
             meshFilter.mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
             vehicleRenderer = vehicleGameObject.AddComponent<MeshRenderer>();
-            vehicleRenderer.material = new Material(Shader.Find("Standard"));
+            vehicleRenderer.sharedMaterial = new Material(Shader.Find("Standard"));
 
             // Agregar audio source
             audioSource = vehicleGameObject.AddComponent<AudioSource>();
@@ -41,7 +41,7 @@ namespace VRCar.Tests.Obstacles
         [TearDown]
         public void TearDown()
         {
-            Object.Destroy(vehicleGameObject);
+            Object.DestroyImmediate(vehicleGameObject);
         }
 
         // ============================================================
@@ -71,7 +71,7 @@ namespace VRCar.Tests.Obstacles
             // Assert: verificar que se intentó reproducir sonido
             Assert.IsNotNull(audioSource, "AudioSource debe existir");
 
-            Object.Destroy(obstacleGO);
+            Object.DestroyImmediate(obstacleGO);
         }
 
         /// <summary>
@@ -93,7 +93,7 @@ namespace VRCar.Tests.Obstacles
             Assert.IsFalse(audioSource.isPlaying,
                 "AudioSource no debe reproducir para objetos sin tag Obstacle");
 
-            Object.Destroy(nonObstacleGO);
+            Object.DestroyImmediate(nonObstacleGO);
         }
 
         // ============================================================
@@ -114,7 +114,7 @@ namespace VRCar.Tests.Obstacles
         {
             // Setup: guardar color original
             Color originalColor = Color.white;
-            vehicleRenderer.material.color = originalColor;
+            vehicleRenderer.sharedMaterial.color = originalColor;
 
             // Setup: crear obstáculo
             var obstacleGO = new GameObject("Obstacle");
@@ -125,10 +125,10 @@ namespace VRCar.Tests.Obstacles
             collisionFeedback.SimulateCollision(obstacleGO.tag);
 
             // Assert: color debe ser rojo
-            Assert.AreEqual(vehicleRenderer.material.color, Color.red,
+            Assert.AreEqual(vehicleRenderer.sharedMaterial.color, Color.red,
                 "Color debe cambiar a rojo al colisionar");
 
-            Object.Destroy(obstacleGO);
+            Object.DestroyImmediate(obstacleGO);
         }
 
         /// <summary>
@@ -143,7 +143,7 @@ namespace VRCar.Tests.Obstacles
         {
             // Setup: color original blanco
             Color originalColor = Color.white;
-            vehicleRenderer.material.color = originalColor;
+            vehicleRenderer.sharedMaterial.color = originalColor;
 
             // Setup: crear obstáculo y simular colisión
             var obstacleGO = new GameObject("Obstacle");
@@ -151,17 +151,17 @@ namespace VRCar.Tests.Obstacles
             obstacleGO.AddComponent<BoxCollider>();
 
             collisionFeedback.SimulateCollision(obstacleGO.tag);
-            Assert.AreEqual(vehicleRenderer.material.color, Color.red,
+            Assert.AreEqual(vehicleRenderer.sharedMaterial.color, Color.red,
                 "Color debe ser rojo después de colisión");
 
             // Execute: simular fin de colisión
             collisionFeedback.SimulateCollisionExit(obstacleGO.tag);
 
             // Assert: color vuelve al original
-            Assert.AreEqual(vehicleRenderer.material.color, originalColor,
+            Assert.AreEqual(vehicleRenderer.sharedMaterial.color, originalColor,
                 "Color debe restaurarse al original cuando termina colisión");
 
-            Object.Destroy(obstacleGO);
+            Object.DestroyImmediate(obstacleGO);
         }
 
         /// <summary>
@@ -173,7 +173,7 @@ namespace VRCar.Tests.Obstacles
         public void CollisionFeedback_OnCollisionExit_IgnoresNonObstacle()
         {
             Color originalColor = Color.blue;
-            vehicleRenderer.material.color = originalColor;
+            vehicleRenderer.sharedMaterial.color = originalColor;
 
             // Simular colisión con Obstacle
             var obstacleGO = new GameObject("Obstacle");
@@ -186,16 +186,16 @@ namespace VRCar.Tests.Obstacles
             collisionFeedback.SimulateCollisionExit(nonObstacleGO.tag);
 
             // Color debe seguir siendo rojo (no se restauró)
-            Assert.AreEqual(vehicleRenderer.material.color, Color.red,
+            Assert.AreEqual(vehicleRenderer.sharedMaterial.color, Color.red,
                 "Color debe permanecer rojo si se sale de non-Obstacle");
 
             // Restaurar con Obstacle
             collisionFeedback.SimulateCollisionExit(obstacleGO.tag);
-            Assert.AreEqual(vehicleRenderer.material.color, originalColor,
+            Assert.AreEqual(vehicleRenderer.sharedMaterial.color, originalColor,
                 "Color debe restaurarse cuando se sale de Obstacle");
 
-            Object.Destroy(obstacleGO);
-            Object.Destroy(nonObstacleGO);
+            Object.DestroyImmediate(obstacleGO);
+            Object.DestroyImmediate(nonObstacleGO);
         }
     }
 }

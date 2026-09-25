@@ -59,10 +59,10 @@ namespace VRCar.Tests.UI
         [TearDown]
         public void TearDown()
         {
-            Object.Destroy(hudGameObject);
-            Object.Destroy(vehicleGameObject);
-            Object.Destroy(mockObstacleDetector.gameObject);
-            if (distanceText != null) Object.Destroy(distanceText.gameObject.transform.parent.gameObject);
+            Object.DestroyImmediate(hudGameObject);
+            Object.DestroyImmediate(vehicleGameObject);
+            Object.DestroyImmediate(mockObstacleDetector.gameObject);
+            if (distanceText != null) Object.DestroyImmediate(distanceText.gameObject.transform.parent.gameObject);
         }
 
         // ============================================================
@@ -186,7 +186,7 @@ namespace VRCar.Tests.UI
         public void HUDManager_UpdateSpeed_ConvertsToKmh()
         {
             // Setup: vehículo con velocidad de 10 m/s
-            vehicleRigidbody.velocity = new Vector3(10, 0, 0);
+            vehicleRigidbody.linearVelocity = new Vector3(10, 0, 0);
 
             // Execute
             hudManager.Update();
@@ -204,7 +204,7 @@ namespace VRCar.Tests.UI
         [Test]
         public void HUDManager_UpdateSpeed_VelocityZero()
         {
-            vehicleRigidbody.velocity = Vector3.zero;
+            vehicleRigidbody.linearVelocity = Vector3.zero;
             hudManager.Update();
 
             Assert.That(speedText.text, Contains.Substring("0"),
@@ -218,7 +218,7 @@ namespace VRCar.Tests.UI
         [Test]
         public void HUDManager_UpdateSpeed_MaxSpeed()
         {
-            vehicleRigidbody.velocity = new Vector3(0, 0, 20);
+            vehicleRigidbody.linearVelocity = new Vector3(0, 0, 20);
             hudManager.Update();
 
             Assert.That(speedText.text, Contains.Substring("72"),

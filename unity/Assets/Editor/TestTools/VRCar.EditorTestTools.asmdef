@@ -1,0 +1,19 @@
+{
+    "name": "VRCar.EditorTestTools",
+    "rootNamespace": "VRCar.EditorTools",
+    "references": [
+        "UnityEditor.TestRunner",
+        "UnityEngine.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

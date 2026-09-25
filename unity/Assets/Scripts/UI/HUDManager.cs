@@ -1,3 +1,4 @@
+using System.Globalization;
 using UnityEngine;
 using TMPro;
 using VRCar.Obstacles;
@@ -52,11 +53,11 @@ namespace VRCar.UI
             }
             if (obstacleDetector == null)
             {
-                obstacleDetector = FindObjectOfType<ObstacleDetector>();
+                obstacleDetector = FindFirstObjectByType<ObstacleDetector>();
             }
             if (vehicleRigidbody == null)
             {
-                vehicleRigidbody = FindObjectOfType<Rigidbody>();
+                vehicleRigidbody = FindFirstObjectByType<Rigidbody>();
             }
         }
 
@@ -83,7 +84,7 @@ namespace VRCar.UI
             }
             else
             {
-                distanceText.text = $"Distancia: {distance:F1}m";
+                distanceText.text = "Distancia: " + distance.ToString("F1", CultureInfo.InvariantCulture) + "m";
             }
 
             // Cambiar color según distancia
@@ -112,10 +113,10 @@ namespace VRCar.UI
         {
             if (speedText == null || vehicleRigidbody == null) return;
 
-            float speedMs = vehicleRigidbody.velocity.magnitude;
+            float speedMs = vehicleRigidbody.linearVelocity.magnitude;
             float speedKmh = speedMs * 3.6f; // Convertir m/s a km/h
 
-            speedText.text = $"Velocidad: {speedKmh:F0} km/h";
+            speedText.text = "Velocidad: " + speedKmh.ToString("F0", CultureInfo.InvariantCulture) + " km/h";
         }
 
         /// <summary>

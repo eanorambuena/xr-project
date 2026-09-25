@@ -1,277 +1,326 @@
-using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
+using TMPro;
+using Unity.XR.CoreUtils;
 using UnityEditor;
 using UnityEditor.SceneManagement;
-using VRCar.Vehicle;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.XR;
+using UnityEngine.SceneManagement;
+using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.Inputs;
 using VRCar.Core;
+using VRCar.Obstacles;
+using VRCar.UI;
+using VRCar.Vehicle;
 
 /// <summary>
-/// Automated Scene Setup for CU1_CornerJudgment
-/// Creates complete VR scene with all GameObjects, components, and settings
-/// Usage: Menu → VRCar → Setup CU1 Scene
+/// Crea la escena CU1_CornerJudgment lista para jugar:
+/// - Piso, luz, conos (obstáculos) formando puertas cada vez más angostas
+/// - Vehículo con física, input, detector de obstáculos y feedback de colisión
+/// - XR Origin (XR Interaction Toolkit) sentado en el puesto del conductor
+/// - HUD en el tablero (distancia al obstáculo y velocidad)
+/// Controles sin visor: W/↑ acelera, S/↓/Espacio frena, A/D o ←/→ gira.
+/// Con Quest: gatillo derecho acelera, gatillo izquierdo frena, joystick derecho gira.
+/// Menú: VRCar → 2. Crear escena CU1
 /// </summary>
 public class SceneSetup
 {
-    [MenuItem("VRCar/Setup CU1 Scene")]
-    public static void SetupCU1Scene()
+    public const string ScenePath = "Assets/Scenes/CU1_CornerJudgment.unity";
+    const string MaterialsFolder = "Assets/Materials";
+    const string InputActionsPath = "Assets/InputActions/VRCarInput.inputactions";
+
+    // Dimensiones Peugeot 308 (m)
+    static readonly Vector3 VehicleSize = new Vector3(1.856f, 1.535f, 4.255f);
+    const float DriverEyeHeight = 1.2f;   // altura de ojos sobre el suelo, sentado
+
+    [MenuItem("VRCar/2. Crear escena CU1", priority = 2)]
+    public static void SetupCU1Scene() => CreateScene(interactive: true);
+
+    public static void CreateScene(bool interactive)
     {
-        Debug.Log("🚀 Setting up CU1_CornerJudgment scene...");
+        if (interactive && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
 
-        // Create new scene
-        var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects);
+        var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
-        // Setup environment
-        SetupEnvironment(scene);
+        CreateLight();
+        CreateGround();
+        var vehicle = CreateVehicle();
+        var xrCamera = CreateXROrigin(vehicle.transform);
+        CreateHUD(vehicle.transform, xrCamera);
+        CreateObstacles();
+        new GameObject("GameManager").AddComponent<GameManager>();
 
-        // Setup XR Origin & Controllers
-        SetupXROrigin(scene);
-
-        // Setup Vehicle
-        var vehicleGO = SetupVehicle(scene);
-
-        // Setup Obstacles
-        SetupObstacles(scene);
-
-        // Setup UI
-        SetupUI(scene);
-
-        // Setup GameManager
-        SetupGameManager(scene);
-
-        // Save scene
-        string scenePath = "Assets/Scenes/CU1_CornerJudgment.unity";
-        EditorSceneManager.SaveScene(scene, scenePath);
-
-        Debug.Log($"✅ Scene created: {scenePath}");
-        Debug.Log($"📊 GameObjects: {FindObjectsOfType<Transform>().Length}");
-        Debug.Log($"📋 Components ready for testing");
+        System.IO.Directory.CreateDirectory("Assets/Scenes");
+        EditorSceneManager.SaveScene(scene, ScenePath);
+        AddSceneToBuildSettings(ScenePath);
+        Debug.Log($"✅ Escena creada: {ScenePath}. Presiona Play y maneja con W/A/S/D.");
     }
 
-    private static void SetupEnvironment(Scene scene)
+    // ------------------------------------------------------------------
+    static Material GetMaterial(string name, Color color)
     {
-        Debug.Log("Setting up environment...");
+        System.IO.Directory.CreateDirectory(MaterialsFolder);
+        string path = $"{MaterialsFolder}/{name}.mat";
+        var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (mat == null)
+        {
+            mat = new Material(Shader.Find("Standard"));
+            AssetDatabase.CreateAsset(mat, path);
+        }
+        mat.color = color;
+        EditorUtility.SetDirty(mat);
+        return mat;
+    }
 
-        // Ground plane
-        var groundGO = new GameObject("Ground");
-        groundGO.tag = "Environment";
-        var groundTransform = groundGO.transform;
-        groundTransform.position = new Vector3(0, 0, 0);
-        groundTransform.localScale = new Vector3(50, 1, 50);
+    static PhysicsMaterial GetPhysicsMaterial()
+    {
+        System.IO.Directory.CreateDirectory(MaterialsFolder);
+        string path = $"{MaterialsFolder}/VehicleNoFriction.physicMaterial";
+        var pm = AssetDatabase.LoadAssetAtPath<PhysicsMaterial>(path);
+        if (pm == null)
+        {
+            pm = new PhysicsMaterial("VehicleNoFriction")
+            {
+                dynamicFriction = 0f,
+                staticFriction = 0f,
+                frictionCombine = PhysicsMaterialCombine.Minimum,
+                bounciness = 0f
+            };
+            AssetDatabase.CreateAsset(pm, path);
+        }
+        return pm;
+    }
 
-        var groundRenderer = groundGO.AddComponent<MeshRenderer>();
-        groundGO.AddComponent<MeshFilter>().mesh = Resources.GetBuiltinResource<Mesh>("Plane.fbx");
-
-        var groundCollider = groundGO.AddComponent<BoxCollider>();
-
-        // Material: Gray
-        var groundMat = new Material(Shader.Find("Standard"));
-        groundMat.color = new Color(0.5f, 0.5f, 0.5f, 1f);
-        groundRenderer.material = groundMat;
-
-        EditorSceneManager.MoveGameObjectToScene(groundGO, scene);
-
-        // Light
-        var lightGO = new GameObject("DirectionalLight");
+    static void CreateLight()
+    {
+        var lightGO = new GameObject("Directional Light");
         var light = lightGO.AddComponent<Light>();
         light.type = LightType.Directional;
-        light.intensity = 1f;
-        lightGO.transform.rotation = Quaternion.Euler(50, -30, 0);
-
-        EditorSceneManager.MoveGameObjectToScene(lightGO, scene);
+        light.intensity = 1.1f;
+        light.shadows = LightShadows.Soft;
+        lightGO.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
     }
 
-    private static void SetupXROrigin(Scene scene)
+    static void CreateGround()
     {
-        Debug.Log("Setting up XR Origin...");
+        var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        ground.name = "Ground";
+        ground.transform.position = new Vector3(0, 0, 60);
+        ground.transform.localScale = new Vector3(6, 1, 16); // 60m x 160m
+        ground.GetComponent<Renderer>().sharedMaterial = GetMaterial("Ground", new Color(0.32f, 0.33f, 0.35f));
+        ground.isStatic = true;
 
-        // Create XR Origin parent
-        var xrOriginGO = new GameObject("XROrigin");
-        xrOriginGO.transform.position = Vector3.zero;
-
-        // Camera Offset
-        var cameraOffsetGO = new GameObject("CameraOffset");
-        cameraOffsetGO.transform.SetParent(xrOriginGO.transform);
-        cameraOffsetGO.transform.localPosition = Vector3.zero;
-
-        // Main Camera
-        var cameraGO = new GameObject("MainCamera");
-        cameraGO.transform.SetParent(cameraOffsetGO.transform);
-        cameraGO.tag = "MainCamera";
-
-        var camera = cameraGO.AddComponent<Camera>();
-        camera.nearClipPlane = 0.01f;
-        camera.farClipPlane = 1000f;
-        camera.fieldOfView = 90f;
-
-        // Add audio listener for VR
-        cameraGO.AddComponent<AudioListener>();
-
-        // Left Controller
-        var leftControllerGO = new GameObject("LeftController");
-        leftControllerGO.transform.SetParent(xrOriginGO.transform);
-        leftControllerGO.transform.localPosition = new Vector3(-0.3f, 0.2f, 0.2f);
-
-        // Right Controller
-        var rightControllerGO = new GameObject("RightController");
-        rightControllerGO.transform.SetParent(xrOriginGO.transform);
-        rightControllerGO.transform.localPosition = new Vector3(0.3f, 0.2f, 0.2f);
-
-        EditorSceneManager.MoveGameObjectToScene(xrOriginGO, scene);
-        EditorSceneManager.MoveGameObjectToScene(cameraOffsetGO, scene);
-        EditorSceneManager.MoveGameObjectToScene(cameraGO, scene);
-        EditorSceneManager.MoveGameObjectToScene(leftControllerGO, scene);
-        EditorSceneManager.MoveGameObjectToScene(rightControllerGO, scene);
+        // Líneas de carril (solo visuales)
+        var lineMat = GetMaterial("LaneLine", Color.white);
+        foreach (float x in new[] { -3f, 3f })
+        {
+            var line = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            line.name = x < 0 ? "LaneLine_Left" : "LaneLine_Right";
+            Object.DestroyImmediate(line.GetComponent<Collider>());
+            line.transform.position = new Vector3(x, 0.005f, 60);
+            line.transform.localScale = new Vector3(0.12f, 0.01f, 150);
+            line.GetComponent<Renderer>().sharedMaterial = lineMat;
+            line.isStatic = true;
+        }
     }
 
-    private static GameObject SetupVehicle(Scene scene)
+    static GameObject CreateVehicle()
     {
-        Debug.Log("Setting up Vehicle...");
+        var vehicle = new GameObject("Vehicle");
+        vehicle.tag = "Vehicle";
+        vehicle.transform.position = new Vector3(0, VehicleSize.y / 2f + 0.01f, 0);
 
-        var vehicleGO = new GameObject("Vehicle");
-        vehicleGO.tag = "Vehicle";
-        vehicleGO.transform.position = new Vector3(0, 1.7f, 0);
-
-        // Rigidbody
-        var rb = vehicleGO.AddComponent<Rigidbody>();
-        rb.mass = 1200f;
-        rb.drag = 0.5f;
-        rb.angularDrag = 0.5f;
-        rb.constraints = RigidbodyConstraints.FreezeRotationX |
-                        RigidbodyConstraints.FreezeRotationZ;
+        var rb = vehicle.AddComponent<Rigidbody>();
+        rb.interpolation = RigidbodyInterpolation.Interpolate;
         rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
 
-        // Collider
-        var collider = vehicleGO.AddComponent<BoxCollider>();
-        collider.size = new Vector3(1.856f, 1.535f, 4.255f);
+        var col = vehicle.AddComponent<BoxCollider>();
+        col.size = VehicleSize;
+        // El auto "rueda": sin fricción de caja contra el piso (el frenado/arrastre lo maneja VehiclePhysics)
+        col.sharedMaterial = GetPhysicsMaterial();
 
-        // Physics material
-        var physicMat = new PhysicMaterial();
-        physicMat.dynamicFriction = 0.5f;
-        physicMat.staticFriction = 0.5f;
-        collider.material = physicMat;
+        // Carrocería visual (baja, tipo descapotable para no tapar la vista del conductor)
+        var body = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        body.name = "Body";
+        Object.DestroyImmediate(body.GetComponent<Collider>());
+        body.transform.SetParent(vehicle.transform, false);
+        body.transform.localPosition = new Vector3(0, -VehicleSize.y / 2f + 0.45f, 0);
+        body.transform.localScale = new Vector3(VehicleSize.x, 0.9f, VehicleSize.z);
+        body.GetComponent<Renderer>().sharedMaterial = GetMaterial("Vehicle", new Color(0.15f, 0.35f, 0.85f));
 
-        // Visual representation (cube for now)
-        var meshRenderer = vehicleGO.AddComponent<MeshRenderer>();
-        vehicleGO.AddComponent<MeshFilter>().mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
-        var vehicleMat = new Material(Shader.Find("Standard"));
-        vehicleMat.color = new Color(1f, 0.2f, 0.2f, 1f); // Red
-        meshRenderer.material = vehicleMat;
+        // Parabrisas (marco) como referencia visual del frente
+        var dash = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        dash.name = "Dashboard";
+        Object.DestroyImmediate(dash.GetComponent<Collider>());
+        dash.transform.SetParent(vehicle.transform, false);
+        dash.transform.localPosition = new Vector3(0, -VehicleSize.y / 2f + 0.82f, 1.1f);
+        dash.transform.localScale = new Vector3(VehicleSize.x - 0.1f, 0.12f, 0.4f);
+        dash.GetComponent<Renderer>().sharedMaterial = GetMaterial("Dashboard", new Color(0.1f, 0.1f, 0.12f));
 
-        // Components
-        vehicleGO.AddComponent<VehiclePhysics>();
-        vehicleGO.AddComponent<InputMapper>();
-        vehicleGO.AddComponent<ObstacleDetector>();
-        vehicleGO.AddComponent<CollisionFeedback>();
-        vehicleGO.AddComponent<XRDebugger>();
+        vehicle.AddComponent<VehiclePhysics>();
+        var input = vehicle.AddComponent<InputMapper>();
+        var actions = AssetDatabase.LoadAssetAtPath<InputActionAsset>(InputActionsPath);
+        var so = new SerializedObject(input);
+        so.FindProperty("inputActions").objectReferenceValue = actions;
+        so.ApplyModifiedPropertiesWithoutUndo();
 
-        EditorSceneManager.MoveGameObjectToScene(vehicleGO, scene);
-
-        return vehicleGO;
+        vehicle.AddComponent<ObstacleDetector>();
+        vehicle.AddComponent<AudioSource>().playOnAwake = false;
+        vehicle.AddComponent<CollisionFeedback>();
+        return vehicle;
     }
 
-    private static void SetupObstacles(Scene scene)
+    /// <summary>
+    /// XR Origin de XR Interaction Toolkit en el asiento del conductor.
+    /// Sin visor, la cámara queda a la altura de ojos (CameraYOffset) y sirve para probar en el editor.
+    /// </summary>
+    static Camera CreateXROrigin(Transform vehicle)
     {
-        Debug.Log("Setting up Obstacles...");
+        var originGO = new GameObject("XR Origin (Driver)");
+        originGO.transform.SetParent(vehicle, false);
+        // Origen a nivel del suelo, en el puesto del conductor (izquierda, un poco atrás del centro)
+        originGO.transform.localPosition = new Vector3(-0.4f, -VehicleSize.y / 2f, -0.2f);
 
-        // Obstacle material (red)
-        var obstacleMat = new Material(Shader.Find("Standard"));
-        obstacleMat.color = new Color(1f, 0.2f, 0.2f, 1f);
+        var offsetGO = new GameObject("Camera Offset");
+        offsetGO.transform.SetParent(originGO.transform, false);
 
-        // Left cone
-        var coneLeftGO = new GameObject("Obstacle_Left");
-        coneLeftGO.tag = "Obstacle";
-        coneLeftGO.transform.position = new Vector3(-1.5f, 0.5f, 15f);
-        coneLeftGO.transform.localScale = new Vector3(0.5f, 1.5f, 0.5f);
+        var camGO = new GameObject("Main Camera");
+        camGO.tag = "MainCamera";
+        camGO.transform.SetParent(offsetGO.transform, false);
+        var cam = camGO.AddComponent<Camera>();
+        cam.nearClipPlane = 0.05f;
+        cam.farClipPlane = 500f;
+        camGO.AddComponent<AudioListener>();
 
-        var leftRenderer = coneLeftGO.AddComponent<MeshRenderer>();
-        coneLeftGO.AddComponent<MeshFilter>().mesh = Resources.GetBuiltinResource<Mesh>("Cylinder.fbx");
-        leftRenderer.material = obstacleMat;
+        var tpd = camGO.AddComponent<TrackedPoseDriver>();
+        tpd.positionInput = new InputActionProperty(new InputAction("Position", InputActionType.Value, "<XRHMD>/centerEyePosition", expectedControlType: "Vector3"));
+        tpd.rotationInput = new InputActionProperty(new InputAction("Rotation", InputActionType.Value, "<XRHMD>/centerEyeRotation", expectedControlType: "Quaternion"));
 
-        var leftCollider = coneLeftGO.AddComponent<BoxCollider>();
-        leftCollider.isTrigger = false;
+        var origin = originGO.AddComponent<XROrigin>();
+        origin.Camera = cam;
+        origin.CameraFloorOffsetObject = offsetGO;
+        origin.RequestedTrackingOriginMode = XROrigin.TrackingOriginMode.Device; // sentado: se recentra en el asiento
+        origin.CameraYOffset = DriverEyeHeight;
+        offsetGO.transform.localPosition = new Vector3(0, DriverEyeHeight, 0);
 
-        EditorSceneManager.MoveGameObjectToScene(coneLeftGO, scene);
+        // XRI: habilita las acciones del auto (mandos, teclado, gamepad)
+        var actions = AssetDatabase.LoadAssetAtPath<InputActionAsset>(InputActionsPath);
+        var iam = originGO.AddComponent<InputActionManager>();
+        iam.actionAssets = new List<InputActionAsset> { actions };
 
-        // Right cone
-        var coneRightGO = new GameObject("Obstacle_Right");
-        coneRightGO.tag = "Obstacle";
-        coneRightGO.transform.position = new Vector3(1.5f, 0.5f, 15f);
-        coneRightGO.transform.localScale = new Vector3(0.5f, 1.5f, 0.5f);
+        // XRI: manager de interacciones + mandos rastreados (se ven en VR)
+        new GameObject("XR Interaction Manager").AddComponent<XRInteractionManager>();
+        CreateController(offsetGO.transform, "Left Controller", "LeftHand");
+        CreateController(offsetGO.transform, "Right Controller", "RightHand");
 
-        var rightRenderer = coneRightGO.AddComponent<MeshRenderer>();
-        coneRightGO.AddComponent<MeshFilter>().mesh = Resources.GetBuiltinResource<Mesh>("Cylinder.fbx");
-        rightRenderer.material = obstacleMat;
-
-        var rightCollider = coneRightGO.AddComponent<BoxCollider>();
-        rightCollider.isTrigger = false;
-
-        EditorSceneManager.MoveGameObjectToScene(coneRightGO, scene);
+        return cam;
     }
 
-    private static void SetupUI(Scene scene)
+    static void CreateController(Transform parent, string name, string hand)
     {
-        Debug.Log("Setting up UI...");
+        var go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        var tpd = go.AddComponent<TrackedPoseDriver>();
+        tpd.positionInput = new InputActionProperty(new InputAction("Position", InputActionType.Value, $"<XRController>{{{hand}}}/devicePosition", expectedControlType: "Vector3"));
+        tpd.rotationInput = new InputActionProperty(new InputAction("Rotation", InputActionType.Value, $"<XRController>{{{hand}}}/deviceRotation", expectedControlType: "Quaternion"));
 
-        // Canvas (World Space for VR)
-        var canvasGO = new GameObject("UICanvas");
+        // Modelo simple del mando
+        var model = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        model.name = "Model";
+        Object.DestroyImmediate(model.GetComponent<Collider>());
+        model.transform.SetParent(go.transform, false);
+        model.transform.localScale = new Vector3(0.05f, 0.05f, 0.12f);
+        model.GetComponent<Renderer>().sharedMaterial = GetMaterial("Controller", new Color(0.9f, 0.9f, 0.9f));
+        // Fuera de VR quedan escondidos bajo el tablero
+        go.transform.localPosition = new Vector3(hand == "LeftHand" ? -0.2f : 0.2f, -0.5f, 0.3f);
+    }
+
+    static void CreateHUD(Transform vehicle, Camera cam)
+    {
+        var canvasGO = new GameObject("HUD", typeof(RectTransform));
+        canvasGO.transform.SetParent(vehicle, false);
         var canvas = canvasGO.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.WorldSpace;
+        canvas.worldCamera = cam;
+        var rect = canvasGO.GetComponent<RectTransform>();
+        rect.sizeDelta = new Vector2(600, 220);
+        rect.localScale = Vector3.one * 0.001f; // 0.6m x 0.22m
+        // Sobre el tablero, frente al conductor, algo bajo la línea de visión
+        rect.localPosition = new Vector3(-0.4f, -VehicleSize.y / 2f + DriverEyeHeight - 0.2f, 1.1f);
+        rect.localRotation = Quaternion.Euler(10f, 0, 0);
 
-        var canvasRect = canvasGO.GetComponent<RectTransform>();
-        canvasRect.sizeDelta = new Vector2(1024, 512);
-        canvasRect.localScale = new Vector3(0.001f, 0.001f, 0.001f);
+        var bg = new GameObject("Background", typeof(RectTransform));
+        bg.transform.SetParent(canvasGO.transform, false);
+        var bgImg = bg.AddComponent<UnityEngine.UI.Image>();
+        bgImg.color = new Color(0, 0, 0, 0.55f);
+        Stretch(bg.GetComponent<RectTransform>());
 
-        // Position 1.5m in front of camera
-        var cameraTransform = GameObject.Find("MainCamera")?.transform;
-        if (cameraTransform != null)
-        {
-            canvasGO.transform.position = cameraTransform.position +
-                                         cameraTransform.forward * 1.5f;
-        }
+        CreateText(canvasGO.transform, "DistanceText", "Distancia: --", new Vector2(0, 50), Color.green);
+        CreateText(canvasGO.transform, "SpeedText", "Velocidad: 0 km/h", new Vector2(0, -50), Color.white);
 
-        // HUDManager
         canvasGO.AddComponent<HUDManager>();
-
-        // Distance Text
-        var distanceGO = new GameObject("DistanceText");
-        distanceGO.transform.SetParent(canvasGO.transform);
-        distanceGO.AddComponent<TextMeshProUGUI>();
-        var distanceRect = distanceGO.GetComponent<RectTransform>();
-        distanceRect.anchoredPosition = new Vector2(-400, 200);
-        distanceRect.sizeDelta = new Vector2(400, 100);
-
-        var distanceText = distanceGO.GetComponent<TextMeshProUGUI>();
-        distanceText.text = "Distancia: --m";
-        distanceText.fontSize = 36;
-        distanceText.alignment = TextAlignmentOptions.BottomLeft;
-        distanceText.color = Color.green;
-
-        // Speed Text
-        var speedGO = new GameObject("SpeedText");
-        speedGO.transform.SetParent(canvasGO.transform);
-        speedGO.AddComponent<TextMeshProUGUI>();
-        var speedRect = speedGO.GetComponent<RectTransform>();
-        speedRect.anchoredPosition = new Vector2(-400, 50);
-        speedRect.sizeDelta = new Vector2(400, 100);
-
-        var speedText = speedGO.GetComponent<TextMeshProUGUI>();
-        speedText.text = "Velocidad: 0 km/h";
-        speedText.fontSize = 36;
-        speedText.alignment = TextAlignmentOptions.BottomLeft;
-        speedText.color = Color.white;
-
-        EditorSceneManager.MoveGameObjectToScene(canvasGO, scene);
-        EditorSceneManager.MoveGameObjectToScene(distanceGO, scene);
-        EditorSceneManager.MoveGameObjectToScene(speedGO, scene);
     }
 
-    private static void SetupGameManager(Scene scene)
+    static void CreateText(Transform parent, string name, string text, Vector2 pos, Color color)
     {
-        Debug.Log("Setting up GameManager...");
+        var go = new GameObject(name, typeof(RectTransform));
+        go.transform.SetParent(parent, false);
+        var tmp = go.AddComponent<TextMeshProUGUI>();
+        tmp.text = text;
+        tmp.fontSize = 56;
+        tmp.alignment = TextAlignmentOptions.Center;
+        tmp.color = color;
+        var r = go.GetComponent<RectTransform>();
+        r.sizeDelta = new Vector2(580, 90);
+        r.anchoredPosition = pos;
+    }
 
-        var gmGO = new GameObject("GameManager");
-        gmGO.tag = "GameController";
-        gmGO.AddComponent<GameManager>();
+    static void Stretch(RectTransform r)
+    {
+        r.anchorMin = Vector2.zero; r.anchorMax = Vector2.one;
+        r.offsetMin = Vector2.zero; r.offsetMax = Vector2.zero;
+    }
 
-        EditorSceneManager.MoveGameObjectToScene(gmGO, scene);
+    /// <summary>
+    /// Circuito de "juicio de esquinas": puertas de conos cada vez más angostas y un muro al final.
+    /// </summary>
+    static void CreateObstacles()
+    {
+        var parent = new GameObject("Obstacles").transform;
+        var coneMat = GetMaterial("Cone", new Color(1f, 0.45f, 0.05f));
+
+        // (distancia z, ancho de la puerta en m)
+        var gates = new[] { (15f, 3.2f), (30f, 2.8f), (45f, 2.4f), (60f, 2.15f) };
+        foreach (var (z, width) in gates)
+        {
+            foreach (float side in new[] { -1f, 1f })
+            {
+                var cone = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                cone.name = $"Cone_z{z}_{(side < 0 ? "L" : "R")}";
+                cone.tag = "Obstacle";
+                cone.transform.SetParent(parent, false);
+                cone.transform.position = new Vector3(side * width / 2f, 0.5f, z);
+                cone.transform.localScale = new Vector3(0.35f, 0.5f, 0.35f); // 1m de alto
+                cone.GetComponent<Renderer>().sharedMaterial = coneMat;
+            }
+        }
+
+        var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        wall.name = "Wall_End";
+        wall.tag = "Obstacle";
+        wall.transform.SetParent(parent, false);
+        wall.transform.position = new Vector3(0, 0.75f, 80f);
+        wall.transform.localScale = new Vector3(8f, 1.5f, 0.5f);
+        wall.GetComponent<Renderer>().sharedMaterial = GetMaterial("Wall", new Color(0.8f, 0.1f, 0.1f));
+    }
+
+    static void AddSceneToBuildSettings(string path)
+    {
+        var scenes = EditorBuildSettings.scenes.ToList();
+        if (scenes.Any(s => s.path == path)) return;
+        scenes.Insert(0, new EditorBuildSettingsScene(path, true));
+        EditorBuildSettings.scenes = scenes.ToArray();
     }
 }
