@@ -86,9 +86,20 @@ public static class EditorCommandBridge
             case "stop": EditorApplication.isPlaying = false; break;
             case "snap": Snap(); break;
             case "snap-mirrors": SnapMirrorCheck(); break;
+            case "dump-mirrors": DumpMirrors(); break;
             case "autodrive": AutoDrive(); break;
             case "autopark": AutoParkTest.Start(); break;
             default:
+                if (cmd.StartsWith("inspect "))
+                {
+                    InspectModel(cmd.Substring(8).Trim());
+                    break;
+                }
+                if (cmd.StartsWith("addpkg "))
+                {
+                    AddPackage(cmd.Substring(7).Trim());
+                    break;
+                }
                 if (cmd.StartsWith("wsl "))
                 {
                     // Ejecuta en WSL (donde están las llaves SSH del usuario) dentro del repo
@@ -121,6 +132,12 @@ public static class EditorCommandBridge
             t.localRotation = original * Quaternion.Euler(5, 40, 0); Render(main, "Temp/snap_driver_right.png");
             t.localRotation = original * Quaternion.Euler(-6, 22, 0); Render(main, "Temp/snap_driver_rearview.png");
             t.localRotation = original * Quaternion.Euler(35, 0, 0); Render(main, "Temp/snap_driver_down.png");
+            // Mirar directo a cada espejo
+            foreach (var m in UnityEngine.Object.FindObjectsByType<VRCar.Vehicle.PlanarMirror>())
+            {
+                t.rotation = Quaternion.LookRotation(m.transform.position - t.position, t.parent.up);
+                Render(main, $"Temp/snap_look_{m.name}.png");
+            }
             t.localRotation = original;
         }
 
@@ -201,6 +218,69 @@ public static class EditorCommandBridge
             p.WaitForExit(120000);
             Log($"{exe} {args} (exit {p.ExitCode}):\n{output}");
         }
+    }
+
+    /// <summary>Lista la jerarquía de un modelo con sus bounds (en espacio del modelo) a Temp/inspect.txt</summary>
+    static void InspectModel(string assetPath)
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+        if (prefab == null) { Log("inspect: no se pudo cargar " + assetPath); return; }
+        var go = (GameObject)UnityEngine.Object.Instantiate(prefab);
+        go.transform.position = Vector3.zero; go.transform.rotation = Quaternion.identity;
+        var sb = new System.Text.StringBuilder();
+        var all = go.GetComponentsInChildren<Renderer>(true);
+        Bounds total = new Bounds();
+        bool first = true;
+        foreach (var r in all) { if (first) { total = r.bounds; first = false; } else total.Encapsulate(r.bounds); }
+        sb.AppendLine($"TOTAL center={total.center} size={total.size}");
+        void Walk(Transform t, int depth)
+        {
+            var r = t.GetComponent<Renderer>();
+            string b = r != null ? $" c={r.bounds.center.ToString("F2")} s={r.bounds.size.ToString("F2")} mats={string.Join(",", System.Array.ConvertAll(r.sharedMaterials, m => m != null ? m.name : "null"))}" : "";
+            sb.AppendLine(new string(' ', depth * 2) + t.name + $" lp={t.localPosition.ToString("F2")} lr={t.localEulerAngles.ToString("F1")} ls={t.localScale.ToString("F2")}" + b);
+            foreach (Transform c in t) Walk(c, depth + 1);
+        }
+        Walk(go.transform, 0);
+        File.WriteAllText("Temp/inspect.txt", sb.ToString());
+        UnityEngine.Object.DestroyImmediate(go);
+        Log("inspect OK");
+    }
+
+    static void DumpMirrors()
+    {
+        var sb = new System.Text.StringBuilder();
+        var car = GameObject.FindWithTag("Vehicle").transform;
+        foreach (var m in UnityEngine.Object.FindObjectsByType<VRCar.Vehicle.PlanarMirror>())
+            sb.AppendLine($"{m.name} local={car.InverseTransformPoint(m.transform.position).ToString("F3")} fwdLocal={car.InverseTransformDirection(m.transform.forward).ToString("F2")} scale={m.transform.lossyScale.ToString("F2")}");
+        foreach (var n in new[] { "InteriorSeatsColor1", "InteriorSeatsFrame1", "InteriorSteeringWheel01", "BodyWindshield", "BodyDoorLWindow", "InteriorPillar", "Main Camera" })
+        {
+            var go = GameObject.Find(n);
+            if (go == null) { sb.AppendLine(n + " no encontrado"); continue; }
+            var r = go.GetComponent<Renderer>();
+            sb.AppendLine($"{n} pos={car.InverseTransformPoint(go.transform.position).ToString("F3")}" + (r != null ? $" bcenter={car.InverseTransformPoint(r.bounds.center).ToString("F3")} bsize={r.bounds.size.ToString("F3")} min={car.InverseTransformPoint(r.bounds.min).ToString("F2")} max={car.InverseTransformPoint(r.bounds.max).ToString("F2")}" : ""));
+        }
+        File.WriteAllText("Temp/mirrors.txt", sb.ToString());
+        Log("dump-mirrors OK");
+    }
+
+    static UnityEditor.PackageManager.Requests.AddRequest addRequest;
+
+    /// <summary>Instala un paquete UPM (resuelve la versión compatible más nueva)</summary>
+    static void AddPackage(string id)
+    {
+        addRequest = UnityEditor.PackageManager.Client.Add(id);
+        EditorApplication.update += WaitAdd;
+    }
+
+    static void WaitAdd()
+    {
+        if (addRequest == null || !addRequest.IsCompleted) return;
+        EditorApplication.update -= WaitAdd;
+        if (addRequest.Status == UnityEditor.PackageManager.StatusCode.Success)
+            Log($"addpkg OK {addRequest.Result.name}@{addRequest.Result.version}");
+        else
+            Log($"addpkg ERROR {addRequest.Error?.message}");
+        addRequest = null;
     }
 
     static void Log(string msg)
