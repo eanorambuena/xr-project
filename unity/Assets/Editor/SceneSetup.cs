@@ -7,7 +7,6 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.XR;
-using UnityEngine.SceneManagement;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Inputs;
 using VRCar.Core;
@@ -16,55 +15,60 @@ using VRCar.UI;
 using VRCar.Vehicle;
 
 /// <summary>
-/// Crea la escena CU1_CornerJudgment lista para jugar:
-/// - Piso, luz, conos (obstáculos) formando puertas cada vez más angostas
-/// - Vehículo con física, input, detector de obstáculos y feedback de colisión
-/// - XR Origin (XR Interaction Toolkit) sentado en el puesto del conductor
-/// - HUD en el tablero (distancia al obstáculo y velocidad)
-/// Controles sin visor: W/↑ acelera, S/↓/Espacio frena, A/D o ←/→ gira.
-/// Con Quest: gatillo derecho acelera, gatillo izquierdo frena, joystick derecho gira.
-/// Menú: VRCar → 2. Crear escena CU1
+/// Crea la escena de práctica: ESTACIONAMIENTO PERPENDICULAR (en batería).
+/// - Fila de espacios de 2.5 x 5.0 m con autos estacionados y un espacio libre (líneas amarillas)
+/// - Pasillo de 7 m y una segunda fila enfrente
+/// - Auto a escala 1:1 (Peugeot 308) con el conductor fijo en el asiento: solo gira la cabeza
+/// - Espejos retrovisor interior y laterales, de tamaño real y con reflejo correcto
+/// - HUD con distancia, velocidad y evaluación del estacionamiento
+/// Controles: gatillo der. acelera · gatillo izq. frena (mantenido detenido = reversa) · joystick der. gira.
+/// Sin visor: W/↑ acelera · S/↓/Espacio frena/reversa · A/D gira.
+/// Menú: VRCar → 2. Crear escena de estacionamiento
 /// </summary>
 public class SceneSetup
 {
-    public const string ScenePath = "Assets/Scenes/CU1_CornerJudgment.unity";
+    public const string ScenePath = "Assets/Scenes/Parking_Perpendicular.unity";
     const string MaterialsFolder = "Assets/Materials";
     const string InputActionsPath = "Assets/InputActions/VRCarInput.inputactions";
 
-    // Dimensiones Peugeot 308 (m)
+    // Peugeot 308 (m)
     static readonly Vector3 VehicleSize = new Vector3(1.856f, 1.535f, 4.255f);
-    const float DriverEyeHeight = 1.2f;   // altura de ojos sobre el suelo, sentado
+    const float DriverEyeHeight = 1.2f;                        // ojos sobre el suelo, sentado
+    static readonly Vector3 DriverSeat = new Vector3(-0.38f, 0f, -0.25f); // x,z relativos al centro del auto
 
-    [MenuItem("VRCar/2. Crear escena CU1", priority = 2)]
+    // Estacionamiento (m)
+    const float SpotWidth = 2.5f, SpotLength = 5.0f, AisleWidth = 7.0f;
+    const int SpotsPerRow = 7, TargetSpot = 3;
+
+    [MenuItem("VRCar/2. Crear escena de estacionamiento", priority = 2)]
     public static void SetupCU1Scene() => CreateScene(interactive: true);
 
     public static void CreateScene(bool interactive)
     {
         if (interactive && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
-
         var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
         CreateLight();
         CreateGround();
+        var spot = CreateParkingLot();
         var vehicle = CreateVehicle();
         var xrCamera = CreateXROrigin(vehicle.transform);
+        CreateMirrors(vehicle.transform, xrCamera.transform);
         var hud = CreateHUD(vehicle.transform, xrCamera);
-        var gates = CreateObstacles();
-
-        // CU1: puntuación por puerta (holgura) y resultado final
-        var judgment = new GameObject("CornerJudgment").AddComponent<CornerJudgment>();
-        judgment.Configure(gates, vehicle.GetComponent<BoxCollider>(), vehicle.GetComponent<CollisionFeedback>(), hud);
-        EditorUtility.SetDirty(judgment);
         new GameObject("GameManager").AddComponent<GameManager>();
+
+        var judgment = new GameObject("ParkingJudgment").AddComponent<ParkingJudgment>();
+        judgment.Configure(spot, SpotWidth, SpotLength, vehicle.GetComponent<BoxCollider>(), hud);
+        EditorUtility.SetDirty(judgment);
 
         System.IO.Directory.CreateDirectory("Assets/Scenes");
         EditorSceneManager.SaveScene(scene, ScenePath);
-        AddSceneToBuildSettings(ScenePath);
-        Debug.Log($"✅ Escena creada: {ScenePath}. Presiona Play y maneja con W/A/S/D.");
+        SetBuildScene(ScenePath);
+        Debug.Log($"✅ Escena creada: {ScenePath}");
     }
 
     // ------------------------------------------------------------------
-    static Material GetMaterial(string name, Color color)
+    static Material GetMaterial(string name, Color color, float smoothness = 0.2f)
     {
         System.IO.Directory.CreateDirectory(MaterialsFolder);
         string path = $"{MaterialsFolder}/{name}.mat";
@@ -75,6 +79,7 @@ public class SceneSetup
             AssetDatabase.CreateAsset(mat, path);
         }
         mat.color = color;
+        mat.SetFloat("_Glossiness", smoothness);
         EditorUtility.SetDirty(mat);
         return mat;
     }
@@ -88,14 +93,24 @@ public class SceneSetup
         {
             pm = new PhysicsMaterial("VehicleNoFriction")
             {
-                dynamicFriction = 0f,
-                staticFriction = 0f,
-                frictionCombine = PhysicsMaterialCombine.Minimum,
-                bounciness = 0f
+                dynamicFriction = 0f, staticFriction = 0f,
+                frictionCombine = PhysicsMaterialCombine.Minimum, bounciness = 0f
             };
             AssetDatabase.CreateAsset(pm, path);
         }
         return pm;
+    }
+
+    static GameObject Box(string name, Transform parent, Vector3 localPos, Vector3 size, Material mat, bool collider)
+    {
+        var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        go.name = name;
+        if (!collider) Object.DestroyImmediate(go.GetComponent<Collider>());
+        go.transform.SetParent(parent, false);
+        go.transform.localPosition = localPos;
+        go.transform.localScale = size;
+        go.GetComponent<Renderer>().sharedMaterial = mat;
+        return go;
     }
 
     static void CreateLight()
@@ -112,30 +127,96 @@ public class SceneSetup
     {
         var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
         ground.name = "Ground";
-        ground.transform.position = new Vector3(0, 0, 60);
-        ground.transform.localScale = new Vector3(6, 1, 16); // 60m x 160m
-        ground.GetComponent<Renderer>().sharedMaterial = GetMaterial("Ground", new Color(0.32f, 0.33f, 0.35f));
+        ground.transform.localScale = new Vector3(8, 1, 6); // 80 x 60 m
+        ground.GetComponent<Renderer>().sharedMaterial = GetMaterial("Asphalt", new Color(0.24f, 0.25f, 0.27f), 0.1f);
         ground.isStatic = true;
+    }
 
-        // Líneas de carril (solo visuales)
-        var lineMat = GetMaterial("LaneLine", Color.white);
-        foreach (float x in new[] { -3f, 3f })
+    /// <summary>
+    /// Dos filas de espacios perpendiculares separadas por un pasillo.
+    /// Fila A: z ∈ [0, 5], tope en z = 5.1. Fila B enfrente, al otro lado del pasillo.
+    /// Devuelve el Transform del espacio objetivo (centro, forward hacia el tope).
+    /// </summary>
+    static Transform CreateParkingLot()
+    {
+        var root = new GameObject("ParkingLot").transform;
+        var white = GetMaterial("LineWhite", new Color(0.92f, 0.92f, 0.9f));
+        var yellow = GetMaterial("LineYellow", new Color(1f, 0.8f, 0.1f));
+        var curbMat = GetMaterial("Concrete", new Color(0.62f, 0.62f, 0.6f));
+        var carColors = new[] { new Color(0.75f, 0.1f, 0.1f), new Color(0.85f, 0.85f, 0.88f), new Color(0.1f, 0.1f, 0.12f),
+                                new Color(0.2f, 0.35f, 0.55f), new Color(0.5f, 0.5f, 0.52f), new Color(0.9f, 0.9f, 0.9f), new Color(0.25f, 0.3f, 0.2f) };
+        Transform target = null;
+        float x0 = -(SpotsPerRow * SpotWidth) / 2f;
+
+        foreach (int row in new[] { 0, 1 })
         {
-            var line = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            line.name = x < 0 ? "LaneLine_Left" : "LaneLine_Right";
-            Object.DestroyImmediate(line.GetComponent<Collider>());
-            line.transform.position = new Vector3(x, 0.005f, 60);
-            line.transform.localScale = new Vector3(0.12f, 0.01f, 150);
-            line.GetComponent<Renderer>().sharedMaterial = lineMat;
-            line.isStatic = true;
+            // Fila 0: espacios hacia +Z (z 0..5). Fila 1: enfrente, hacia -Z (z -AisleWidth-5 .. -AisleWidth)
+            float dir = row == 0 ? 1f : -1f;
+            float zStart = row == 0 ? 0f : -AisleWidth;
+            float zCenter = zStart + dir * SpotLength / 2f;
+            float zEnd = zStart + dir * SpotLength;
+
+            for (int i = 0; i <= SpotsPerRow; i++)
+            {
+                float x = x0 + i * SpotWidth;
+                bool targetEdge = row == 0 && (i == TargetSpot || i == TargetSpot + 1);
+                var line = Box($"Line_R{row}_{i}", root, new Vector3(x, 0.003f, zCenter), new Vector3(0.1f, 0.005f, SpotLength), targetEdge ? yellow : white, false);
+                line.isStatic = true;
+            }
+            // Tope (solera) al fondo de la fila
+            var curb = Box($"Curb_R{row}", root, new Vector3(0, 0.075f, zEnd + dir * 0.15f), new Vector3(SpotsPerRow * SpotWidth, 0.15f, 0.3f), curbMat, true);
+            curb.tag = "Obstacle";
+            curb.isStatic = true;
+
+            for (int i = 0; i < SpotsPerRow; i++)
+            {
+                float cx = x0 + (i + 0.5f) * SpotWidth;
+                if (row == 0 && i == TargetSpot)
+                {
+                    var spot = new GameObject("TargetSpot").transform;
+                    spot.SetParent(root, false);
+                    spot.localPosition = new Vector3(cx, 0, zCenter);
+                    spot.localRotation = Quaternion.identity; // forward +Z = hacia el tope
+                    // línea de fondo amarilla del espacio objetivo
+                    Box("Line_Target_End", root, new Vector3(cx, 0.003f, zEnd - 0.05f), new Vector3(SpotWidth, 0.005f, 0.1f), yellow, false);
+                    target = spot;
+                    continue;
+                }
+                // Auto estacionado, un poco desplazado al azar (determinista) como en la vida real
+                float jitterX = Mathf.Sin(i * 12.9898f + row * 78.233f) * 0.12f;
+                float jitterZ = Mathf.Cos(i * 4.1414f + row * 3.3f) * 0.15f;
+                var carMat = GetMaterial($"ParkedCar_{(i + row * 3) % carColors.Length}", carColors[(i + row * 3) % carColors.Length], 0.6f);
+                CreateParkedCar(root, new Vector3(cx + jitterX, 0, zCenter + dir * (0.1f + jitterZ)), row == 0 ? 0f : 180f, carMat);
+            }
         }
+        return target;
+    }
+
+    /// <summary>Auto estacionado simple: carrocería + cabina, con collider (obstáculo)</summary>
+    static void CreateParkedCar(Transform parent, Vector3 pos, float yaw, Material paint)
+    {
+        var glass = GetMaterial("CarGlass", new Color(0.12f, 0.15f, 0.2f), 0.9f);
+        var car = new GameObject("ParkedCar");
+        car.tag = "Obstacle";
+        car.transform.SetParent(parent, false);
+        car.transform.localPosition = pos;
+        car.transform.localRotation = Quaternion.Euler(0, yaw, 0);
+        var col = car.AddComponent<BoxCollider>();
+        col.center = new Vector3(0, 0.72f, 0);
+        col.size = new Vector3(1.8f, 1.44f, 4.3f);
+        Box("Body", car.transform, new Vector3(0, 0.55f, 0), new Vector3(1.8f, 0.7f, 4.3f), paint, false);
+        Box("Cabin", car.transform, new Vector3(0, 1.15f, -0.2f), new Vector3(1.6f, 0.55f, 2.3f), glass, false);
+        car.isStatic = true;
     }
 
     static GameObject CreateVehicle()
     {
         var vehicle = new GameObject("Vehicle");
         vehicle.tag = "Vehicle";
-        vehicle.transform.position = new Vector3(0, VehicleSize.y / 2f + 0.01f, 0);
+        // Empieza en el pasillo, mirando a lo largo de él (+X), antes del espacio libre
+        float targetX = -(SpotsPerRow * SpotWidth) / 2f + (TargetSpot + 0.5f) * SpotWidth;
+        vehicle.transform.position = new Vector3(targetX - 5.5f, VehicleSize.y / 2f + 0.01f, -AisleWidth / 2f - 0.6f);
+        vehicle.transform.rotation = Quaternion.Euler(0, 90f, 0);
 
         var rb = vehicle.AddComponent<Rigidbody>();
         rb.interpolation = RigidbodyInterpolation.Interpolate;
@@ -143,32 +224,19 @@ public class SceneSetup
 
         var col = vehicle.AddComponent<BoxCollider>();
         col.size = VehicleSize;
-        // El auto "rueda": sin fricción de caja contra el piso (el frenado/arrastre lo maneja VehiclePhysics)
         col.sharedMaterial = GetPhysicsMaterial();
 
-        // Carrocería visual (baja, tipo descapotable para no tapar la vista del conductor)
-        var body = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        body.name = "Body";
-        Object.DestroyImmediate(body.GetComponent<Collider>());
-        body.transform.SetParent(vehicle.transform, false);
-        body.transform.localPosition = new Vector3(0, -VehicleSize.y / 2f + 0.45f, 0);
-        body.transform.localScale = new Vector3(VehicleSize.x, 0.9f, VehicleSize.z);
-        body.GetComponent<Renderer>().sharedMaterial = GetMaterial("Vehicle", new Color(0.15f, 0.35f, 0.85f));
-
-        // Parabrisas (marco) como referencia visual del frente
-        var dash = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        dash.name = "Dashboard";
-        Object.DestroyImmediate(dash.GetComponent<Collider>());
-        dash.transform.SetParent(vehicle.transform, false);
-        dash.transform.localPosition = new Vector3(0, -VehicleSize.y / 2f + 0.82f, 1.1f);
-        dash.transform.localScale = new Vector3(VehicleSize.x - 0.1f, 0.12f, 0.4f);
-        dash.GetComponent<Renderer>().sharedMaterial = GetMaterial("Dashboard", new Color(0.1f, 0.1f, 0.12f));
+        // Carrocería provisoria (se reemplazará por un modelo real): baja para no tapar la vista
+        var paint = GetMaterial("Vehicle", new Color(0.15f, 0.35f, 0.85f), 0.6f);
+        float floorY = -VehicleSize.y / 2f;
+        Box("Body", vehicle.transform, new Vector3(0, floorY + 0.45f, 0), new Vector3(VehicleSize.x, 0.9f, VehicleSize.z), paint, false);
+        Box("Dashboard", vehicle.transform, new Vector3(0, floorY + 0.82f, 0.55f), new Vector3(VehicleSize.x - 0.1f, 0.12f, 0.4f),
+            GetMaterial("Dashboard", new Color(0.1f, 0.1f, 0.12f)), false);
 
         vehicle.AddComponent<VehiclePhysics>();
         var input = vehicle.AddComponent<InputMapper>();
-        var actions = AssetDatabase.LoadAssetAtPath<InputActionAsset>(InputActionsPath);
         var so = new SerializedObject(input);
-        so.FindProperty("inputActions").objectReferenceValue = actions;
+        so.FindProperty("inputActions").objectReferenceValue = AssetDatabase.LoadAssetAtPath<InputActionAsset>(InputActionsPath);
         so.ApplyModifiedPropertiesWithoutUndo();
 
         vehicle.AddComponent<ObstacleDetector>();
@@ -178,15 +246,14 @@ public class SceneSetup
     }
 
     /// <summary>
-    /// XR Origin de XR Interaction Toolkit en el asiento del conductor.
-    /// Sin visor, la cámara queda a la altura de ojos (CameraYOffset) y sirve para probar en el editor.
+    /// XR Origin (XR Interaction Toolkit) fijo en el asiento del conductor.
+    /// Solo se sigue la rotación de la cabeza: el conductor mira libremente pero no se desplaza (anti-mareo).
     /// </summary>
     static Camera CreateXROrigin(Transform vehicle)
     {
         var originGO = new GameObject("XR Origin (Driver)");
         originGO.transform.SetParent(vehicle, false);
-        // Origen a nivel del suelo, en el puesto del conductor (izquierda, un poco atrás del centro)
-        originGO.transform.localPosition = new Vector3(-0.4f, -VehicleSize.y / 2f, -0.2f);
+        originGO.transform.localPosition = new Vector3(DriverSeat.x, -VehicleSize.y / 2f, DriverSeat.z);
 
         var offsetGO = new GameObject("Camera Offset");
         offsetGO.transform.SetParent(originGO.transform, false);
@@ -195,31 +262,28 @@ public class SceneSetup
         camGO.tag = "MainCamera";
         camGO.transform.SetParent(offsetGO.transform, false);
         var cam = camGO.AddComponent<Camera>();
-        cam.nearClipPlane = 0.05f;
+        cam.nearClipPlane = 0.03f;
         cam.farClipPlane = 500f;
         camGO.AddComponent<AudioListener>();
 
         var tpd = camGO.AddComponent<TrackedPoseDriver>();
         tpd.positionInput = new InputActionProperty(new InputAction("Position", InputActionType.Value, "<XRHMD>/centerEyePosition", expectedControlType: "Vector3"));
         tpd.rotationInput = new InputActionProperty(new InputAction("Rotation", InputActionType.Value, "<XRHMD>/centerEyeRotation", expectedControlType: "Quaternion"));
+        tpd.trackingType = TrackedPoseDriver.TrackingType.RotationOnly;
 
         var origin = originGO.AddComponent<XROrigin>();
         origin.Camera = cam;
         origin.CameraFloorOffsetObject = offsetGO;
-        origin.RequestedTrackingOriginMode = XROrigin.TrackingOriginMode.Device; // sentado: se recentra en el asiento
+        origin.RequestedTrackingOriginMode = XROrigin.TrackingOriginMode.Device;
         origin.CameraYOffset = DriverEyeHeight;
         offsetGO.transform.localPosition = new Vector3(0, DriverEyeHeight, 0);
 
-        // XRI: habilita las acciones del auto (mandos, teclado, gamepad)
-        var actions = AssetDatabase.LoadAssetAtPath<InputActionAsset>(InputActionsPath);
         var iam = originGO.AddComponent<InputActionManager>();
-        iam.actionAssets = new List<InputActionAsset> { actions };
-
-        // XRI: manager de interacciones + mandos rastreados (se ven en VR)
+        iam.actionAssets = new List<InputActionAsset> { AssetDatabase.LoadAssetAtPath<InputActionAsset>(InputActionsPath) };
         new GameObject("XR Interaction Manager").AddComponent<XRInteractionManager>();
+
         CreateController(offsetGO.transform, "Left Controller", "LeftHand");
         CreateController(offsetGO.transform, "Right Controller", "RightHand");
-
         return cam;
     }
 
@@ -230,16 +294,49 @@ public class SceneSetup
         var tpd = go.AddComponent<TrackedPoseDriver>();
         tpd.positionInput = new InputActionProperty(new InputAction("Position", InputActionType.Value, $"<XRController>{{{hand}}}/devicePosition", expectedControlType: "Vector3"));
         tpd.rotationInput = new InputActionProperty(new InputAction("Rotation", InputActionType.Value, $"<XRController>{{{hand}}}/deviceRotation", expectedControlType: "Quaternion"));
-
-        // Modelo simple del mando
-        var model = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        model.name = "Model";
-        Object.DestroyImmediate(model.GetComponent<Collider>());
-        model.transform.SetParent(go.transform, false);
-        model.transform.localScale = new Vector3(0.05f, 0.05f, 0.12f);
-        model.GetComponent<Renderer>().sharedMaterial = GetMaterial("Controller", new Color(0.9f, 0.9f, 0.9f));
-        // Fuera de VR quedan escondidos bajo el tablero
+        var model = Box("Model", go.transform, Vector3.zero, new Vector3(0.05f, 0.05f, 0.12f), GetMaterial("Controller", new Color(0.9f, 0.9f, 0.9f)), false);
         go.transform.localPosition = new Vector3(hand == "LeftHand" ? -0.2f : 0.2f, -0.5f, 0.3f);
+    }
+
+    /// <summary>
+    /// Espejos de tamaño real, ajustados como lo haría un conductor:
+    /// - Retrovisor interior 25 x 7 cm, centrado, mirando la luneta trasera
+    /// - Laterales 19 x 12 cm, mostrando apenas el costado del propio auto
+    /// </summary>
+    static void CreateMirrors(Transform vehicle, Transform eye)
+    {
+        float floorY = -VehicleSize.y / 2f;
+        Vector3 eyeLocal = new Vector3(DriverSeat.x, floorY + DriverEyeHeight, DriverSeat.z);
+        var housing = GetMaterial("MirrorHousing", new Color(0.08f, 0.08f, 0.09f));
+
+        // (nombre, posición local, tamaño del vidrio, dirección que debe mostrar)
+        var mirrors = new (string, Vector3, Vector2, Vector3)[]
+        {
+            ("Mirror_Interior", new Vector3(0.0f, eyeLocal.y + 0.10f, eyeLocal.z + 0.55f), new Vector2(0.25f, 0.07f), new Vector3(0f, -0.02f, -1f)),
+            ("Mirror_Left",     new Vector3(-VehicleSize.x / 2f - 0.10f, eyeLocal.y - 0.18f, eyeLocal.z + 0.60f), new Vector2(0.19f, 0.12f), new Vector3(-0.20f, -0.04f, -1f)),
+            ("Mirror_Right",    new Vector3(VehicleSize.x / 2f + 0.10f, eyeLocal.y - 0.18f, eyeLocal.z + 0.60f), new Vector2(0.19f, 0.12f), new Vector3(0.28f, -0.06f, -1f)),
+        };
+
+        foreach (var (name, pos, size, view) in mirrors)
+        {
+            var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            go.name = name;
+            Object.DestroyImmediate(go.GetComponent<Collider>());
+            go.transform.SetParent(vehicle, false);
+            go.transform.localPosition = pos;
+            // Normal del vidrio = bisectriz entre la dirección al ojo y la dirección que se quiere ver
+            Vector3 toEye = (eyeLocal - pos).normalized;
+            Vector3 normal = (toEye + view.normalized).normalized;
+            // La cara visible del Quad mira hacia -forward → forward = -normal
+            go.transform.localRotation = Quaternion.LookRotation(-normal, Vector3.up);
+            go.transform.localScale = new Vector3(size.x, size.y, 1f);
+            var mirror = go.AddComponent<PlanarMirror>();
+            mirror.eye = eye;
+
+            // Carcasa detrás del vidrio
+            var back = Box(name + "_Housing", vehicle, pos + normal * -0.03f, new Vector3(size.x + 0.03f, size.y + 0.03f, 0.05f), housing, false);
+            back.transform.localRotation = go.transform.localRotation;
+        }
     }
 
     static HUDManager CreateHUD(Transform vehicle, Camera cam)
@@ -251,22 +348,18 @@ public class SceneSetup
         canvas.worldCamera = cam;
         var rect = canvasGO.GetComponent<RectTransform>();
         rect.sizeDelta = new Vector2(700, 300);
-        rect.localScale = Vector3.one * 0.001f; // 0.7m x 0.3m
-        // Sobre el tablero, frente al conductor, algo bajo la línea de visión
-        rect.localPosition = new Vector3(-0.4f, -VehicleSize.y / 2f + DriverEyeHeight - 0.1f, 1.2f);
-        rect.localRotation = Quaternion.Euler(10f, 0, 0);
+        rect.localScale = Vector3.one * 0.0007f; // 49 x 21 cm, sobre el tablero
+        rect.localPosition = new Vector3(DriverSeat.x, -VehicleSize.y / 2f + DriverEyeHeight - 0.22f, DriverSeat.z + 0.95f);
+        rect.localRotation = Quaternion.Euler(15f, 0, 0);
 
         var bg = new GameObject("Background", typeof(RectTransform));
         bg.transform.SetParent(canvasGO.transform, false);
-        var bgImg = bg.AddComponent<UnityEngine.UI.Image>();
-        bgImg.color = new Color(0, 0, 0, 0.55f);
+        bg.AddComponent<UnityEngine.UI.Image>().color = new Color(0, 0, 0, 0.55f);
         Stretch(bg.GetComponent<RectTransform>());
 
-        CreateText(canvasGO.transform, "MessageText", "", new Vector2(0, 95), new Color(1f, 0.85f, 0.3f), 34, new Vector2(680, 100));
-        CreateText(canvasGO.transform, "DistanceText", "Distancia: --", new Vector2(-60, 0), Color.green);
-        CreateText(canvasGO.transform, "SpeedText", "Velocidad: 0 km/h", new Vector2(-60, -90), Color.white);
-        CreateText(canvasGO.transform, "GearText", "D", new Vector2(280, -45), new Color(0.5f, 0.85f, 1f), 110, new Vector2(120, 160));
-
+        CreateText(canvasGO.transform, "MessageText", "", new Vector2(0, 85), new Color(1f, 0.85f, 0.3f), 34, new Vector2(680, 120));
+        CreateText(canvasGO.transform, "DistanceText", "Distancia: --", new Vector2(0, -20), Color.green);
+        CreateText(canvasGO.transform, "SpeedText", "Velocidad: 0 km/h", new Vector2(0, -100), Color.white);
         return canvasGO.AddComponent<HUDManager>();
     }
 
@@ -280,7 +373,7 @@ public class SceneSetup
         tmp.alignment = TextAlignmentOptions.Center;
         tmp.color = color;
         var r = go.GetComponent<RectTransform>();
-        r.sizeDelta = size ?? new Vector2(560, 90);
+        r.sizeDelta = size ?? new Vector2(660, 80);
         r.anchoredPosition = pos;
     }
 
@@ -290,49 +383,8 @@ public class SceneSetup
         r.offsetMin = Vector2.zero; r.offsetMax = Vector2.zero;
     }
 
-    /// <summary>
-    /// Circuito de "juicio de esquinas": puertas de conos cada vez más angostas y un muro al final.
-    /// </summary>
-    static List<CornerJudgment.GateDefinition> CreateObstacles()
+    static void SetBuildScene(string path)
     {
-        var gateList = new List<CornerJudgment.GateDefinition>();
-        var parent = new GameObject("Obstacles").transform;
-        var coneMat = GetMaterial("Cone", new Color(1f, 0.45f, 0.05f));
-
-        // (distancia z, ancho de la puerta en m)
-        var gates = new[] { (15f, 3.2f), (30f, 2.8f), (45f, 2.4f), (60f, 2.15f) };
-        foreach (var (z, width) in gates)
-        {
-            var gate = new CornerJudgment.GateDefinition();
-            gateList.Add(gate);
-            foreach (float side in new[] { -1f, 1f })
-            {
-                var cone = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-                cone.name = $"Cone_z{z}_{(side < 0 ? "L" : "R")}";
-                cone.tag = "Obstacle";
-                cone.transform.SetParent(parent, false);
-                cone.transform.position = new Vector3(side * width / 2f, 0.5f, z);
-                cone.transform.localScale = new Vector3(0.35f, 0.5f, 0.35f); // 1m de alto
-                cone.GetComponent<Renderer>().sharedMaterial = coneMat;
-                if (side < 0) gate.leftCone = cone.transform; else gate.rightCone = cone.transform;
-            }
-        }
-
-        var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        wall.name = "Wall_End";
-        wall.tag = "Obstacle";
-        wall.transform.SetParent(parent, false);
-        wall.transform.position = new Vector3(0, 0.75f, 80f);
-        wall.transform.localScale = new Vector3(8f, 1.5f, 0.5f);
-        wall.GetComponent<Renderer>().sharedMaterial = GetMaterial("Wall", new Color(0.8f, 0.1f, 0.1f));
-        return gateList;
-    }
-
-    static void AddSceneToBuildSettings(string path)
-    {
-        var scenes = EditorBuildSettings.scenes.ToList();
-        if (scenes.Any(s => s.path == path)) return;
-        scenes.Insert(0, new EditorBuildSettingsScene(path, true));
-        EditorBuildSettings.scenes = scenes.ToArray();
+        EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(path, true) };
     }
 }

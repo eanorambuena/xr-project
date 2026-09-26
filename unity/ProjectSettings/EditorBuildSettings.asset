@@ -6,8 +6,8 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/CU1_CornerJudgment.unity
-    guid: dc08ef7d825a4e645b817ab108ae943b
+    path: Assets/Scenes/Parking_Perpendicular.unity
+    guid: 4f3f8012ae6b13646ab694e9c1738ae6
   m_configObjects:
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 9c4a250731f0b1b47a9a69df291869ed, type: 2}
     com.unity.xr.openxr.settings4: {fileID: 11400000, guid: 96dfcb28bbf6ee34b86244be45d315d2, type: 2}

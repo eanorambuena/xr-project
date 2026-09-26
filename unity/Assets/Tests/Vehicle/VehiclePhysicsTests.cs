@@ -115,7 +115,7 @@ namespace VRCar.Tests.Vehicle
         public void ApplyBraking_WithBrakeActive_DecreasesVelocity()
         {
             // Setup: dar velocidad inicial
-            rigidbody.linearVelocity = new Vector3(10, 0, 0);
+            rigidbody.linearVelocity = new Vector3(0, 0, 10); // hacia adelante
             float initialSpeed = rigidbody.linearVelocity.magnitude;
 
             // Frenar
@@ -147,7 +147,12 @@ namespace VRCar.Tests.Vehicle
             vehiclePhysics.steerInput = 0.5f;
             Quaternion initialRot = vehicleGameObject.transform.rotation;
 
-            vehiclePhysics.FixedUpdate(); Physics.Simulate(Time.fixedDeltaTime);
+            // Un auto solo gira si avanza (modelo de bicicleta): avanzar a 5 m/s durante 0.5 s
+            for (int i = 0; i < 25; i++)
+            {
+                rigidbody.linearVelocity = vehicleGameObject.transform.forward * 5f;
+                vehiclePhysics.FixedUpdate(); Physics.Simulate(Time.fixedDeltaTime);
+            }
 
             Quaternion finalRot = vehicleGameObject.transform.rotation;
 
@@ -222,7 +227,7 @@ namespace VRCar.Tests.Vehicle
             Quaternion initialRot = vehicleGameObject.transform.rotation;
             Vector3 initialVel = rigidbody.linearVelocity;
 
-            vehiclePhysics.FixedUpdate(); Physics.Simulate(Time.fixedDeltaTime);
+            for (int i = 0; i < 50; i++) { vehiclePhysics.FixedUpdate(); Physics.Simulate(Time.fixedDeltaTime); }
 
             // Debe acelerar
             Assert.Greater(rigidbody.linearVelocity.magnitude, initialVel.magnitude);

@@ -52,8 +52,29 @@ public static class EditorCommandBridge
         }
     }
 
+    /// <summary>
+    /// Siempre guarda la escena abierta antes de operar, para que Unity no bloquee con
+    /// el diálogo "Scene(s) Have Been Modified". Si la escena no tiene archivo (Untitled)
+    /// o su archivo ya no existe, se reemplaza por una escena vacía.
+    /// </summary>
+    static void SaveOpenScenes()
+    {
+        if (EditorApplication.isPlaying) return;
+        var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
+        if (!string.IsNullOrEmpty(scene.path) && File.Exists(scene.path))
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();
+        }
+        else if (scene.isDirty)
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.NewScene(
+                UnityEditor.SceneManagement.NewSceneSetup.EmptyScene, UnityEditor.SceneManagement.NewSceneMode.Single);
+        }
+    }
+
     static void Run(string cmd)
     {
+        if (cmd != "stop" && cmd != "autodrive" && cmd != "snap" && !cmd.StartsWith("wsl ") && !cmd.StartsWith("git ")) SaveOpenScenes();
         switch (cmd)
         {
             case "refresh": AssetDatabase.Refresh(); break;
@@ -64,6 +85,7 @@ public static class EditorCommandBridge
             case "play": EditorApplication.isPlaying = true; break;
             case "stop": EditorApplication.isPlaying = false; break;
             case "snap": Snap(); break;
+            case "snap-mirrors": SnapMirrorCheck(); break;
             case "autodrive": AutoDrive(); break;
             default:
                 if (cmd.StartsWith("wsl "))
@@ -86,15 +108,50 @@ public static class EditorCommandBridge
     static void Snap()
     {
         var main = Camera.main;
-        if (main != null) Render(main, "Temp/snap_driver.png");
+        if (main != null)
+        {
+            // Vista del conductor como con el visor puesto: al frente y girando la cabeza
+            var t = main.transform;
+            var original = t.localRotation;
+            // Los espejos se actualizan en LateUpdate (solo en Play): forzarlos para la captura
+            foreach (var m in UnityEngine.Object.FindObjectsByType<VRCar.Vehicle.PlanarMirror>()) m.Render();
+            Render(main, "Temp/snap_driver.png");
+            t.localRotation = original * Quaternion.Euler(8, -45, 0); Render(main, "Temp/snap_driver_left.png");
+            t.localRotation = original * Quaternion.Euler(5, 40, 0); Render(main, "Temp/snap_driver_right.png");
+            t.localRotation = original * Quaternion.Euler(-6, 22, 0); Render(main, "Temp/snap_driver_rearview.png");
+            t.localRotation = original * Quaternion.Euler(35, 0, 0); Render(main, "Temp/snap_driver_down.png");
+            t.localRotation = original;
+        }
 
         var go = new GameObject("SnapCam") { hideFlags = HideFlags.HideAndDontSave };
         var cam = go.AddComponent<Camera>();
-        go.transform.position = new Vector3(12f, 14f, -12f);
-        go.transform.LookAt(new Vector3(0, 0, 25f));
+        go.transform.position = new Vector3(-10f, 16f, -18f);
+        go.transform.LookAt(new Vector3(-1f, 0, -2f));
         cam.fieldOfView = 55f;
         Render(cam, "Temp/snap_overview.png");
         UnityEngine.Object.DestroyImmediate(go);
+    }
+
+    /// <summary>Pone marcadores de colores detrás del auto y captura, para verificar los espejos</summary>
+    static void SnapMirrorCheck()
+    {
+        var car = GameObject.FindWithTag("Vehicle");
+        if (car == null) return;
+        var markers = new System.Collections.Generic.List<GameObject>();
+        void Marker(Vector3 local, Color c)
+        {
+            var m = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            m.transform.position = car.transform.TransformPoint(local);
+            m.transform.localScale = new Vector3(1.2f, 1.8f, 1.2f);
+            var mat = new Material(Shader.Find("Unlit/Color")) { color = c };
+            m.GetComponent<Renderer>().sharedMaterial = mat;
+            markers.Add(m);
+        }
+        Marker(new Vector3(0, 0, -8), Color.red);          // detrás, al centro → retrovisor interior
+        Marker(new Vector3(-2.8f, 0, -9), Color.green);    // atrás a la izquierda → espejo izquierdo
+        Marker(new Vector3(2.8f, 0, -9), Color.yellow);    // atrás a la derecha → espejo derecho
+        Snap();
+        foreach (var m in markers) UnityEngine.Object.DestroyImmediate(m);
     }
 
     static void Render(Camera cam, string path)

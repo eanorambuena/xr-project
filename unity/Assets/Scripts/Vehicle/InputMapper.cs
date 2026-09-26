@@ -27,7 +27,6 @@ namespace VRCar.Vehicle
         private InputAction accelerateAction;
         private InputAction brakeAction;
         private InputAction steerAction;
-        private InputAction changeGearAction;
 
         // Referencias a controllers reales (asignadas en inspector o runtime)
         private InputDevice rightControllerDevice;
@@ -73,7 +72,6 @@ namespace VRCar.Vehicle
             accelerateAction = map.FindAction("Accelerate");
             brakeAction = map.FindAction("Brake");
             steerAction = map.FindAction("Steer");
-            changeGearAction = map.FindAction("ChangeGear");
             map.Enable();
         }
 
@@ -126,10 +124,6 @@ namespace VRCar.Vehicle
                 vehiclePhysics.accelerationInput = Mathf.Clamp01(accelerateAction.ReadValue<float>());
                 vehiclePhysics.brakeInput = brakeAction != null ? Mathf.Clamp01(brakeAction.ReadValue<float>()) : 0f;
                 vehiclePhysics.steerInput = steerAction != null ? Mathf.Clamp(steerAction.ReadValue<Vector2>().x, -1f, 1f) : 0f;
-                if (changeGearAction != null && changeGearAction.WasPressedThisFrame())
-                {
-                    vehiclePhysics.CycleGear();
-                }
                 return;
             }
 

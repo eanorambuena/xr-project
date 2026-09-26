@@ -58,14 +58,14 @@ public class UnityAutomation
         try
         {
             // Ensure scene exists
-            if (!File.Exists("Assets/Scenes/CU1_CornerJudgment.unity"))
+            if (!File.Exists("Assets/Scenes/Parking_Perpendicular.unity"))
             {
                 Debug.Log("Scene not found, creating it...");
                 SceneSetup.SetupCU1Scene();
             }
 
             // Build settings
-            var scenes = new[] { "Assets/Scenes/CU1_CornerJudgment.unity" };
+            var scenes = new[] { "Assets/Scenes/Parking_Perpendicular.unity" };
             var buildPlayerOptions = new BuildPlayerOptions
             {
                 scenes = scenes,

@@ -18,9 +18,7 @@ namespace VRCar.UI
         // Referencias a UI
         private TextMeshProUGUI distanceText;
         private TextMeshProUGUI speedText;
-        private TextMeshProUGUI gearText;      // opcional: marcha D/R/P
         private TextMeshProUGUI messageText;   // opcional: mensajes de CU1 (puertas, resultado)
-        private VRCar.Vehicle.VehiclePhysics vehiclePhysics;
         private string pendingMessage;
 
         // Referencias a sistema
@@ -63,10 +61,6 @@ namespace VRCar.UI
             {
                 vehicleRigidbody = FindFirstObjectByType<Rigidbody>();
             }
-            if (gearText == null)
-            {
-                gearText = FindComponentInChildren<TextMeshProUGUI>("GearText");
-            }
             if (messageText == null)
             {
                 messageText = FindComponentInChildren<TextMeshProUGUI>("MessageText");
@@ -78,11 +72,10 @@ namespace VRCar.UI
         }
 
         /// <summary>
-        /// Asignar textos opcionales de marcha y mensajes (usado por tests y setup)
+        /// Asignar el texto opcional de mensajes (usado por tests y setup)
         /// </summary>
-        public void SetExtraReferences(TextMeshProUGUI gearTxt, TextMeshProUGUI messageTxt)
+        public void SetMessageText(TextMeshProUGUI messageTxt)
         {
-            gearText = gearTxt;
             messageText = messageTxt;
         }
 
@@ -95,22 +88,11 @@ namespace VRCar.UI
             if (messageText != null) messageText.text = message;
         }
 
-        /// <summary>
-        /// Actualizar la marcha actual (D/R/P)
-        /// </summary>
-        private void UpdateGear()
-        {
-            if (gearText == null || vehicleRigidbody == null) return;
-            if (vehiclePhysics == null) vehiclePhysics = vehicleRigidbody.GetComponent<VRCar.Vehicle.VehiclePhysics>();
-            if (vehiclePhysics == null) return;
-            gearText.text = vehiclePhysics.GearLetter;
-        }
 
         public void Update()
         {
             UpdateDistance();
             UpdateSpeed();
-            UpdateGear();
         }
 
         /// <summary>
