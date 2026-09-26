@@ -143,8 +143,10 @@ namespace VRCar.UI
 
             float speedMs = vehicleRigidbody.linearVelocity.magnitude;
             float speedKmh = speedMs * 3.6f; // Convertir m/s a km/h
+            var physics = vehicleRigidbody.GetComponent<VRCar.Vehicle.VehiclePhysics>();
+            string mode = physics != null && physics.IsReversing ? " · Reversa" : "";
 
-            speedText.text = "Velocidad: " + speedKmh.ToString("F0", CultureInfo.InvariantCulture) + " km/h";
+            speedText.text = "Velocidad: " + speedKmh.ToString("F0", CultureInfo.InvariantCulture) + " km/h" + mode;
         }
 
         /// <summary>

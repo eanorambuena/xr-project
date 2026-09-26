@@ -74,7 +74,7 @@ public static class EditorCommandBridge
 
     static void Run(string cmd)
     {
-        if (cmd != "stop" && cmd != "autodrive" && cmd != "snap" && !cmd.StartsWith("wsl ") && !cmd.StartsWith("git ")) SaveOpenScenes();
+        if (cmd != "stop" && cmd != "autodrive" && cmd != "autopark" && cmd != "snap" && !cmd.StartsWith("wsl ") && !cmd.StartsWith("git ")) SaveOpenScenes();
         switch (cmd)
         {
             case "refresh": AssetDatabase.Refresh(); break;
@@ -87,6 +87,7 @@ public static class EditorCommandBridge
             case "snap": Snap(); break;
             case "snap-mirrors": SnapMirrorCheck(); break;
             case "autodrive": AutoDrive(); break;
+            case "autopark": AutoParkTest.Start(); break;
             default:
                 if (cmd.StartsWith("wsl "))
                 {

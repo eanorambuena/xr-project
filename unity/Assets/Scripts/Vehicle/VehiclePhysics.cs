@@ -101,7 +101,7 @@ namespace VRCar.Vehicle
 
         /// <summary>
         /// Reversa sin caja de cambios: detenido + freno mantenido → reversa.
-        /// Se sale de la reversa al soltar el freno con el auto detenido.
+        /// Se sale de la reversa al soltar ambos gatillos con el auto detenido.
         /// </summary>
         private void UpdateReverseState(float dt)
         {
@@ -118,8 +118,10 @@ namespace VRCar.Vehicle
                     brakeHeldStoppedTime = 0f;
                 }
             }
-            else if (brakeInput < 0.05f && stopped)
+            else if (brakeInput < 0.05f && accelerationInput < 0.05f && stopped)
             {
+                // Se sale de la reversa solo con AMBOS gatillos sueltos y el auto detenido:
+                // así frenar la reversa con el gatillo derecho nunca hace avanzar el auto.
                 IsReversing = false;
                 brakeHeldStoppedTime = 0f;
             }

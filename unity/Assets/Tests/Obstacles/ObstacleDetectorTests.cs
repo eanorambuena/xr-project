@@ -101,6 +101,29 @@ namespace VRCar.Tests.Obstacles
         ///   - GetClosestDistance() retorna 3.0m (el más cercano)
         /// </summary>
         [Test]
+        public void ObstacleDetector_WhenReversing_MeasuresFromRearBumper()
+        {
+            // Obstáculo 5 m DETRÁS y otro 3 m adelante: en reversa importa el de atrás
+            var behind = Track(new GameObject("Behind"));
+            behind.tag = "Obstacle";
+            behind.transform.position = new Vector3(0, 0, -5f);
+            behind.AddComponent<BoxCollider>();
+            var ahead = Track(new GameObject("Ahead"));
+            ahead.tag = "Obstacle";
+            ahead.transform.position = new Vector3(0, 0, 3f);
+            ahead.AddComponent<BoxCollider>();
+
+            obstacleDetector.SetReversing(true);
+            RunDetection();
+            Assert.AreEqual(BumperDistanceTo(5.0f), obstacleDetector.GetClosestDistance(), 0.05f,
+                "En reversa la distancia se mide desde el parachoques trasero hacia atrás");
+
+            obstacleDetector.SetReversing(false);
+            RunDetection();
+            Assert.AreEqual(BumperDistanceTo(3.0f), obstacleDetector.GetClosestDistance(), 0.05f);
+        }
+
+        [Test]
         public void ObstacleDetector_WithMultipleObstacles_ReturnClosest()
         {
             // Setup: crear múltiples obstáculos

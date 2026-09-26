@@ -137,6 +137,20 @@ namespace VRCar.Tests.Vehicle
         }
 
         [Test]
+        public void Reverse_StoppingWithAccelerator_DoesNotLurchForward()
+        {
+            // En reversa el gatillo derecho frena. Al detenerse, mantenerlo NO debe sacar el auto hacia adelante.
+            physics.brakeInput = 1f;
+            Step(Frames(2f));
+            Assert.Less(physics.SignedSpeed, -0.3f);
+            physics.brakeInput = 0f;
+            physics.accelerationInput = 1f;
+            Step(Frames(3f));
+            Assert.IsTrue(physics.IsReversing, "Sigue en reversa mientras se mantenga un pedal");
+            Assert.AreEqual(0f, physics.SignedSpeed, 0.05f, "Queda detenido, sin salir hacia adelante");
+        }
+
+        [Test]
         public void Braking_DoesNotEngageReverse_WhileMoving()
         {
             rb.linearVelocity = go.transform.forward * 5f;

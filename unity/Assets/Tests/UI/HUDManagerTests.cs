@@ -183,6 +183,21 @@ namespace VRCar.Tests.UI
         ///   - speedText muestra "36" (10 * 3.6 = 36 km/h)
         /// </summary>
         [Test]
+        public void HUDManager_Speed_ShowsReverse_WhenReversing()
+        {
+            var physics = vehicleGameObject.AddComponent<VRCar.Vehicle.VehiclePhysics>();
+            physics.Initialize();
+            Physics.simulationMode = SimulationMode.Script;
+            physics.brakeInput = 1f;   // detenido + freno mantenido = reversa
+            for (int i = 0; i < 60; i++) { physics.FixedUpdate(); Physics.Simulate(Time.fixedDeltaTime); }
+            Physics.simulationMode = SimulationMode.FixedUpdate;
+            Assert.IsTrue(physics.IsReversing);
+
+            hudManager.Update();
+            StringAssert.Contains("Reversa", speedText.text);
+        }
+
+        [Test]
         public void HUDManager_UpdateSpeed_ConvertsToKmh()
         {
             // Setup: vehículo con velocidad de 10 m/s

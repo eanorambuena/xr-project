@@ -74,6 +74,15 @@ namespace VRCar.Tests.Core
         }
 
         [Test]
+        public void ReversedIn_LeftRight_AreFromDriverPerspective()
+        {
+            // Entró en reversa (mirando a -Z) desplazado hacia +X: +X es la IZQUIERDA del conductor
+            var r = ParkingJudgment.Evaluate(Corners(new Vector3(0.2f, 0, 0), 180f), Vector3.back, spotGO.transform, W, L);
+            Assert.AreEqual((W - CarW) / 2f - 0.2f, r.LeftMargin, 0.001f);
+            Assert.AreEqual((W - CarW) / 2f + 0.2f, r.RightMargin, 0.001f);
+        }
+
+        [Test]
         public void TooCrooked_IsNotGood()
         {
             var r = ParkingJudgment.Evaluate(Corners(Vector3.zero, 8f), Quaternion.Euler(0, 8f, 0) * Vector3.forward, spotGO.transform, W, L);

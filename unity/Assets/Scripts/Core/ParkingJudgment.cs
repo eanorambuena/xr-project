@@ -105,11 +105,14 @@ namespace VRCar.Core
             float angle = Vector3.Angle(f, spot.forward);
             if (angle > 90f) angle = 180f - angle; // da igual si entró de frente o en reversa
 
+            // Izquierda/derecha según el conductor: si entró en reversa mira hacia afuera del espacio
+            bool facingOut = Vector3.Dot(f, spot.forward) < 0f;
+            float spotLeft = minX + halfW, spotRight = halfW - maxX;
             return new Result
             {
                 Inside = inside == corners.Length,
-                LeftMargin = minX + halfW,
-                RightMargin = halfW - maxX,
+                LeftMargin = facingOut ? spotRight : spotLeft,
+                RightMargin = facingOut ? spotLeft : spotRight,
                 EndMargin = halfL - maxZ,
                 AngleDeg = angle,
                 Overlap = inside / (float)corners.Length
