@@ -332,6 +332,8 @@ public class SceneSetup
             go.transform.localScale = new Vector3(size.x, size.y, 1f);
             var mirror = go.AddComponent<PlanarMirror>();
             mirror.eye = eye;
+            mirror.eyeCamera = eye.GetComponent<Camera>();
+            mirror.mirrorShader = Shader.Find("VRCar/StereoMirror");
 
             // Carcasa detrás del vidrio
             var back = Box(name + "_Housing", vehicle, pos + normal * -0.03f, new Vector3(size.x + 0.03f, size.y + 0.03f, 0.05f), housing, false);
