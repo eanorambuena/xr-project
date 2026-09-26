@@ -29,6 +29,29 @@ namespace VRCar.Vehicle
         public float maxSteerAngle = 45f;     // grados
 
         // ============================================================
+        // Marchas (D/R/P)
+        // ============================================================
+        public enum Gear { Drive, Reverse, Park }
+
+        public float reverseForceFactor = 0.5f;   // reversa con menos fuerza
+        public float maxGearChangeSpeed = 0.5f;   // m/s: solo se cambia casi detenido
+
+        private Gear gear = Gear.Drive;
+        public Gear CurrentGear => gear;
+        public string GearLetter => gear == Gear.Drive ? "D" : gear == Gear.Reverse ? "R" : "P";
+
+        /// <summary>
+        /// Cambia D → R → P → D. Solo si el auto está casi detenido.
+        /// </summary>
+        /// <returns>true si se cambió la marcha</returns>
+        public bool CycleGear()
+        {
+            if (GetCurrentSpeed() > maxGearChangeSpeed) return false;
+            gear = gear == Gear.Drive ? Gear.Reverse : gear == Gear.Reverse ? Gear.Park : Gear.Drive;
+            return true;
+        }
+
+        // ============================================================
         // Referencias
         // ============================================================
         private Rigidbody rb;
@@ -79,10 +102,11 @@ namespace VRCar.Vehicle
         /// </summary>
         private void ApplyMotorForce()
         {
-            if (accelerationInput > 0f)
+            if (accelerationInput > 0f && gear != Gear.Park)
             {
-                Vector3 forceDirection = transform.forward;
-                Vector3 motorForce = forceDirection * accelerationInput * accelerationForce;
+                Vector3 forceDirection = gear == Gear.Reverse ? -transform.forward : transform.forward;
+                float force = accelerationForce * (gear == Gear.Reverse ? reverseForceFactor : 1f);
+                Vector3 motorForce = forceDirection * accelerationInput * force;
                 rb.AddForce(motorForce, ForceMode.Force);
             }
         }

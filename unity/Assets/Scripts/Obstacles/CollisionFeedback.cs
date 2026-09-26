@@ -10,6 +10,9 @@ namespace VRCar.Obstacles
     /// </summary>
     public class CollisionFeedback : MonoBehaviour
     {
+        /// <summary>Se dispara cada vez que el vehículo toca un obstáculo</summary>
+        public event System.Action ObstacleHit;
+
         /// <summary>
         /// Material del vehículo: instancia propia en Play Mode, sharedMaterial en Edit Mode (tests)
         /// </summary>
@@ -88,7 +91,10 @@ namespace VRCar.Obstacles
                 VehicleMaterial.color = Color.red;
             }
 
-            // Reproducir sonido de colisión
+            ObstacleHit?.Invoke();
+
+            // Reproducir sonido de colisión (si no hay clip asignado se genera un "beep")
+            if (collisionClip == null) collisionClip = CreateBeep();
             if (audioSource != null && collisionClip != null)
             {
                 audioSource.PlayOneShot(collisionClip);
@@ -137,6 +143,21 @@ namespace VRCar.Obstacles
         public void SetCollisionClip(AudioClip clip)
         {
             collisionClip = clip;
+        }
+    
+        private static AudioClip CreateBeep()
+        {
+            const int rate = 44100; const float duration = 0.25f;
+            int n = (int)(rate * duration);
+            var data = new float[n];
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)rate;
+                data[i] = Mathf.Sin(2f * Mathf.PI * 660f * t) * Mathf.Exp(-t * 12f) * 0.8f;
+            }
+            var clip = AudioClip.Create("CollisionBeep", n, 1, rate, false);
+            clip.SetData(data, 0);
+            return clip;
         }
     }
 }

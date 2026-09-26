@@ -48,8 +48,13 @@ public class SceneSetup
         CreateGround();
         var vehicle = CreateVehicle();
         var xrCamera = CreateXROrigin(vehicle.transform);
-        CreateHUD(vehicle.transform, xrCamera);
-        CreateObstacles();
+        var hud = CreateHUD(vehicle.transform, xrCamera);
+        var gates = CreateObstacles();
+
+        // CU1: puntuación por puerta (holgura) y resultado final
+        var judgment = new GameObject("CornerJudgment").AddComponent<CornerJudgment>();
+        judgment.Configure(gates, vehicle.GetComponent<BoxCollider>(), vehicle.GetComponent<CollisionFeedback>(), hud);
+        EditorUtility.SetDirty(judgment);
         new GameObject("GameManager").AddComponent<GameManager>();
 
         System.IO.Directory.CreateDirectory("Assets/Scenes");
@@ -237,7 +242,7 @@ public class SceneSetup
         go.transform.localPosition = new Vector3(hand == "LeftHand" ? -0.2f : 0.2f, -0.5f, 0.3f);
     }
 
-    static void CreateHUD(Transform vehicle, Camera cam)
+    static HUDManager CreateHUD(Transform vehicle, Camera cam)
     {
         var canvasGO = new GameObject("HUD", typeof(RectTransform));
         canvasGO.transform.SetParent(vehicle, false);
@@ -245,10 +250,10 @@ public class SceneSetup
         canvas.renderMode = RenderMode.WorldSpace;
         canvas.worldCamera = cam;
         var rect = canvasGO.GetComponent<RectTransform>();
-        rect.sizeDelta = new Vector2(600, 220);
-        rect.localScale = Vector3.one * 0.001f; // 0.6m x 0.22m
+        rect.sizeDelta = new Vector2(700, 300);
+        rect.localScale = Vector3.one * 0.001f; // 0.7m x 0.3m
         // Sobre el tablero, frente al conductor, algo bajo la línea de visión
-        rect.localPosition = new Vector3(-0.4f, -VehicleSize.y / 2f + DriverEyeHeight - 0.2f, 1.1f);
+        rect.localPosition = new Vector3(-0.4f, -VehicleSize.y / 2f + DriverEyeHeight - 0.1f, 1.2f);
         rect.localRotation = Quaternion.Euler(10f, 0, 0);
 
         var bg = new GameObject("Background", typeof(RectTransform));
@@ -257,23 +262,25 @@ public class SceneSetup
         bgImg.color = new Color(0, 0, 0, 0.55f);
         Stretch(bg.GetComponent<RectTransform>());
 
-        CreateText(canvasGO.transform, "DistanceText", "Distancia: --", new Vector2(0, 50), Color.green);
-        CreateText(canvasGO.transform, "SpeedText", "Velocidad: 0 km/h", new Vector2(0, -50), Color.white);
+        CreateText(canvasGO.transform, "MessageText", "", new Vector2(0, 95), new Color(1f, 0.85f, 0.3f), 34, new Vector2(680, 100));
+        CreateText(canvasGO.transform, "DistanceText", "Distancia: --", new Vector2(-60, 0), Color.green);
+        CreateText(canvasGO.transform, "SpeedText", "Velocidad: 0 km/h", new Vector2(-60, -90), Color.white);
+        CreateText(canvasGO.transform, "GearText", "D", new Vector2(280, -45), new Color(0.5f, 0.85f, 1f), 110, new Vector2(120, 160));
 
-        canvasGO.AddComponent<HUDManager>();
+        return canvasGO.AddComponent<HUDManager>();
     }
 
-    static void CreateText(Transform parent, string name, string text, Vector2 pos, Color color)
+    static void CreateText(Transform parent, string name, string text, Vector2 pos, Color color, float fontSize = 56, Vector2? size = null)
     {
         var go = new GameObject(name, typeof(RectTransform));
         go.transform.SetParent(parent, false);
         var tmp = go.AddComponent<TextMeshProUGUI>();
         tmp.text = text;
-        tmp.fontSize = 56;
+        tmp.fontSize = fontSize;
         tmp.alignment = TextAlignmentOptions.Center;
         tmp.color = color;
         var r = go.GetComponent<RectTransform>();
-        r.sizeDelta = new Vector2(580, 90);
+        r.sizeDelta = size ?? new Vector2(560, 90);
         r.anchoredPosition = pos;
     }
 
@@ -286,8 +293,9 @@ public class SceneSetup
     /// <summary>
     /// Circuito de "juicio de esquinas": puertas de conos cada vez más angostas y un muro al final.
     /// </summary>
-    static void CreateObstacles()
+    static List<CornerJudgment.GateDefinition> CreateObstacles()
     {
+        var gateList = new List<CornerJudgment.GateDefinition>();
         var parent = new GameObject("Obstacles").transform;
         var coneMat = GetMaterial("Cone", new Color(1f, 0.45f, 0.05f));
 
@@ -295,6 +303,8 @@ public class SceneSetup
         var gates = new[] { (15f, 3.2f), (30f, 2.8f), (45f, 2.4f), (60f, 2.15f) };
         foreach (var (z, width) in gates)
         {
+            var gate = new CornerJudgment.GateDefinition();
+            gateList.Add(gate);
             foreach (float side in new[] { -1f, 1f })
             {
                 var cone = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
@@ -304,6 +314,7 @@ public class SceneSetup
                 cone.transform.position = new Vector3(side * width / 2f, 0.5f, z);
                 cone.transform.localScale = new Vector3(0.35f, 0.5f, 0.35f); // 1m de alto
                 cone.GetComponent<Renderer>().sharedMaterial = coneMat;
+                if (side < 0) gate.leftCone = cone.transform; else gate.rightCone = cone.transform;
             }
         }
 
@@ -314,6 +325,7 @@ public class SceneSetup
         wall.transform.position = new Vector3(0, 0.75f, 80f);
         wall.transform.localScale = new Vector3(8f, 1.5f, 0.5f);
         wall.GetComponent<Renderer>().sharedMaterial = GetMaterial("Wall", new Color(0.8f, 0.1f, 0.1f));
+        return gateList;
     }
 
     static void AddSceneToBuildSettings(string path)
