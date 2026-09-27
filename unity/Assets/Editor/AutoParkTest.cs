@@ -15,7 +15,7 @@ public static class AutoParkTest
     enum Phase { Forward, Stop, TurnWheel, ReverseTurn, Straighten, ReverseStraight, Settle, Done }
 
     static Phase phase;
-    static bool sensorSnapped;
+    static bool sensorSnapped, turnSnapped;
     static VehiclePhysics physics;
     static Transform spot;
     static float phaseStart;
@@ -32,7 +32,7 @@ public static class AutoParkTest
         if (mapper != null) mapper.enabled = false;
         startTurnX = spot.position.x + turnStartOffset;
         File.WriteAllText(LogPath, $"autopark start turnX={startTurnX:F2}\n");
-        sensorSnapped = false;
+        sensorSnapped = false; turnSnapped = false;
         Set(Phase.Forward);
         EditorApplication.update -= Tick;
         EditorApplication.update += Tick;
@@ -48,13 +48,23 @@ public static class AutoParkTest
     static void Log(string msg)
     {
         var t = physics.transform;
-        File.AppendAllText(LogPath, $"{Time.time:F2}s {msg} pos=({t.position.x:F2},{t.position.z:F2}) yaw={t.eulerAngles.y:F1} v={physics.SignedSpeed:F2} steer={physics.CurrentSteerAngle:F1} rev={physics.IsReversing} sensor={SensorText()}\n");
+        File.AppendAllText(LogPath, $"{Time.time:F2}s {msg} pos=({t.position.x:F2},{t.position.z:F2}) yaw={t.eulerAngles.y:F1} v={physics.SignedSpeed:F2} steer={physics.CurrentSteerAngle:F1} rev={physics.IsReversing} sensor={SensorText()} wheels={WheelText()}\n");
     }
 
     static string SensorText()
     {
         var l = GameObject.Find("SensorLabel")?.GetComponent<TMPro.TextMeshProUGUI>();
         return l != null && l.gameObject.activeInHierarchy ? l.text : "(oculto)";
+    }
+
+    static string WheelText()
+    {
+        var v = physics.GetComponent<VehicleVisuals>();
+        if (v == null || v.frontLeft == null || v.frontRight == null) return "-";
+        // Dirección a la que apunta cada rueda delantera, relativa al auto (° yaw, + = derecha)
+        float yl = Vector3.SignedAngle(physics.transform.right, Vector3.ProjectOnPlane(v.frontLeft.right, physics.transform.up), physics.transform.up);
+        float yr = Vector3.SignedAngle(physics.transform.right, Vector3.ProjectOnPlane(v.frontRight.right, physics.transform.up), physics.transform.up);
+        return $"L{yl:F1}/R{yr:F1}";
     }
 
     static void Tick()
@@ -83,6 +93,13 @@ public static class AutoParkTest
                 break;
             case Phase.ReverseTurn:
                 physics.steerInput = -1f;
+                if (!turnSnapped && elapsed > 2f)
+                {
+                    turnSnapped = true;
+                    EditorCommandBridge.SnapPrefix = "turn";
+                    EditorCommandBridge.Snap();
+                    EditorCommandBridge.SnapPrefix = "snap";
+                }
                 physics.brakeInput = physics.SignedSpeed > -0.8f ? 0.45f : 0f; // ~3 km/h
                 if (Mathf.Abs(Mathf.DeltaAngle(t.eulerAngles.y, 180f)) < 4f) Set(Phase.Straighten);
                 break;

@@ -46,7 +46,7 @@ public static class SedanModel
         foreach (var c in model.GetComponentsInChildren<Collider>()) Object.DestroyImmediate(c);
 
         var glass = Mat("SedanGlass", new Color(0.55f, 0.65f, 0.72f, 0.18f), 0.95f, transparent: true);
-        var trim = Mat("SedanInterior", new Color(0.16f, 0.16f, 0.17f), 0.1f);
+        var trim = Mat("SedanInterior", new Color(0.24f, 0.24f, 0.25f), 0.1f);
         var paint = Mat("SedanPaint", new Color(0.15f, 0.33f, 0.72f), 0.65f);
 
         // Carrocería: pintura + vidrios transparentes + copia invertida para verla por dentro
@@ -78,8 +78,8 @@ public static class SedanModel
         float eye = 1.20f;
         var interior = new GameObject("Interior").transform;
         interior.SetParent(root.transform, false);
-        var dark = Mat("SedanDash", new Color(0.07f, 0.07f, 0.08f), 0.25f);
-        var fabric = Mat("SedanSeat", new Color(0.22f, 0.22f, 0.24f), 0.05f);
+        var dark = Mat("SedanDash", new Color(0.13f, 0.13f, 0.14f), 0.3f);
+        var fabric = Mat("SedanSeat", new Color(0.30f, 0.30f, 0.33f), 0.05f);
 
         Box("Floor", interior, new Vector3(0, 0.24f, -0.3f), new Vector3(1.55f, 0.04f, 2.6f), trim);
         Box("Dashboard", interior, new Vector3(0, 0.86f, 0.68f), new Vector3(1.62f, 0.22f, 0.50f), dark);
@@ -113,7 +113,7 @@ public static class SedanModel
         var ring = new GameObject("SteeringRing");
         ring.transform.SetParent(pivot, false);
         ring.AddComponent<MeshFilter>().sharedMesh = TorusMesh(0.18f, 0.016f);
-        ring.AddComponent<MeshRenderer>().sharedMaterial = dark;
+        ring.AddComponent<MeshRenderer>().sharedMaterial = Mat("SedanWheelRim", new Color(0.09f, 0.09f, 0.10f), 0.45f);
         foreach (float a in new[] { 90f, 210f, 330f })
         {
             var spoke = Box("Spoke", pivot, Vector3.zero, new Vector3(0.18f, 0.025f, 0.015f), dark);

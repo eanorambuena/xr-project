@@ -108,7 +108,7 @@ namespace VRCar.UI
             // Mostrar distancia
             if (float.IsInfinity(distance) || distance == float.MaxValue)
             {
-                distanceText.text = "Distancia: ∞";
+                distanceText.text = "Distancia: libre";
             }
             else
             {

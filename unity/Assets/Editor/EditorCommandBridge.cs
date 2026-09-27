@@ -117,6 +117,7 @@ public static class EditorCommandBridge
     }
 
     /// <summary>Renderiza la vista del conductor y una vista general a Temp/*.png</summary>
+    internal static string SnapPrefix = "snap";
     internal static void Snap()
     {
         var main = Camera.main;
@@ -127,16 +128,16 @@ public static class EditorCommandBridge
             var original = t.localRotation;
             // Los espejos se actualizan en LateUpdate (solo en Play): forzarlos para la captura
             foreach (var m in UnityEngine.Object.FindObjectsByType<VRCar.Vehicle.PlanarMirror>()) m.Render();
-            Render(main, "Temp/snap_driver.png");
-            t.localRotation = original * Quaternion.Euler(8, -45, 0); Render(main, "Temp/snap_driver_left.png");
-            t.localRotation = original * Quaternion.Euler(5, 40, 0); Render(main, "Temp/snap_driver_right.png");
-            t.localRotation = original * Quaternion.Euler(-6, 22, 0); Render(main, "Temp/snap_driver_rearview.png");
-            t.localRotation = original * Quaternion.Euler(35, 0, 0); Render(main, "Temp/snap_driver_down.png");
+            Render(main, $"Temp/{SnapPrefix}_driver.png");
+            t.localRotation = original * Quaternion.Euler(8, -45, 0); Render(main, $"Temp/{SnapPrefix}_driver_left.png");
+            t.localRotation = original * Quaternion.Euler(5, 40, 0); Render(main, $"Temp/{SnapPrefix}_driver_right.png");
+            t.localRotation = original * Quaternion.Euler(-6, 22, 0); Render(main, $"Temp/{SnapPrefix}_driver_rearview.png");
+            t.localRotation = original * Quaternion.Euler(35, 0, 0); Render(main, $"Temp/{SnapPrefix}_driver_down.png");
             // Mirar directo a cada espejo
             foreach (var m in UnityEngine.Object.FindObjectsByType<VRCar.Vehicle.PlanarMirror>())
             {
                 t.rotation = Quaternion.LookRotation(m.transform.position - t.position, t.parent.up);
-                Render(main, $"Temp/snap_look_{m.name}.png");
+                Render(main, $"Temp/{SnapPrefix}_look_{m.name}.png");
             }
             t.localRotation = original;
         }
@@ -146,7 +147,7 @@ public static class EditorCommandBridge
         go.transform.position = new Vector3(-10f, 16f, -18f);
         go.transform.LookAt(new Vector3(-1f, 0, -2f));
         cam.fieldOfView = 55f;
-        Render(cam, "Temp/snap_overview.png");
+        Render(cam, $"Temp/{SnapPrefix}_overview.png");
         UnityEngine.Object.DestroyImmediate(go);
     }
 
