@@ -485,6 +485,19 @@ public class SceneSetup
             // Carcasa detrás del vidrio
             var back = Box(name + "_Housing", vehicle, pos + normal * -0.03f, new Vector3(size.x + 0.03f, size.y + 0.03f, 0.05f), housing, false);
             back.transform.localRotation = go.transform.localRotation;
+            if (name != "Mirror_Interior")
+            {
+                // Brazo que une el espejo a la puerta
+                float side = Mathf.Sign(pos.x), bodyX = side * (VehicleSize.x / 2f - 0.06f);
+                float len = Mathf.Abs(pos.x - bodyX);
+                Box(name + "_Arm", vehicle, new Vector3((pos.x + bodyX) / 2f, pos.y - size.y / 2f + 0.01f, pos.z + 0.03f),
+                    new Vector3(len, 0.035f, 0.07f), housing, false);
+            }
+            else
+            {
+                Box(name + "_Stem", vehicle, new Vector3(pos.x, pos.y + size.y / 2f + 0.05f, pos.z + 0.05f),
+                    new Vector3(0.025f, 0.10f, 0.025f), housing, false);
+            }
         }
     }
 
@@ -506,10 +519,56 @@ public class SceneSetup
         bg.AddComponent<UnityEngine.UI.Image>().color = new Color(0, 0, 0, 0.55f);
         Stretch(bg.GetComponent<RectTransform>());
 
-        CreateText(canvasGO.transform, "MessageText", "", new Vector2(0, 85), new Color(1f, 0.85f, 0.3f), 34, new Vector2(680, 120));
-        CreateText(canvasGO.transform, "DistanceText", "Distancia: --", new Vector2(0, -20), Color.green);
-        CreateText(canvasGO.transform, "SpeedText", "Velocidad: 0 km/h", new Vector2(0, -100), Color.white);
+        // Si el auto tiene pantalla central (SedanModel), el HUD va en ella
+        var screen = FindDeep(vehicle, "CenterScreen");
+        if (screen != null)
+        {
+            rect.sizeDelta = new Vector2(700, 400);
+            rect.localScale = Vector3.one * (0.25f / 700f);
+            canvasGO.transform.position = screen.position - screen.forward * 0.012f;
+            canvasGO.transform.rotation = screen.rotation;
+            CreateText(canvasGO.transform, "MessageText", "", new Vector2(0, 135), new Color(1f, 0.85f, 0.3f), 32, new Vector2(680, 120));
+            CreateText(canvasGO.transform, "DistanceText", "Distancia: --", new Vector2(0, 55), Color.green, 64);
+            CreateText(canvasGO.transform, "SpeedText", "Velocidad: 0 km/h", new Vector2(0, -25), Color.white, 64);
+        }
+        else
+        {
+            CreateText(canvasGO.transform, "MessageText", "", new Vector2(0, 85), new Color(1f, 0.85f, 0.3f), 34, new Vector2(680, 120));
+            CreateText(canvasGO.transform, "DistanceText", "Distancia: --", new Vector2(0, -20), Color.green);
+            CreateText(canvasGO.transform, "SpeedText", "Velocidad: 0 km/h", new Vector2(0, -100), Color.white);
+        }
+        CreateParkingSensor(canvasGO.transform, vehicle, screen != null ? new Vector2(0, -130) : new Vector2(0, -150));
         return canvasGO.AddComponent<HUDManager>();
+    }
+
+    /// <summary>Barras + distancia del sensor trasero (visibles solo en reversa).</summary>
+    static void CreateParkingSensor(Transform canvas, Transform vehicle, Vector2 pos)
+    {
+        var panel = new GameObject("ParkingSensorPanel", typeof(RectTransform));
+        panel.transform.SetParent(canvas, false);
+        var pr = panel.GetComponent<RectTransform>();
+        pr.sizeDelta = new Vector2(680, 110);
+        pr.anchoredPosition = pos;
+        var bars = new UnityEngine.UI.Image[4];
+        for (int i = 0; i < 4; i++)
+        {
+            var b = new GameObject("Bar" + i, typeof(RectTransform));
+            b.transform.SetParent(panel.transform, false);
+            bars[i] = b.AddComponent<UnityEngine.UI.Image>();
+            bars[i].color = new Color(1, 1, 1, 0.08f);
+            var r = b.GetComponent<RectTransform>();
+            r.sizeDelta = new Vector2(80, 30 + i * 18);
+            r.anchoredPosition = new Vector2(-300 + i * 95, -45 + (30 + i * 18) / 2f);
+        }
+        CreateText(panel.transform, "SensorLabel", "--", new Vector2(160, 0), Color.white, 56, new Vector2(300, 100));
+        var sensor = panel.AddComponent<ParkingSensor>();
+        sensor.bars = bars;
+        sensor.label = panel.transform.Find("SensorLabel").GetComponent<TextMeshProUGUI>();
+        sensor.panel = panel;
+        sensor.detector = vehicle.GetComponent<ObstacleDetector>();
+        sensor.physics = vehicle.GetComponent<VehiclePhysics>();
+        sensor.audioSource = vehicle.GetComponent<AudioSource>();
+        panel.SetActive(false);
     }
 
     static void CreateText(Transform parent, string name, string text, Vector2 pos, Color color, float fontSize = 56, Vector2? size = null)
