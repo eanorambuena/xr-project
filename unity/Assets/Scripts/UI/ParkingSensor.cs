@@ -74,6 +74,7 @@ namespace VRCar.UI
             if (Time.time >= nextBeep)
             {
                 audioSource.PlayOneShot(beep, 0.6f);
+                if (interval == 0f) CollisionFeedback.PulseControllers(0.25f, 0.08f); // vibración suave en STOP
                 nextBeep = Time.time + Mathf.Max(interval, beep.length);
             }
         }

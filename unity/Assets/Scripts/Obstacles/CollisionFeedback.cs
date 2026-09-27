@@ -92,6 +92,7 @@ namespace VRCar.Obstacles
             }
 
             ObstacleHit?.Invoke();
+            PulseControllers(0.8f, 0.25f);
 
             // Reproducir sonido de colisión (si no hay clip asignado se genera un "beep")
             if (collisionClip == null) collisionClip = CreateBeep();
@@ -145,6 +146,17 @@ namespace VRCar.Obstacles
             collisionClip = clip;
         }
     
+        /// <summary>Vibración de ambos controles (si hay visor conectado); sin XR no hace nada</summary>
+        public static void PulseControllers(float amplitude, float seconds)
+        {
+            foreach (var node in new[] { UnityEngine.XR.XRNode.LeftHand, UnityEngine.XR.XRNode.RightHand })
+            {
+                var dev = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(node);
+                if (dev.isValid && dev.TryGetHapticCapabilities(out var caps) && caps.supportsImpulse)
+                    dev.SendHapticImpulse(0, Mathf.Clamp01(amplitude), seconds);
+            }
+        }
+
         private static AudioClip CreateBeep()
         {
             const int rate = 44100; const float duration = 0.25f;
