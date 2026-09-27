@@ -309,6 +309,7 @@ public class SceneSetup
         }
 
         vehicle.AddComponent<VehiclePhysics>();
+        vehicle.AddComponent<EngineSound>();
         var input = vehicle.AddComponent<InputMapper>();
         var so = new SerializedObject(input);
         so.FindProperty("inputActions").objectReferenceValue = AssetDatabase.LoadAssetAtPath<InputActionAsset>(InputActionsPath);
