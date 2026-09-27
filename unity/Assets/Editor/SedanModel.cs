@@ -117,15 +117,24 @@ public static class SedanModel
         pivot.localRotation = Quaternion.Euler(22f, 0, 0); // columna inclinada hacia abajo
         var ring = new GameObject("SteeringRing");
         ring.transform.SetParent(pivot, false);
-        ring.AddComponent<MeshFilter>().sharedMesh = TorusMesh(0.18f, 0.016f);
+        ring.AddComponent<MeshFilter>().sharedMesh = TorusMesh(0.18f, 0.019f);
         ring.AddComponent<MeshRenderer>().sharedMaterial = Mat("SedanWheelRim", new Color(0.09f, 0.09f, 0.10f), 0.45f);
-        foreach (float a in new[] { 90f, 210f, 330f })
+        // Rayos a las 3, 9 y 6 (como un volante moderno) y centro redondo con airbag
+        var rim = Mat("SedanWheelRim", new Color(0.09f, 0.09f, 0.10f), 0.45f);
+        foreach (float a in new[] { 0f, 180f, 270f })
         {
-            var spoke = Box("Spoke", pivot, Vector3.zero, new Vector3(0.18f, 0.025f, 0.015f), dark);
+            var spoke = Box("Spoke", pivot, Vector3.zero, new Vector3(0.12f, 0.035f, 0.018f), dark);
             spoke.transform.localRotation = Quaternion.Euler(0, 0, a);
-            spoke.transform.localPosition = Quaternion.Euler(0, 0, a) * new Vector3(0.09f, 0, 0);
+            spoke.transform.localPosition = Quaternion.Euler(0, 0, a) * new Vector3(0.115f, 0, 0.01f);
         }
-        Box("Hub", pivot, new Vector3(0, 0, 0.02f), new Vector3(0.08f, 0.07f, 0.05f), dark);
+        var hub = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        hub.name = "Airbag";
+        Object.DestroyImmediate(hub.GetComponent<Collider>());
+        hub.transform.SetParent(pivot, false);
+        hub.transform.localRotation = Quaternion.Euler(90f, 0, 0);
+        hub.transform.localPosition = new Vector3(0, 0, 0.005f);
+        hub.transform.localScale = new Vector3(0.13f, 0.025f, 0.11f);
+        hub.GetComponent<Renderer>().sharedMaterial = rim;
         var column = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         column.name = "SteeringColumn";
         Object.DestroyImmediate(column.GetComponent<Collider>());
@@ -239,7 +248,7 @@ public static class SedanModel
 
     static Mesh TorusMesh(float R, float r, int seg = 48, int side = 10)
     {
-        var path = $"{MaterialsFolder}/SteeringRing.asset";
+        var path = $"{MaterialsFolder}/SteeringRing_{R:F3}_{r:F3}.asset";
         var existing = AssetDatabase.LoadAssetAtPath<Mesh>(path);
         if (existing != null) return existing;
         var v = new Vector3[(seg + 1) * (side + 1)];
