@@ -72,6 +72,7 @@ public class SceneSetup
         CreateLight();
         CreateGround();
         var spot = CreateParkingLot();
+        CreateSurroundings();
         var vehicle = CreateVehicle();
         var xrCamera = CreateXROrigin(vehicle.transform);
         CreateMirrors(vehicle.transform, xrCamera.transform);
@@ -211,6 +212,43 @@ public class SceneSetup
             }
         }
         return target;
+    }
+
+    /// <summary>
+    /// Entorno mínimo para dar referencias de escala y profundidad en VR (sin jugabilidad):
+    /// veredas detrás de cada tope, postes de luz y un muro/edificio al fondo de cada fila.
+    /// </summary>
+    static void CreateSurroundings()
+    {
+        var root = new GameObject("Surroundings").transform;
+        var sidewalk = GetMaterial("Sidewalk", new Color(0.55f, 0.55f, 0.53f));
+        var pole = GetMaterial("LampPole", new Color(0.2f, 0.21f, 0.23f), 0.5f);
+        var lamp = GetMaterial("LampHead", new Color(0.95f, 0.93f, 0.8f), 0.8f);
+        var wall = GetMaterial("BuildingWall", new Color(0.72f, 0.66f, 0.58f));
+        var window = GetMaterial("BuildingWindow", new Color(0.25f, 0.32f, 0.4f), 0.9f);
+        float lotWidth = SpotsPerRow * SpotWidth;
+        foreach (int row in new[] { 0, 1 })
+        {
+            float dir = row == 0 ? 1f : -1f;
+            float zCurb = (row == 0 ? 0f : -AisleWidth) + dir * (SpotLength + 0.3f);
+            // Vereda (2.5 m) — elevada 15 cm como el tope
+            var sw = Box($"Sidewalk_R{row}", root, new Vector3(0, 0.075f, zCurb + dir * 1.25f), new Vector3(lotWidth + 10f, 0.15f, 2.5f), sidewalk, true);
+            sw.tag = "Obstacle"; sw.isStatic = true;
+            // Postes de luz cada 2 espacios
+            for (int i = 0; i <= SpotsPerRow; i += 2)
+            {
+                float x = -lotWidth / 2f + i * SpotWidth;
+                var p = Box($"LampPole_R{row}_{i}", root, new Vector3(x, 2.5f, zCurb + dir * 0.6f), new Vector3(0.12f, 5f, 0.12f), pole, true);
+                p.tag = "Obstacle"; p.isStatic = true;
+                Box($"LampArm_R{row}_{i}", root, new Vector3(x, 4.95f, zCurb + dir * 0.6f - dir * 0.5f), new Vector3(0.08f, 0.08f, 1.0f), pole, false).isStatic = true;
+                Box($"LampHead_R{row}_{i}", root, new Vector3(x, 4.88f, zCurb + dir * 0.6f - dir * 0.95f), new Vector3(0.3f, 0.08f, 0.5f), lamp, false).isStatic = true;
+            }
+            // Edificio al fondo, con franjas de ventanas
+            float zWall = zCurb + dir * 4.5f;
+            Box($"Building_R{row}", root, new Vector3(0, 4f, zWall + dir * 1f), new Vector3(lotWidth + 16f, 8f, 2f), wall, true).isStatic = true;
+            for (int f = 0; f < 3; f++)
+                Box($"Windows_R{row}_{f}", root, new Vector3(0, 1.6f + f * 2.4f, zWall - dir * 0.01f), new Vector3(lotWidth + 14f, 1.1f, 0.02f), window, false).isStatic = true;
+        }
     }
 
     /// <summary>Auto estacionado simple: carrocería + cabina, con collider (obstáculo)</summary>
@@ -457,9 +495,9 @@ public class SceneSetup
         // (nombre, posición local, tamaño del vidrio, dirección que debe mostrar)
         var mirrors = new (string, Vector3, Vector2, Vector3)[]
         {
-            ("Mirror_Interior", new Vector3(0.0f, eyeLocal.y + 0.08f, eyeLocal.z + 0.50f), new Vector2(0.25f, 0.07f), new Vector3(0f, -0.10f, -1f)),
-            ("Mirror_Left",     ModelMirrorLeft ?? new Vector3(-VehicleSize.x / 2f - 0.10f, eyeLocal.y + 0.02f, eyeLocal.z + 0.30f), new Vector2(0.19f, 0.12f), new Vector3(-0.20f, -0.04f, -1f)),
-            ("Mirror_Right",    ModelMirrorRight ?? new Vector3(VehicleSize.x / 2f + 0.10f, eyeLocal.y + 0.02f, eyeLocal.z + 0.30f), new Vector2(0.19f, 0.12f), new Vector3(0.28f, -0.06f, -1f)),
+            ("Mirror_Interior", new Vector3(0.0f, eyeLocal.y + 0.08f, eyeLocal.z + 0.50f), new Vector2(0.25f, 0.07f), new Vector3(0f, -0.05f, -1f)),
+            ("Mirror_Left",     ModelMirrorLeft ?? new Vector3(-VehicleSize.x / 2f - 0.10f, eyeLocal.y - 0.04f, eyeLocal.z + 0.52f), new Vector2(0.19f, 0.12f), new Vector3(-0.20f, -0.04f, -1f)),
+            ("Mirror_Right",    ModelMirrorRight ?? new Vector3(VehicleSize.x / 2f + 0.10f, eyeLocal.y - 0.04f, eyeLocal.z + 0.52f), new Vector2(0.19f, 0.12f), new Vector3(0.28f, -0.06f, -1f)),
         };
 
         foreach (var (name, pos, size, view) in mirrors)
@@ -483,7 +521,7 @@ public class SceneSetup
             mirror.mirrorShader = Shader.Find("VRCar/StereoMirror");
 
             // Carcasa detrás del vidrio
-            var back = Box(name + "_Housing", vehicle, pos + normal * -0.03f, new Vector3(size.x + 0.03f, size.y + 0.03f, 0.05f), housing, false);
+            var back = Box(name + "_Housing", vehicle, pos + normal * -0.03f, new Vector3(size.x + 0.02f, size.y + 0.02f, 0.03f), housing, false);
             back.transform.localRotation = go.transform.localRotation;
             if (name != "Mirror_Interior")
             {
@@ -491,7 +529,7 @@ public class SceneSetup
                 float side = Mathf.Sign(pos.x), bodyX = side * (VehicleSize.x / 2f - 0.06f);
                 float len = Mathf.Abs(pos.x - bodyX);
                 Box(name + "_Arm", vehicle, new Vector3((pos.x + bodyX) / 2f, pos.y - size.y / 2f + 0.01f, pos.z + 0.03f),
-                    new Vector3(len, 0.035f, 0.07f), housing, false);
+                    new Vector3(len, 0.025f, 0.045f), housing, false);
             }
             else
             {
