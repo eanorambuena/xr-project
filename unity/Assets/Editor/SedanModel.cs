@@ -105,6 +105,14 @@ public static class SedanModel
             back.transform.localRotation = Quaternion.Euler(-12f, 0, 0);
             Box(side + "Headrest", interior, new Vector3(x, 1.18f, -0.54f), new Vector3(0.26f, 0.18f, 0.10f), fabric);
         }
+        // Paneles de puertas por dentro (bajo la línea de ventanas) con apoyabrazos
+        var doorMat = Mat("SedanDoorPanel", new Color(0.20f, 0.20f, 0.22f), 0.15f);
+        foreach (float side in new[] { -1f, 1f })
+        {
+            float x = side * 0.80f;
+            Box(side < 0 ? "DoorPanelL" : "DoorPanelR", interior, new Vector3(x, 0.66f, -0.35f), new Vector3(0.05f, 0.56f, 2.1f), doorMat);
+            Box(side < 0 ? "ArmrestL" : "ArmrestR", interior, new Vector3(x - side * 0.05f, 0.72f, -0.15f), new Vector3(0.08f, 0.05f, 0.45f), trim);
+        }
         Box("RearSeatCushion", interior, new Vector3(0, 0.44f, -1.15f), new Vector3(1.40f, 0.14f, 0.50f), fabric);
         var rback = Box("RearSeatBack", interior, new Vector3(0, 0.78f, -1.44f), new Vector3(1.40f, 0.60f, 0.12f), fabric);
         rback.transform.localRotation = Quaternion.Euler(-14f, 0, 0);
