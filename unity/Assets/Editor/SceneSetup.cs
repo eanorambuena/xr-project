@@ -225,8 +225,11 @@ public class SceneSetup
         var col = car.AddComponent<BoxCollider>();
         col.center = new Vector3(0, 0.72f, 0);
         col.size = new Vector3(1.8f, 1.44f, 4.3f);
-        Box("Body", car.transform, new Vector3(0, 0.55f, 0), new Vector3(1.8f, 0.7f, 4.3f), paint, false);
-        Box("Cabin", car.transform, new Vector3(0, 1.15f, -0.2f), new Vector3(1.6f, 0.55f, 2.3f), glass, false);
+        if (!SedanModel.BuildParked(car.transform, new Vector3(1.8f, 1.44f, 4.3f), paint, glass))
+        {
+            Box("Body", car.transform, new Vector3(0, 0.55f, 0), new Vector3(1.8f, 0.7f, 4.3f), paint, false);
+            Box("Cabin", car.transform, new Vector3(0, 1.15f, -0.2f), new Vector3(1.6f, 0.55f, 2.3f), glass, false);
+        }
         car.isStatic = true;
     }
 
@@ -248,7 +251,14 @@ public class SceneSetup
         col.sharedMaterial = GetPhysicsMaterial();
 
         ModelMirrorLeft = ModelMirrorRight = null;
-        if (!EditorPrefs.GetBool(UseCarModelPref, false) || !CreateVehicleModel(vehicle))
+        bool built = EditorPrefs.GetBool(UseCarModelPref, false) && CreateVehicleModel(vehicle);
+        if (!built && SedanModel.Build(vehicle, VehicleSize, out var sedan))
+        {
+            DriverSeat = sedan.driverSeat;
+            DriverEyeHeight = sedan.eyeHeight;
+            built = true;
+        }
+        if (!built)
         {
             // Sin modelo: carrocería de cajas, baja para no tapar la vista
             DriverEyeHeight = 1.2f;
@@ -447,7 +457,7 @@ public class SceneSetup
         // (nombre, posición local, tamaño del vidrio, dirección que debe mostrar)
         var mirrors = new (string, Vector3, Vector2, Vector3)[]
         {
-            ("Mirror_Interior", new Vector3(0.0f, eyeLocal.y + 0.08f, eyeLocal.z + 0.50f), new Vector2(0.25f, 0.07f), new Vector3(0f, 0.04f, -1f)),
+            ("Mirror_Interior", new Vector3(0.0f, eyeLocal.y + 0.08f, eyeLocal.z + 0.50f), new Vector2(0.25f, 0.07f), new Vector3(0f, -0.10f, -1f)),
             ("Mirror_Left",     ModelMirrorLeft ?? new Vector3(-VehicleSize.x / 2f - 0.10f, eyeLocal.y + 0.02f, eyeLocal.z + 0.30f), new Vector2(0.19f, 0.12f), new Vector3(-0.20f, -0.04f, -1f)),
             ("Mirror_Right",    ModelMirrorRight ?? new Vector3(VehicleSize.x / 2f + 0.10f, eyeLocal.y + 0.02f, eyeLocal.z + 0.30f), new Vector2(0.19f, 0.12f), new Vector3(0.28f, -0.06f, -1f)),
         };
