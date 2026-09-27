@@ -64,8 +64,13 @@ public static class SedanModel
         bodyR.sharedMaterials = mats;
         var inner = new GameObject("BodyInside");
         inner.transform.SetParent(body, false);
-        inner.AddComponent<MeshFilter>().sharedMesh = InvertedMesh(body.GetComponent<MeshFilter>().sharedMesh);
-        inner.AddComponent<MeshRenderer>().sharedMaterials = innerMats;
+        // Por dentro: el techo (sobre la línea de las ventanas) va en un tapiz claro, el resto en plástico gris
+        var headliner = Mat("SedanHeadliner", new Color(0.62f, 0.60f, 0.56f), 0.05f);
+        var innerMesh = InvertedMesh(body.GetComponent<MeshFilter>().sharedMesh, 1.12f, mats, out int roofSub);
+        var allInner = new Material[innerMesh.subMeshCount];
+        for (int i = 0; i < allInner.Length; i++) allInner[i] = i < innerMats.Length ? innerMats[i] : headliner;
+        inner.AddComponent<MeshFilter>().sharedMesh = innerMesh;
+        inner.AddComponent<MeshRenderer>().sharedMaterials = allInner;
 
         // Ruedas: pivote en el centro, escala uniforme
         float sw = sy;
@@ -196,19 +201,38 @@ public static class SedanModel
         return pivot;
     }
 
-    static Mesh InvertedMesh(Mesh src)
+    /// <summary>
+    /// Copia con caras invertidas (para ver la carrocería por dentro). Los triángulos que no son vidrio
+    /// y quedan sobre roofY (unidades del modelo) se mueven a un submesh extra al final (techo interior).
+    /// </summary>
+    static Mesh InvertedMesh(Mesh src, float roofY, Material[] mats, out int roofSub)
     {
         var m = Object.Instantiate(src);
         m.name = src.name + "_Inside";
         var n = m.normals;
         for (int i = 0; i < n.Length; i++) n[i] = -n[i];
         m.normals = n;
-        for (int s = 0; s < m.subMeshCount; s++)
+        var v = m.vertices;
+        int count = m.subMeshCount;
+        var roof = new System.Collections.Generic.List<int>();
+        var subs = new System.Collections.Generic.List<int>[count];
+        for (int s = 0; s < count; s++)
         {
             var t = m.GetTriangles(s);
-            for (int i = 0; i < t.Length; i += 3) { int a = t[i]; t[i] = t[i + 1]; t[i + 1] = a; }
-            m.SetTriangles(t, s);
+            bool glass = s < mats.Length && mats[s] != null && mats[s].name.StartsWith("SedanGlass");
+            subs[s] = new System.Collections.Generic.List<int>();
+            for (int i = 0; i < t.Length; i += 3)
+            {
+                int a = t[i], b = t[i + 1], c = t[i + 2];
+                float cy = (v[a].y + v[b].y + v[c].y) / 3f;
+                var dst = (!glass && cy > roofY) ? roof : subs[s];
+                dst.Add(b); dst.Add(a); dst.Add(c); // invertido
+            }
         }
+        m.subMeshCount = count + 1;
+        for (int s = 0; s < count; s++) m.SetTriangles(subs[s], s);
+        m.SetTriangles(roof, count);
+        roofSub = count;
         SaveMesh(m);
         return m;
     }
