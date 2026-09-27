@@ -87,9 +87,9 @@ public static class SedanModel
         var fabric = Mat("SedanSeat", new Color(0.30f, 0.30f, 0.33f), 0.05f);
 
         Box("Floor", interior, new Vector3(0, 0.24f, -0.3f), new Vector3(1.55f, 0.04f, 2.6f), trim);
-        Box("Dashboard", interior, new Vector3(0, 0.86f, 0.68f), new Vector3(1.62f, 0.22f, 0.50f), dark);
+        Box("Dashboard", interior, new Vector3(0, 0.81f, 0.68f), new Vector3(1.62f, 0.22f, 0.50f), dark);
         Box("DashboardLower", interior, new Vector3(0, 0.62f, 0.78f), new Vector3(1.55f, 0.30f, 0.30f), dark);
-        Box("Cowl", interior, new Vector3(0, 0.975f, 0.90f), new Vector3(1.55f, 0.02f, 0.25f), dark);
+        Box("Cowl", interior, new Vector3(0, 0.925f, 0.90f), new Vector3(1.55f, 0.02f, 0.25f), dark);
         var console = Box("CenterConsole", interior, new Vector3(0, 0.48f, 0.05f), new Vector3(0.24f, 0.22f, 0.95f), dark);
         Box("CenterStack", interior, new Vector3(0, 0.70f, 0.52f), new Vector3(0.28f, 0.30f, 0.18f), dark);
         // Pantalla central (aquí irá la cámara/sensor de retroceso)
@@ -135,7 +135,7 @@ public static class SedanModel
         column.transform.localScale = new Vector3(0.05f, 0.18f, 0.05f);
         column.GetComponent<Renderer>().sharedMaterial = dark;
         // Tablero de instrumentos detrás del volante
-        Box("Cluster", interior, new Vector3(seat.x, 0.99f, 0.52f), new Vector3(0.32f, 0.10f, 0.12f), dark);
+        Box("Cluster", interior, new Vector3(seat.x, 0.96f, 0.55f), new Vector3(0.32f, 0.08f, 0.14f), dark);
 
         var visuals = vehicle.AddComponent<VehicleVisuals>();
         visuals.frontLeft = fl; visuals.frontRight = fr; visuals.rearLeft = rear;
