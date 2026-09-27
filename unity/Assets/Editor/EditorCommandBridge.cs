@@ -89,6 +89,7 @@ public static class EditorCommandBridge
             case "dump-mirrors": DumpMirrors(); break;
             case "autodrive": AutoDrive(); break;
             case "autopark": AutoParkTest.Start(); break;
+            case "autopark-video": AutoParkTest.Start(record: true); break;
             default:
                 if (cmd.StartsWith("inspect "))
                 {
@@ -173,17 +174,19 @@ public static class EditorCommandBridge
         foreach (var m in markers) UnityEngine.Object.DestroyImmediate(m);
     }
 
-    static void Render(Camera cam, string path)
+    static void Render(Camera cam, string path) => Render(cam, path, 1280, 720, false);
+
+    internal static void Render(Camera cam, string path, int w, int h, bool jpg)
     {
-        var rt = new RenderTexture(1280, 720, 24);
+        var rt = new RenderTexture(w, h, 24);
         var prev = cam.targetTexture;
         cam.targetTexture = rt;
         cam.Render();
         RenderTexture.active = rt;
-        var tex = new Texture2D(1280, 720, TextureFormat.RGB24, false);
-        tex.ReadPixels(new Rect(0, 0, 1280, 720), 0, 0);
+        var tex = new Texture2D(w, h, TextureFormat.RGB24, false);
+        tex.ReadPixels(new Rect(0, 0, w, h), 0, 0);
         tex.Apply();
-        File.WriteAllBytes(path, tex.EncodeToPNG());
+        File.WriteAllBytes(path, jpg ? tex.EncodeToJPG(90) : tex.EncodeToPNG());
         cam.targetTexture = prev;
         RenderTexture.active = null;
         UnityEngine.Object.DestroyImmediate(rt);

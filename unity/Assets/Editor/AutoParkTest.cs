@@ -22,8 +22,53 @@ public static class AutoParkTest
     static float startTurnX;
     const string LogPath = "Temp/autopark.log";
 
-    public static void Start(float turnStartOffset = 4.6f)
+    // ---- Video: cuadros de la vista del conductor + cámara de seguimiento (Temp/video) ----
+    static bool recording;
+    static float nextFrame;
+    static int frameIndex;
+    static Camera chaseCam;
+    static float headYaw;
+    const string VideoDir = "Temp/video";
+    const float FrameStep = 0.1f; // 10 fps (tiempo de juego)
+
+    static void RecordFrame()
     {
+        if (!recording || Time.time < nextFrame) return;
+        nextFrame = Time.time + FrameStep;
+        var main = Camera.main;
+        if (main == null) return;
+        // Cabeza del conductor: mira adelante al avanzar y hacia la izquierda/espejo al retroceder
+        bool rev = phase == Phase.ReverseTurn || phase == Phase.Straighten || phase == Phase.ReverseStraight;
+        headYaw = Mathf.MoveTowards(headYaw, rev ? -55f : 0f, 90f * FrameStep);
+        var t = main.transform;
+        var orig = t.localRotation;
+        t.localRotation = Quaternion.Euler(8f, headYaw, 0f);
+        foreach (var m in Object.FindObjectsByType<VRCar.Vehicle.PlanarMirror>(FindObjectsSortMode.None)) m.Render();
+        EditorCommandBridge.Render(main, $"{VideoDir}/d_{frameIndex:D4}.jpg", 960, 540, true);
+        t.localRotation = orig;
+
+        if (chaseCam == null)
+        {
+            var go = new GameObject("ChaseCam") { hideFlags = HideFlags.HideAndDontSave };
+            chaseCam = go.AddComponent<Camera>();
+            chaseCam.fieldOfView = 55f;
+        }
+        var car = physics.transform;
+        Vector3 focus = Vector3.Lerp(car.position, spot.position, 0.3f);
+        chaseCam.transform.position = focus + new Vector3(-3f, 11f, -10f);
+        chaseCam.transform.LookAt(focus);
+        EditorCommandBridge.Render(chaseCam, $"{VideoDir}/c_{frameIndex:D4}.jpg", 960, 540, true);
+        frameIndex++;
+    }
+
+    public static void Start(float turnStartOffset = 4.6f, bool record = false)
+    {
+        recording = record; frameIndex = 0; nextFrame = 0f; headYaw = 0f;
+        if (record)
+        {
+            if (Directory.Exists(VideoDir)) Directory.Delete(VideoDir, true);
+            Directory.CreateDirectory(VideoDir);
+        }
         if (!EditorApplication.isPlaying) { Debug.LogWarning("autopark requiere Play"); return; }
         physics = Object.FindFirstObjectByType<VehiclePhysics>();
         spot = GameObject.Find("TargetSpot")?.transform;
@@ -72,6 +117,7 @@ public static class AutoParkTest
         if (!EditorApplication.isPlaying || physics == null) { EditorApplication.update -= Tick; return; }
         var t = physics.transform;
         float elapsed = Time.time - phaseStart;
+        RecordFrame();
         physics.accelerationInput = 0f; physics.brakeInput = 0f;
 
         switch (phase)
@@ -124,11 +170,12 @@ public static class AutoParkTest
                 break;
             case Phase.Settle:
                 // soltar todo: el auto queda detenido y se evalúa el estacionamiento
-                if (elapsed > 2.5f) { Set(Phase.Done); }
+                if (elapsed > (recording ? 4f : 2.5f)) { Set(Phase.Done); }
                 break;
             case Phase.Done:
                 var hud = GameObject.Find("MessageText")?.GetComponent<TMPro.TextMeshProUGUI>();
                 Log("HUD: " + (hud != null ? hud.text.Replace("\n", " | ") : "(sin HUD)"));
+                if (recording) { File.WriteAllText(VideoDir + "/done.txt", frameIndex.ToString()); recording = false; }
                 EditorApplication.update -= Tick;
                 return;
         }
