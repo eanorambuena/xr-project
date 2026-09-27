@@ -159,5 +159,23 @@ namespace VRCar.Tests.Vehicle
             Assert.IsFalse(physics.IsReversing);
             Assert.Greater(physics.SignedSpeed, 0f);
         }
-    }
+    
+        [Test]
+        public void Brake_HoldsCarCompletelyStopped_NoCreep()
+        {
+            rb.linearVelocity = go.transform.forward * 0.04f; // arrastre residual muy lento
+            physics.brakeInput = 1f;
+            Step(Frames(0.3f));
+            Assert.AreEqual(0f, rb.linearVelocity.magnitude, 1e-4f, "Con el freno apretado el auto debe quedar detenido del todo");
+        }
+
+        [Test]
+        public void Brake_DecelerationIsProgressive_NoInstantStop()
+        {
+            rb.linearVelocity = go.transform.forward * 2f; // ~7 km/h
+            physics.brakeInput = 0.5f;
+            Step(1);
+            Assert.Greater(rb.linearVelocity.magnitude, 1.9f, "Frenar a medias no debe detener de golpe");
+        }
+}
 }

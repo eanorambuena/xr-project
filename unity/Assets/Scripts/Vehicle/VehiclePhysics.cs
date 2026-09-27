@@ -146,10 +146,15 @@ namespace VRCar.Vehicle
         private void ApplyBraking()
         {
             float brake = IsReversing ? accelerationInput : brakeInput;
-            if (brake > 0f && rb.linearVelocity.magnitude > 0.05f)
-            {
-                rb.AddForce(-rb.linearVelocity.normalized * brake * brakingForce, ForceMode.Force);
-            }
+            if (brake <= 0f) return;
+            Vector3 v = rb.linearVelocity;
+            Vector3 horizontal = new Vector3(v.x, 0f, v.z);
+            // Si en este paso el freno alcanza para detenerlo, se detiene exacto (sin arrastre ni rebote)
+            float dvMax = brake * brakingForce / rb.mass * Time.fixedDeltaTime;
+            if (horizontal.magnitude <= dvMax)
+                rb.linearVelocity = new Vector3(0f, v.y, 0f);
+            else
+                rb.AddForce(-horizontal.normalized * brake * brakingForce, ForceMode.Force);
         }
 
         /// <summary>
