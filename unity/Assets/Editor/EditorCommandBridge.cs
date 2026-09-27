@@ -91,6 +91,22 @@ public static class EditorCommandBridge
             case "autopark": AutoParkTest.Start(); break;
             case "autopark-video": AutoParkTest.Start(record: true); break;
             default:
+                if (cmd.StartsWith("snap-eye "))
+                {
+                    // Captura con la cabeza desplazada en altura (estaturas distintas): snap-eye -0.10
+                    float dy = float.Parse(cmd.Substring(9), System.Globalization.CultureInfo.InvariantCulture);
+                    var cam = Camera.main;
+                    if (cam != null)
+                    {
+                        var p0 = cam.transform.localPosition;
+                        cam.transform.localPosition = p0 + Vector3.up * dy;
+                        SnapPrefix = dy < 0 ? "eyelow" : "eyehigh";
+                        Snap();
+                        SnapPrefix = "snap";
+                        cam.transform.localPosition = p0;
+                    }
+                    break;
+                }
                 if (cmd.StartsWith("inspect "))
                 {
                     InspectModel(cmd.Substring(8).Trim());
