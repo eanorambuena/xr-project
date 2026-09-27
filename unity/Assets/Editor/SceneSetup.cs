@@ -527,9 +527,9 @@ public class SceneSetup
             rect.localScale = Vector3.one * (0.25f / 700f);
             canvasGO.transform.position = screen.position - screen.forward * 0.012f;
             canvasGO.transform.rotation = screen.rotation;
-            CreateText(canvasGO.transform, "MessageText", "", new Vector2(0, 135), new Color(1f, 0.85f, 0.3f), 32, new Vector2(680, 120));
-            CreateText(canvasGO.transform, "DistanceText", "Distancia: --", new Vector2(0, 55), Color.green, 64);
-            CreateText(canvasGO.transform, "SpeedText", "Velocidad: 0 km/h", new Vector2(0, -25), Color.white, 64);
+            CreateText(canvasGO.transform, "MessageText", "", new Vector2(0, 150), new Color(1f, 0.85f, 0.3f), 30, new Vector2(680, 90));
+            CreateText(canvasGO.transform, "DistanceText", "Distancia: --", new Vector2(0, 70), Color.green, 56, new Vector2(680, 70));
+            CreateText(canvasGO.transform, "SpeedText", "Velocidad: 0 km/h", new Vector2(0, 0), Color.white, 50, new Vector2(690, 70));
         }
         else
         {
@@ -537,7 +537,7 @@ public class SceneSetup
             CreateText(canvasGO.transform, "DistanceText", "Distancia: --", new Vector2(0, -20), Color.green);
             CreateText(canvasGO.transform, "SpeedText", "Velocidad: 0 km/h", new Vector2(0, -100), Color.white);
         }
-        CreateParkingSensor(canvasGO.transform, vehicle, screen != null ? new Vector2(0, -130) : new Vector2(0, -150));
+        CreateParkingSensor(canvasGO.transform, vehicle, screen != null ? new Vector2(0, -125) : new Vector2(0, -150));
         return canvasGO.AddComponent<HUDManager>();
     }
 
@@ -561,7 +561,7 @@ public class SceneSetup
             r.anchoredPosition = new Vector2(-300 + i * 95, -45 + (30 + i * 18) / 2f);
         }
         CreateText(panel.transform, "SensorLabel", "--", new Vector2(160, 0), Color.white, 56, new Vector2(300, 100));
-        var sensor = panel.AddComponent<ParkingSensor>();
+        var sensor = canvas.gameObject.AddComponent<ParkingSensor>(); // en el canvas: sigue activo con el panel oculto
         sensor.bars = bars;
         sensor.label = panel.transform.Find("SensorLabel").GetComponent<TextMeshProUGUI>();
         sensor.panel = panel;
@@ -580,6 +580,10 @@ public class SceneSetup
         tmp.fontSize = fontSize;
         tmp.alignment = TextAlignmentOptions.Center;
         tmp.color = color;
+        // Si no cabe se achica en vez de pasar a otra línea (la pantalla es chica)
+        tmp.enableAutoSizing = true;
+        tmp.fontSizeMax = fontSize;
+        tmp.fontSizeMin = 16;
         var r = go.GetComponent<RectTransform>();
         r.sizeDelta = size ?? new Vector2(660, 80);
         r.anchoredPosition = pos;

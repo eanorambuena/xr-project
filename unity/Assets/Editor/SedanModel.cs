@@ -88,7 +88,7 @@ public static class SedanModel
         var console = Box("CenterConsole", interior, new Vector3(0, 0.48f, 0.05f), new Vector3(0.24f, 0.22f, 0.95f), dark);
         Box("CenterStack", interior, new Vector3(0, 0.70f, 0.52f), new Vector3(0.28f, 0.30f, 0.18f), dark);
         // Pantalla central (aquí irá la cámara/sensor de retroceso)
-        var screen = Box("CenterScreen", interior, new Vector3(0, 0.99f, 0.53f), new Vector3(0.26f, 0.15f, 0.02f),
+        var screen = Box("CenterScreen", interior, new Vector3(0, 1.05f, 0.56f), new Vector3(0.26f, 0.15f, 0.02f),
             Mat("SedanScreen", new Color(0.02f, 0.03f, 0.05f), 0.9f));
         screen.transform.localRotation = Quaternion.Euler(-12f, 0, 0);
 

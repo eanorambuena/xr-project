@@ -117,7 +117,7 @@ public static class EditorCommandBridge
     }
 
     /// <summary>Renderiza la vista del conductor y una vista general a Temp/*.png</summary>
-    static void Snap()
+    internal static void Snap()
     {
         var main = Camera.main;
         if (main != null)

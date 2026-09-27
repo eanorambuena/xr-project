@@ -18,6 +18,7 @@ namespace VRCar.Obstacles
         public float detectionRange = 10f;           // Rango máximo de detección (m)
         public float vehicleWidth = 1.856f;          // Ancho del vehículo Peugeot 308 (m)
         public float vehicleLength = 4.255f;         // Largo del vehículo (m)
+        public float lowSensorHeight = 0.10f;        // Altura de los sensores bajos sobre la base del auto (m)
 
         // Estado actual
         private float closestDistance = float.MaxValue;
@@ -77,6 +78,17 @@ namespace VRCar.Obstacles
             CheckRaycast(frontLeftCorner, dir);
             CheckRaycast(frontRightCorner, dir);
             CheckRaycast(centerFront, dir);
+
+            // Sensores bajos (altura de parachoques inferior, ~10 cm del suelo): detectan topes/soleras
+            var box = GetComponent<BoxCollider>();
+            if (box != null)
+            {
+                float bottom = box.center.y - box.size.y / 2f;
+                Vector3 low = transform.up * (bottom + lowSensorHeight);
+                CheckRaycast(frontLeftCorner + low, dir);
+                CheckRaycast(frontRightCorner + low, dir);
+                CheckRaycast(centerFront + low, dir);
+            }
         }
 
         /// <summary>

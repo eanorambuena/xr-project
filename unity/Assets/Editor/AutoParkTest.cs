@@ -15,6 +15,7 @@ public static class AutoParkTest
     enum Phase { Forward, Stop, TurnWheel, ReverseTurn, Straighten, ReverseStraight, Settle, Done }
 
     static Phase phase;
+    static bool sensorSnapped;
     static VehiclePhysics physics;
     static Transform spot;
     static float phaseStart;
@@ -31,6 +32,7 @@ public static class AutoParkTest
         if (mapper != null) mapper.enabled = false;
         startTurnX = spot.position.x + turnStartOffset;
         File.WriteAllText(LogPath, $"autopark start turnX={startTurnX:F2}\n");
+        sensorSnapped = false;
         Set(Phase.Forward);
         EditorApplication.update -= Tick;
         EditorApplication.update += Tick;
@@ -46,7 +48,13 @@ public static class AutoParkTest
     static void Log(string msg)
     {
         var t = physics.transform;
-        File.AppendAllText(LogPath, $"{Time.time:F2}s {msg} pos=({t.position.x:F2},{t.position.z:F2}) yaw={t.eulerAngles.y:F1} v={physics.SignedSpeed:F2} steer={physics.CurrentSteerAngle:F1} rev={physics.IsReversing}\n");
+        File.AppendAllText(LogPath, $"{Time.time:F2}s {msg} pos=({t.position.x:F2},{t.position.z:F2}) yaw={t.eulerAngles.y:F1} v={physics.SignedSpeed:F2} steer={physics.CurrentSteerAngle:F1} rev={physics.IsReversing} sensor={SensorText()}\n");
+    }
+
+    static string SensorText()
+    {
+        var l = GameObject.Find("SensorLabel")?.GetComponent<TMPro.TextMeshProUGUI>();
+        return l != null && l.gameObject.activeInHierarchy ? l.text : "(oculto)";
     }
 
     static void Tick()
@@ -86,6 +94,13 @@ public static class AutoParkTest
             case Phase.ReverseStraight:
                 physics.steerInput = 0f;
                 // Retroceder hasta que el centro quede ~en el centro del espacio (tope a ~40 cm)
+                var det = physics.GetComponent<VRCar.Obstacles.ObstacleDetector>();
+                if (!sensorSnapped && det != null && det.GetClosestDistance() < 0.9f)
+                {
+                    sensorSnapped = true;
+                    Log("SNAP sensor");
+                    EditorCommandBridge.Snap();
+                }
                 if (t.position.z < spot.position.z - 0.25f)
                     physics.brakeInput = physics.SignedSpeed > -0.6f ? 0.35f : 0f;
                 else { physics.accelerationInput = 0.8f; if (Mathf.Abs(physics.SignedSpeed) < 0.05f) Set(Phase.Settle); }
