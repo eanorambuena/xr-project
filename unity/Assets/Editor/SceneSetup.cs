@@ -142,7 +142,14 @@ public class SceneSetup
         light.type = LightType.Directional;
         light.intensity = 1.1f;
         light.shadows = LightShadows.Soft;
+        light.shadowStrength = 0.75f;
+        light.color = new Color(1f, 0.96f, 0.9f); // sol de tarde, levemente cálido
         lightGO.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+        // Luz ambiente de cielo/horizonte/suelo: la cabina (en sombra) no queda negra
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
+        RenderSettings.ambientSkyColor = new Color(0.55f, 0.62f, 0.72f);
+        RenderSettings.ambientEquatorColor = new Color(0.45f, 0.45f, 0.45f);
+        RenderSettings.ambientGroundColor = new Color(0.22f, 0.22f, 0.22f);
     }
 
     static void CreateGround()
