@@ -229,6 +229,18 @@ public class SceneSetup
                 CreateParkedCar(root, new Vector3(cx + jitterX, 0, zCenter + dir * (0.1f + jitterZ)), row == 0 ? 0f : 180f, carMat);
             }
         }
+        // Flechas de sentido pintadas en el pasillo (circulación hacia +X)
+        float aisleZ = -AisleWidth / 2f;
+        foreach (float ax in new[] { x0 + 2.5f, x0 + SpotsPerRow * SpotWidth - 4.5f })
+        {
+            Box("Arrow_Shaft", root, new Vector3(ax, 0.004f, aisleZ), new Vector3(1.6f, 0.005f, 0.18f), white, false).isStatic = true;
+            foreach (float sgn in new[] { 1f, -1f })
+            {
+                var head = Box("Arrow_Head", root, new Vector3(ax + 0.95f, 0.004f, aisleZ + sgn * 0.22f), new Vector3(0.7f, 0.005f, 0.16f), white, false);
+                head.transform.localRotation = Quaternion.Euler(0, sgn * 40f, 0);
+                head.isStatic = true;
+            }
+        }
         return target;
     }
 
