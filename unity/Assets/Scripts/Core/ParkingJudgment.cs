@@ -46,7 +46,7 @@ namespace VRCar.Core
             var result = Evaluate(VehicleCorners(vehicleCollider), vehicleCollider.transform.forward, spot, spotWidth, spotLength);
             if (result.Overlap > 0f) // solo informar si el auto está (al menos en parte) en el espacio
             {
-                hud?.ShowMessage(result.Message());
+                hud?.ShowMessage(result.Message() + "\nMantén A/X (o R) para reintentar");
                 reported = true;
             }
         }
