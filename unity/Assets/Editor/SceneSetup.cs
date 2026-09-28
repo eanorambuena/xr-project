@@ -152,12 +152,39 @@ public class SceneSetup
         RenderSettings.ambientGroundColor = new Color(0.22f, 0.22f, 0.22f);
     }
 
+    /// <summary>Textura de asfalto procedural (grano + manchas), guardada como PNG en Assets/Materials</summary>
+    static Texture2D AsphaltTexture()
+    {
+        const string path = MaterialsFolder + "/AsphaltTex.png";
+        var existing = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        if (existing != null) return existing;
+        const int n = 256;
+        var tex = new Texture2D(n, n, TextureFormat.RGB24, true);
+        var rng = new System.Random(3);
+        for (int y = 0; y < n; y++)
+            for (int x = 0; x < n; x++)
+            {
+                float stain = Mathf.PerlinNoise(x / 48f, y / 48f) * 0.06f;           // manchas grandes (tileable aprox.)
+                float grain = (float)rng.NextDouble() * 0.07f;                         // áridos
+                float v = 0.20f + grain + stain;
+                tex.SetPixel(x, y, new Color(v, v * 1.02f, v * 1.08f));
+            }
+        tex.Apply();
+        System.IO.Directory.CreateDirectory(MaterialsFolder);
+        System.IO.File.WriteAllBytes(path, tex.EncodeToPNG());
+        AssetDatabase.ImportAsset(path);
+        return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+    }
+
     static void CreateGround()
     {
         var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
         ground.name = "Ground";
         ground.transform.localScale = new Vector3(8, 1, 6); // 80 x 60 m
-        ground.GetComponent<Renderer>().sharedMaterial = GetMaterial("Asphalt", new Color(0.24f, 0.25f, 0.27f), 0.1f);
+        var asphalt = GetMaterial("Asphalt", Color.white, 0.1f);
+        asphalt.mainTexture = AsphaltTexture();
+        asphalt.mainTextureScale = new Vector2(40f, 30f); // ~2 m por repetición
+        ground.GetComponent<Renderer>().sharedMaterial = asphalt;
         ground.isStatic = true;
     }
 
