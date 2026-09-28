@@ -30,7 +30,7 @@ namespace VRCar.Core
 
         private void Start()
         {
-            hud?.ShowMessage("Estaciona en el espacio libre (entre las líneas amarillas)");
+            hud?.ShowMessage("Estaciona en el espacio A4 (líneas amarillas)");
         }
 
         private void Update()
