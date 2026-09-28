@@ -585,8 +585,10 @@ public class SceneSetup
             canvasGO.transform.position = screen.position - screen.forward * 0.012f;
             canvasGO.transform.rotation = screen.rotation;
             CreateText(canvasGO.transform, "MessageText", "", new Vector2(0, 148), new Color(1f, 0.85f, 0.3f), 40, new Vector2(680, 100));
-            CreateText(canvasGO.transform, "DistanceText", "Distancia: --", new Vector2(0, 70), Color.green, 56, new Vector2(680, 70));
-            CreateText(canvasGO.transform, "SpeedText", "Velocidad: 0 km/h", new Vector2(0, 0), Color.white, 50, new Vector2(690, 70));
+            CreateText(canvasGO.transform, "DistanceText", "Distancia: --", new Vector2(0, 40), Color.green, 70, new Vector2(680, 90));
+            // La velocidad ya está en el velocímetro detrás del volante: aquí se oculta
+            CreateText(canvasGO.transform, "SpeedText", "Velocidad: 0 km/h", new Vector2(0, -30), Color.white, 50, new Vector2(690, 70));
+            canvasGO.transform.Find("SpeedText").gameObject.SetActive(false);
         }
         else
         {

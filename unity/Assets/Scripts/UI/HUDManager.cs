@@ -154,7 +154,7 @@ namespace VRCar.UI
         /// </summary>
         private T FindComponentInChildren<T>(string name) where T : Component
         {
-            foreach (Transform child in GetComponentsInChildren<Transform>())
+            foreach (Transform child in GetComponentsInChildren<Transform>(true))
             {
                 if (child.gameObject.name == name)
                 {
