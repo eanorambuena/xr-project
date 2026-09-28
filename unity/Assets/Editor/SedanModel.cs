@@ -153,6 +153,12 @@ public static class SedanModel
         column.GetComponent<Renderer>().sharedMaterial = dark;
         // Tablero de instrumentos detrás del volante
         Box("Cluster", interior, new Vector3(seat.x, 0.96f, 0.55f), new Vector3(0.32f, 0.08f, 0.14f), dark);
+        // Velocímetro digital y marcha en la cara del tablero que mira al conductor
+        var cluster = vehicle.AddComponent<VRCar.UI.ClusterDisplay>();
+        cluster.speedText = ClusterText(interior, "ClusterSpeed", new Vector3(seat.x - 0.04f, 0.965f, 0.478f), 0.45f, Color.white);
+        cluster.gearText = ClusterText(interior, "ClusterGear", new Vector3(seat.x + 0.09f, 0.965f, 0.478f), 0.4f, new Color(0.4f, 0.9f, 1f));
+        cluster.speedText.text = "0"; cluster.gearText.text = "D";
+        ClusterText(interior, "ClusterUnit", new Vector3(seat.x - 0.04f, 0.94f, 0.478f), 0.14f, new Color(0.7f, 0.7f, 0.7f)).text = "km/h";
 
         var visuals = vehicle.AddComponent<VehicleVisuals>();
         visuals.frontLeft = fl; visuals.frontRight = fr; visuals.rearLeft = rear;
@@ -189,6 +195,19 @@ public static class SedanModel
             r.gameObject.isStatic = true;
         }
         return true;
+    }
+
+    static TMPro.TextMeshPro ClusterText(Transform parent, string name, Vector3 pos, float size, Color color)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        go.transform.localPosition = pos;
+        var t = go.AddComponent<TMPro.TextMeshPro>();
+        t.fontSize = size;
+        t.alignment = TMPro.TextAlignmentOptions.Center;
+        t.color = color;
+        t.rectTransform.sizeDelta = new Vector2(0.12f, 0.05f);
+        return t;
     }
 
     static Transform Wheel(Transform root, Transform model, string name, float scale, bool flip)
