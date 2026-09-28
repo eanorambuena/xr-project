@@ -200,6 +200,17 @@ public class SceneSetup
             for (int i = 0; i < SpotsPerRow; i++)
             {
                 float cx = x0 + (i + 0.5f) * SpotWidth;
+                // Número pintado en el suelo, a la entrada del espacio, legible desde el pasillo
+                var num = new GameObject($"SpotNumber_R{row}_{i}");
+                num.transform.SetParent(root, false);
+                num.transform.localPosition = new Vector3(cx, 0.006f, zStart + dir * 0.9f);
+                num.transform.localRotation = Quaternion.Euler(90f, row == 0 ? 0f : 180f, 0f);
+                var tmp = num.AddComponent<TextMeshPro>();
+                tmp.text = (row == 0 ? "A" : "B") + (i + 1);
+                tmp.fontSize = 6f;
+                tmp.alignment = TextAlignmentOptions.Center;
+                tmp.color = (row == 0 && i == TargetSpot) ? new Color(1f, 0.8f, 0.1f) : new Color(0.92f, 0.92f, 0.9f, 0.9f);
+                tmp.rectTransform.sizeDelta = new Vector2(2f, 1f);
                 if (row == 0 && i == TargetSpot)
                 {
                     var spot = new GameObject("TargetSpot").transform;
