@@ -117,9 +117,13 @@ namespace VRCar.Vehicle
             mirrorCamera.projectionMatrix = GlassFrustum(mirrorCamera.transform, center,
                 transform.right * transform.lossyScale.x * 0.5f, transform.up * transform.lossyScale.y * 0.5f, 300f, out float near);
             mirrorCamera.nearClipPlane = near;
-            mirrorCamera.farClipPlane = 300f;
+            mirrorCamera.farClipPlane = 80f; // el estacionamiento completo cabe; menos geometría por espejo (Quest)
             mirrorCamera.targetTexture = target;
+            // Sin sombras en el reflejo: en un espejo chico no se notan y ahorran un pase de sombras por ojo
+            var prevShadows = QualitySettings.shadows;
+            QualitySettings.shadows = ShadowQuality.Disable;
             mirrorCamera.Render();
+            QualitySettings.shadows = prevShadows;
         }
 
         /// <summary>
