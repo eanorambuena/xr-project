@@ -70,6 +70,17 @@ namespace VRCar.Vehicle
             rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
         }
 
+        /// <summary>Vuelve el estado de manejo a cero (reinicio del ejercicio)</summary>
+        public void ResetDrivingState()
+        {
+            CurrentSteerAngle = 0f;
+            IsReversing = false;
+            brakeHeldStoppedTime = 0f;
+            accelerationInput = brakeInput = steerInput = 0f;
+            if (rb == null) rb = GetComponent<Rigidbody>();
+            if (rb != null) { rb.linearVelocity = Vector3.zero; rb.angularVelocity = Vector3.zero; }
+        }
+
         public static float ComputeMaxSteerAngle(float wheelbase, float track, float turningCircle)
         {
             float outerFront = turningCircle * 0.5f;
