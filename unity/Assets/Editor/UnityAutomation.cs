@@ -2,6 +2,10 @@ using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using System.IO;
+using UnityEditor.Build;
+using UnityEditor.Build.Reporting;
+using UnityEngine.XR.Management;
+using UnityEditor.XR.Management;
 
 /// <summary>
 /// Unity Batch Mode Automation - Run via CLI with command-line arguments
@@ -54,14 +58,14 @@ public class UnityAutomation
         try
         {
             // Ensure scene exists
-            if (!File.Exists("Assets/Scenes/CU1_CornerJudgment.unity"))
+            if (!File.Exists("Assets/Scenes/Parking_Perpendicular.unity"))
             {
                 Debug.Log("Scene not found, creating it...");
                 SceneSetup.SetupCU1Scene();
             }
 
             // Build settings
-            var scenes = new[] { "Assets/Scenes/CU1_CornerJudgment.unity" };
+            var scenes = new[] { "Assets/Scenes/Parking_Perpendicular.unity" };
             var buildPlayerOptions = new BuildPlayerOptions
             {
                 scenes = scenes,
@@ -161,11 +165,11 @@ public class UnityAutomation
                 writer.WriteLine("Project Status:");
                 writer.WriteLine($"  Product Name: {PlayerSettings.productName}");
                 writer.WriteLine($"  Company Name: {PlayerSettings.companyName}");
-                writer.WriteLine($"  Bundle ID: {PlayerSettings.GetApplicationIdentifier(BuildTargetGroup.Android)}");
+                writer.WriteLine($"  Bundle ID: {PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android)}");
                 writer.WriteLine($"  Target API Level: {PlayerSettings.Android.targetSdkVersion}");
                 writer.WriteLine("");
                 writer.WriteLine("Build Configuration:");
-                writer.WriteLine($"  VR Support: {PlayerSettings.GetVirtualRealitySupported(BuildTargetGroup.Android)}");
+                writer.WriteLine($"  VR Support: {(XRGeneralSettingsPerBuildTarget.XRGeneralSettingsForBuildTarget(BuildTargetGroup.Android)?.Manager?.activeLoaders.Count > 0)}");
                 writer.WriteLine($"  Target FPS: {Application.targetFrameRate}");
                 writer.WriteLine($"  Time.fixedDeltaTime: {Time.fixedDeltaTime}");
                 writer.WriteLine("");

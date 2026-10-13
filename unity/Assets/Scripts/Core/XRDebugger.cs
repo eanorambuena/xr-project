@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
 using TMPro;
@@ -41,7 +42,7 @@ namespace VRCar.Core
         private void Update()
         {
             // Toggle debug display with 'D' key
-            if (Input.GetKeyDown(KeyCode.D))
+            if (UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.f1Key.wasPressedThisFrame)
             {
                 debugVisible = !debugVisible;
                 if (debugText != null)
@@ -114,8 +115,8 @@ namespace VRCar.Core
 
             try
             {
-                var devices = InputDevices.GetDevicesWithCharacteristics(
-                    InputDeviceCharacteristics.HeadMounted);
+                var devices = new List<InputDevice>();
+                InputDevices.GetDevicesWithCharacteristics(InputDeviceCharacteristics.HeadMounted, devices);
 
                 if (devices.Count > 0)
                 {
@@ -151,8 +152,8 @@ namespace VRCar.Core
             try
             {
                 // Right controller
-                var rightDevices = InputDevices.GetDevicesWithCharacteristics(
-                    InputDeviceCharacteristics.Controller | InputDeviceCharacteristics.Right);
+                var rightDevices = new List<InputDevice>();
+                InputDevices.GetDevicesWithCharacteristics(InputDeviceCharacteristics.Controller | InputDeviceCharacteristics.Right, rightDevices);
                 if (rightDevices.Count > 0)
                 {
                     var right = rightDevices[0];
@@ -167,8 +168,8 @@ namespace VRCar.Core
                 }
 
                 // Left controller
-                var leftDevices = InputDevices.GetDevicesWithCharacteristics(
-                    InputDeviceCharacteristics.Controller | InputDeviceCharacteristics.Left);
+                var leftDevices = new List<InputDevice>();
+                InputDevices.GetDevicesWithCharacteristics(InputDeviceCharacteristics.Controller | InputDeviceCharacteristics.Left, leftDevices);
                 if (leftDevices.Count > 0)
                 {
                     var left = leftDevices[0];
@@ -208,7 +209,7 @@ namespace VRCar.Core
                 var rb = vehiclePhysics.GetComponent<Rigidbody>();
                 if (rb != null)
                 {
-                    float speed = rb.velocity.magnitude;
+                    float speed = rb.linearVelocity.magnitude;
                     float speedKmh = speed * 3.6f;
 
                     info += $"Speed: {speed:F2} m/s ({speedKmh:F1} km/h)\n";
@@ -231,8 +232,8 @@ namespace VRCar.Core
 
             try
             {
-                var headsetDevices = InputDevices.GetDevicesWithCharacteristics(
-                    InputDeviceCharacteristics.HeadMounted);
+                var headsetDevices = new List<InputDevice>();
+                InputDevices.GetDevicesWithCharacteristics(InputDeviceCharacteristics.HeadMounted, headsetDevices);
 
                 if (headsetDevices.Count > 0)
                 {

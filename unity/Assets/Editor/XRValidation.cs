@@ -3,6 +3,8 @@ using UnityEditor;
 using UnityEditor.XR.Management;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.Rendering;
+using UnityEngine.XR.Management;
 
 /// <summary>
 /// XR Configuration Validator for Meta Quest 3
@@ -10,6 +12,12 @@ using System.Linq;
 /// </summary>
 public class XRValidation
 {
+    private static XRManagerSettings GetAndroidXRManager()
+    {
+        var general = XRGeneralSettingsPerBuildTarget.XRGeneralSettingsForBuildTarget(BuildTargetGroup.Android);
+        return general != null ? general.Manager : null;
+    }
+
     private static List<string> validationIssues = new List<string>();
     private static List<string> validationWarnings = new List<string>();
     private static List<string> validationPassed = new List<string>();
@@ -46,8 +54,8 @@ public class XRValidation
         // Check XR Management settings (modern API, replaces deprecated GetVirtualRealitySupported)
         try
         {
-            var xrSettings = XRManagementSettings.Instance;
-            if (xrSettings != null && xrSettings.loaders.Count > 0)
+            var xrSettings = GetAndroidXRManager();
+            if (xrSettings != null && xrSettings.activeLoaders.Count > 0)
             {
                 validationPassed.Add("✓ XR Plug-in Management configured");
             }
@@ -108,13 +116,13 @@ public class XRValidation
 
         try
         {
-            var settings = XRManagementSettings.Instance;
+            var settings = GetAndroidXRManager();
             if (settings != null)
             {
                 validationPassed.Add("✓ XR Management settings found");
 
                 // Check if loader is assigned
-                var loaders = settings.loaders;
+                var loaders = settings.activeLoaders;
                 if (loaders.Count > 0)
                 {
                     validationPassed.Add("✓ XR Loaders configured: " + loaders.Count);
@@ -286,8 +294,8 @@ public class XRValidation
         }
 
         // Check Android settings
-        PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel21; // Min for Oculus
-        validationPassed.Add("✓ Min SDK: API 21 (Quest 3 compatible)");
+        PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel32; // Min recomendado para Meta Quest
+        validationPassed.Add("✓ Min SDK: API 32 (Quest 3 compatible)");
     }
 
     /// <summary>

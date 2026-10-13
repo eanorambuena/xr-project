@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using UnityEngine;
+using VRCar.Vehicle;
 
 namespace VRCar.Tests.Vehicle
 {
@@ -13,9 +14,15 @@ namespace VRCar.Tests.Vehicle
         private VehiclePhysics vehiclePhysics;
         private Rigidbody rigidbody;
 
+        private SimulationMode previousSimulationMode;
+
         [SetUp]
         public void Setup()
         {
+            // En Edit Mode la física no avanza sola: la avanzamos manualmente con Physics.Simulate
+            previousSimulationMode = Physics.simulationMode;
+            Physics.simulationMode = SimulationMode.Script;
+
             // Crear GameObject con Rigidbody
             vehicleGameObject = new GameObject("TestVehicle");
             rigidbody = vehicleGameObject.AddComponent<Rigidbody>();
@@ -23,15 +30,16 @@ namespace VRCar.Tests.Vehicle
 
             // Configurar Rigidbody
             rigidbody.mass = 1200f;
-            rigidbody.drag = 0.5f;
-            rigidbody.angularDrag = 0.5f;
+            rigidbody.linearDamping = 0.5f;
+            rigidbody.angularDamping = 0.5f;
             rigidbody.freezeRotation = true;
         }
 
         [TearDown]
         public void TearDown()
         {
-            Object.Destroy(vehicleGameObject);
+            Physics.simulationMode = previousSimulationMode;
+            Object.DestroyImmediate(vehicleGameObject);
         }
 
         // ============================================================
@@ -81,10 +89,10 @@ namespace VRCar.Tests.Vehicle
             // Simular varios frames
             for (int i = 0; i < 10; i++)
             {
-                vehiclePhysics.FixedUpdate();
+                vehiclePhysics.FixedUpdate(); Physics.Simulate(Time.fixedDeltaTime);
             }
 
-            float velocityMagnitude = rigidbody.velocity.magnitude;
+            float velocityMagnitude = rigidbody.linearVelocity.magnitude;
             Assert.Greater(velocityMagnitude, 0,
                 "Velocidad debe aumentar con aceleración");
             Assert.LessOrEqual(velocityMagnitude, vehiclePhysics.maxSpeed,
@@ -107,14 +115,14 @@ namespace VRCar.Tests.Vehicle
         public void ApplyBraking_WithBrakeActive_DecreasesVelocity()
         {
             // Setup: dar velocidad inicial
-            rigidbody.velocity = new Vector3(10, 0, 0);
-            float initialSpeed = rigidbody.velocity.magnitude;
+            rigidbody.linearVelocity = new Vector3(0, 0, 10); // hacia adelante
+            float initialSpeed = rigidbody.linearVelocity.magnitude;
 
             // Frenar
             vehiclePhysics.brakeInput = 1.0f;
-            vehiclePhysics.FixedUpdate();
+            vehiclePhysics.FixedUpdate(); Physics.Simulate(Time.fixedDeltaTime);
 
-            float finalSpeed = rigidbody.velocity.magnitude;
+            float finalSpeed = rigidbody.linearVelocity.magnitude;
             Assert.Less(finalSpeed, initialSpeed,
                 "Velocidad debe disminuir al frenar");
         }
@@ -139,7 +147,12 @@ namespace VRCar.Tests.Vehicle
             vehiclePhysics.steerInput = 0.5f;
             Quaternion initialRot = vehicleGameObject.transform.rotation;
 
-            vehiclePhysics.FixedUpdate();
+            // Un auto solo gira si avanza (modelo de bicicleta): avanzar a 5 m/s durante 0.5 s
+            for (int i = 0; i < 25; i++)
+            {
+                rigidbody.linearVelocity = vehicleGameObject.transform.forward * 5f;
+                vehiclePhysics.FixedUpdate(); Physics.Simulate(Time.fixedDeltaTime);
+            }
 
             Quaternion finalRot = vehicleGameObject.transform.rotation;
 
@@ -166,7 +179,7 @@ namespace VRCar.Tests.Vehicle
             vehiclePhysics.steerInput = 0f;
             Quaternion initialRot = vehicleGameObject.transform.rotation;
 
-            vehiclePhysics.FixedUpdate();
+            vehiclePhysics.FixedUpdate(); Physics.Simulate(Time.fixedDeltaTime);
 
             Quaternion finalRot = vehicleGameObject.transform.rotation;
 
@@ -188,11 +201,11 @@ namespace VRCar.Tests.Vehicle
         public void LimitSpeed_EnforcesMaxSpeed()
         {
             // Forzar velocidad superior al máximo
-            rigidbody.velocity = new Vector3(0, 0, 25f); // 25 m/s > 20 m/s
+            rigidbody.linearVelocity = new Vector3(0, 0, 25f); // 25 m/s > 20 m/s
 
-            vehiclePhysics.FixedUpdate();
+            vehiclePhysics.FixedUpdate(); Physics.Simulate(Time.fixedDeltaTime);
 
-            float finalSpeed = rigidbody.velocity.magnitude;
+            float finalSpeed = rigidbody.linearVelocity.magnitude;
             Assert.LessOrEqual(finalSpeed, vehiclePhysics.maxSpeed,
                 "Velocidad debe estar limitada a maxSpeed");
         }
@@ -212,12 +225,12 @@ namespace VRCar.Tests.Vehicle
             vehiclePhysics.steerInput = 0.3f;
 
             Quaternion initialRot = vehicleGameObject.transform.rotation;
-            Vector3 initialVel = rigidbody.velocity;
+            Vector3 initialVel = rigidbody.linearVelocity;
 
-            vehiclePhysics.FixedUpdate();
+            for (int i = 0; i < 50; i++) { vehiclePhysics.FixedUpdate(); Physics.Simulate(Time.fixedDeltaTime); }
 
             // Debe acelerar
-            Assert.Greater(rigidbody.velocity.magnitude, initialVel.magnitude);
+            Assert.Greater(rigidbody.linearVelocity.magnitude, initialVel.magnitude);
 
             // Debe girar
             Assert.AreNotEqual(vehicleGameObject.transform.rotation, initialRot);

@@ -34,7 +34,7 @@ namespace VRCar.Tests.XR
         [TearDown]
         public void TearDown()
         {
-            Object.Destroy(xrOriginGameObject);
+            Object.DestroyImmediate(xrOriginGameObject);
         }
 
         // ============================================================
@@ -56,7 +56,7 @@ namespace VRCar.Tests.XR
             vrOriginSetup.Initialize();
 
             // Assert: XROrigin debe estar a 1.7m
-            Assert.AreApproximatelyEqual(xrOriginGameObject.transform.position.y, 1.7f, 0.01f,
+            Assert.AreEqual(1.7f, xrOriginGameObject.transform.position.y, 0.01f,
                 "XROrigin debe estar a 1.7m (altura promedio conductor)");
         }
 
@@ -71,7 +71,7 @@ namespace VRCar.Tests.XR
             vrOriginSetup.Initialize();
 
             // Camera local position debe ser 0.17m (eye height en auto)
-            Assert.AreApproximatelyEqual(mainCamera.transform.localPosition.y, 0.17f, 0.01f,
+            Assert.AreEqual(0.17f, mainCamera.transform.localPosition.y, 0.01f,
                 "Cámara debe estar 0.17m sobre piso del auto (eye height)");
         }
 
@@ -104,7 +104,7 @@ namespace VRCar.Tests.XR
             float expectedWorldHeight = 1.7f + 0.17f; // 1.87m
             float actualWorldHeight = mainCamera.transform.position.y;
 
-            Assert.AreApproximatelyEqual(actualWorldHeight, expectedWorldHeight, 0.01f,
+            Assert.AreEqual(expectedWorldHeight, actualWorldHeight, 0.01f,
                 "Camera world height debe ser 1.87m (1.7m XROrigin + 0.17m offset)");
         }
 

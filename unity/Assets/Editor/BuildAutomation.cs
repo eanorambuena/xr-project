@@ -4,7 +4,8 @@ using UnityEditor.SceneManagement;
 using System;
 using System.IO;
 using System.Diagnostics;
-using UnityEngine.TestTools;
+using UnityEditor.Build.Reporting;
+using Debug = UnityEngine.Debug;
 
 /// <summary>
 /// Build automation and CI/CD scripts for VR Car project
@@ -15,7 +16,7 @@ public class BuildAutomation
 {
     private static readonly string BUILD_OUTPUT_DIR = "Builds";
     private static readonly string APK_FILENAME = "VRCar-Hito1.apk";
-    private static readonly string SCENE_PATH = "Assets/Scenes/CU1_CornerJudgment.unity";
+    private static readonly string SCENE_PATH = "Assets/Scenes/Parking_Perpendicular.unity";
 
     /// <summary>
     /// Run all unit tests in batch mode
@@ -86,12 +87,7 @@ public class BuildAutomation
             BuildOptions buildOptions = BuildOptions.None;
 
             // Perform build
-            BuildReport report = BuildPipeline.BuildPlayer(
-                scenes: new[] { SCENE_PATH },
-                locationPathName: apkPath,
-                target: BuildTarget.Android,
-                options: buildOptions
-            );
+            BuildReport report = BuildPipeline.BuildPlayer(new[] { SCENE_PATH }, apkPath, BuildTarget.Android, buildOptions);
 
             // Report results
             if (report.summary.result == BuildResult.Succeeded)

@@ -3,6 +3,9 @@ using UnityEngine;
 using UnityEngine.XR;
 using VRCar.Vehicle;
 using VRCar.Tests.Mocks;
+using VRCar.UI;
+using VRCar.XR;
+using VRCar.Obstacles;
 
 namespace VRCar.Tests.XR
 {
@@ -16,9 +19,15 @@ namespace VRCar.Tests.XR
         private VehiclePhysics vehiclePhysics;
         private InputMapper inputMapper;
 
+        private SimulationMode previousSimulationMode;
+
         [SetUp]
         public void Setup()
         {
+            // En Edit Mode la física no avanza sola: la avanzamos manualmente con Physics.Simulate
+            previousSimulationMode = Physics.simulationMode;
+            Physics.simulationMode = SimulationMode.Script;
+
             // Create test vehicle with XR components
             vehicleGO = new GameObject("TestVehicleXR");
             vehicleGO.AddComponent<Rigidbody>();
@@ -36,7 +45,8 @@ namespace VRCar.Tests.XR
         [TearDown]
         public void TearDown()
         {
-            Object.Destroy(vehicleGO);
+            Physics.simulationMode = previousSimulationMode;
+            Object.DestroyImmediate(vehicleGO);
         }
 
         // ============================================================
@@ -136,7 +146,7 @@ namespace VRCar.Tests.XR
                 inputMapper.Update();
 
                 // Verify immediate response
-                Assert.AreApproximatelyEqual(vehiclePhysics.accelerationInput, triggerValue, 0.01f,
+                Assert.AreEqual(triggerValue, vehiclePhysics.accelerationInput, 0.01f,
                     $"Frame {frame}: Should respond immediately to input changes");
             }
         }
@@ -164,15 +174,15 @@ namespace VRCar.Tests.XR
                 // Set to 90 FPS (Quest 3 native)
                 Time.fixedDeltaTime = 1f / 90f;
 
-                Assert.AreApproximatelyEqual(Time.fixedDeltaTime, 0.01111f, 0.00001f,
+                Assert.AreEqual(0.01111f, Time.fixedDeltaTime, 0.00001f,
                     "Fixed timestep should be ~0.01111s for 90 FPS");
 
                 // Apply force
                 vehiclePhysics.accelerationInput = 1f;
-                vehiclePhysics.FixedUpdate();
+                vehiclePhysics.FixedUpdate(); Physics.Simulate(Time.fixedDeltaTime);
 
                 // Velocity should increase based on 90 FPS timestep
-                Assert.Greater(vehiclePhysics.GetComponent<Rigidbody>().velocity.magnitude, 0,
+                Assert.Greater(vehiclePhysics.GetComponent<Rigidbody>().linearVelocity.magnitude, 0,
                     "Velocity should increase even with short timestep");
             }
             finally
@@ -210,8 +220,8 @@ namespace VRCar.Tests.XR
             Assert.AreEqual(canvas.renderMode, RenderMode.WorldSpace,
                 "HUD must use World Space render mode for VR");
 
-            Object.Destroy(hudGO);
-            Object.Destroy(canvasGO);
+            Object.DestroyImmediate(hudGO);
+            Object.DestroyImmediate(canvasGO);
         }
 
         // ============================================================
@@ -241,13 +251,13 @@ namespace VRCar.Tests.XR
             vrSetup.Initialize();
 
             // Verify positioning for driver view
-            Assert.AreApproximatelyEqual(xrOriginGO.transform.position.y, 1.7f, 0.01f,
+            Assert.AreEqual(1.7f, xrOriginGO.transform.position.y, 0.01f,
                 "XROrigin should be at driver height (1.7m)");
 
-            Assert.AreApproximatelyEqual(camera.transform.localPosition.y, 0.17f, 0.01f,
+            Assert.AreEqual(0.17f, camera.transform.localPosition.y, 0.01f,
                 "Camera should be at eye level (0.17m above seat)");
 
-            Object.Destroy(xrOriginGO);
+            Object.DestroyImmediate(xrOriginGO);
         }
 
         // ============================================================
@@ -279,7 +289,7 @@ namespace VRCar.Tests.XR
                 vehiclePhysics.brakeInput = 0f;
 
                 // Update physics (this is called by FixedUpdate)
-                vehiclePhysics.FixedUpdate();
+                vehiclePhysics.FixedUpdate(); Physics.Simulate(Time.fixedDeltaTime);
 
                 stopwatch.Stop();
 
@@ -357,12 +367,12 @@ namespace VRCar.Tests.XR
                     if (physics != null)
                     {
                         physics.accelerationInput = 0.5f;
-                        physics.FixedUpdate();
+                        physics.FixedUpdate(); Physics.Simulate(Time.fixedDeltaTime);
                     }
                 }
 
                 // Cleanup
-                Object.Destroy(testVehicle);
+                Object.DestroyImmediate(testVehicle);
             }
 
             // If we got here, no exceptions from leaks
@@ -395,23 +405,23 @@ namespace VRCar.Tests.XR
                 var collision = vehicle.AddComponent<CollisionFeedback>();
 
                 // Simulate Start/Update cycle
-                physics.SendMessage("Start", SendMessageOptions.DontRequireReceiver);
-                input.SendMessage("OnEnable", SendMessageOptions.DontRequireReceiver);
+                physics.Initialize();
+                input.Update();
 
                 for (int frame = 0; frame < 5; frame++)
                 {
-                    input.SendMessage("Update", SendMessageOptions.DontRequireReceiver);
-                    physics.SendMessage("FixedUpdate", SendMessageOptions.DontRequireReceiver);
-                    detector.SendMessage("FixedUpdate", SendMessageOptions.DontRequireReceiver);
+                    input.Update();
+                    physics.FixedUpdate(); Physics.Simulate(Time.fixedDeltaTime);
+                    detector.FixedUpdate();
                 }
 
-                Object.Destroy(vehicle);
-                Assert.Pass("All components initialized successfully");
+                Object.DestroyImmediate(vehicle);
             }
             catch (System.Exception ex)
             {
                 Assert.Fail($"XR initialization error: {ex.Message}");
             }
+            Assert.Pass("All components initialized successfully");
         }
     }
 }
