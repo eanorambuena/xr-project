@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.XR;
+using InputAction = UnityEngine.InputSystem.InputAction;
+using InputActionAsset = UnityEngine.InputSystem.InputActionAsset;
 using VRCar.Tests.Mocks;
 
 namespace VRCar.Vehicle
@@ -17,6 +19,14 @@ namespace VRCar.Vehicle
     {
         [SerializeField]
         private VehiclePhysics vehiclePhysics;
+
+        // Acciones de input (Input System): mandos XR + teclado/gamepad para probar sin visor.
+        // Mapa "VRCar" con acciones Accelerate, Brake y Steer (Assets/InputActions/VRCarInput.inputactions)
+        [SerializeField]
+        private InputActionAsset inputActions;
+        private InputAction accelerateAction;
+        private InputAction brakeAction;
+        private InputAction steerAction;
 
         // Referencias a controllers reales (asignadas en inspector o runtime)
         private InputDevice rightControllerDevice;
@@ -37,8 +47,32 @@ namespace VRCar.Vehicle
             // Encontrar controllers en hardware real
             if (!useMocks)
             {
-                InitializeRealControllers();
+                BindInputActions();
+                if (accelerateAction == null)
+                {
+                    InitializeRealControllers();
+                }
             }
+        }
+
+        /// <summary>
+        /// Asignar el asset de acciones (usado por SceneSetup y tests)
+        /// </summary>
+        public void SetInputActions(InputActionAsset asset)
+        {
+            inputActions = asset;
+            BindInputActions();
+        }
+
+        private void BindInputActions()
+        {
+            if (inputActions == null) return;
+            var map = inputActions.FindActionMap("VRCar");
+            if (map == null) return;
+            accelerateAction = map.FindAction("Accelerate");
+            brakeAction = map.FindAction("Brake");
+            steerAction = map.FindAction("Steer");
+            map.Enable();
         }
 
         private void InitializeRealControllers()
@@ -66,6 +100,7 @@ namespace VRCar.Vehicle
 
         public void Update()
         {
+            if (vehiclePhysics == null) vehiclePhysics = GetComponent<VehiclePhysics>();
             if (vehiclePhysics == null) return;
 
             if (useMocks)
@@ -83,6 +118,15 @@ namespace VRCar.Vehicle
         /// </summary>
         private void UpdateWithRealControllers()
         {
+            if (accelerateAction != null)
+            {
+                // SPEC 2.1 / 2.2 / 2.3 vía Input System (mandos XR, teclado o gamepad)
+                vehiclePhysics.accelerationInput = Mathf.Clamp01(accelerateAction.ReadValue<float>());
+                vehiclePhysics.brakeInput = brakeAction != null ? Mathf.Clamp01(brakeAction.ReadValue<float>()) : 0f;
+                vehiclePhysics.steerInput = steerAction != null ? Mathf.Clamp(steerAction.ReadValue<Vector2>().x, -1f, 1f) : 0f;
+                return;
+            }
+
             // SPEC 2.1: Right trigger → accelerationInput
             if (rightControllerDevice.isValid)
             {

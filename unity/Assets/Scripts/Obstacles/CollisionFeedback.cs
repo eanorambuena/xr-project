@@ -10,6 +10,14 @@ namespace VRCar.Obstacles
     /// </summary>
     public class CollisionFeedback : MonoBehaviour
     {
+        /// <summary>Se dispara cada vez que el vehículo toca un obstáculo</summary>
+        public event System.Action ObstacleHit;
+
+        /// <summary>
+        /// Material del vehículo: instancia propia en Play Mode, sharedMaterial en Edit Mode (tests)
+        /// </summary>
+        private Material VehicleMaterial => vehicleRenderer == null ? null : (Application.isPlaying ? vehicleRenderer.material : vehicleRenderer.sharedMaterial);
+
         private Renderer vehicleRenderer;
         private AudioSource audioSource;
         private AudioClip collisionClip;
@@ -21,7 +29,7 @@ namespace VRCar.Obstacles
             // Auto-find componentes si no fueron asignados en SetReferences
             if (vehicleRenderer == null)
             {
-                vehicleRenderer = GetComponent<Renderer>();
+                vehicleRenderer = GetComponentInChildren<Renderer>();
             }
             if (audioSource == null)
             {
@@ -31,7 +39,7 @@ namespace VRCar.Obstacles
             // Guardar color original
             if (vehicleRenderer != null)
             {
-                originalColor = vehicleRenderer.material.color;
+                if (VehicleMaterial != null) originalColor = VehicleMaterial.color;
             }
         }
 
@@ -42,7 +50,7 @@ namespace VRCar.Obstacles
         {
             vehicleRenderer = renderer;
             audioSource = audio;
-            originalColor = renderer.material.color;
+            if (VehicleMaterial != null) originalColor = VehicleMaterial.color;
         }
 
         /// <summary>
@@ -76,13 +84,18 @@ namespace VRCar.Obstacles
         /// </summary>
         private void ApplyCollisionFeedback()
         {
-            // Cambiar color a rojo
-            if (vehicleRenderer != null)
+            // Cambiar color a rojo (guardando el color actual si recién empieza la colisión)
+            if (VehicleMaterial != null)
             {
-                vehicleRenderer.material.color = Color.red;
+                if (!isColliding) originalColor = VehicleMaterial.color;
+                VehicleMaterial.color = Color.red;
             }
 
-            // Reproducir sonido de colisión
+            ObstacleHit?.Invoke();
+            PulseControllers(0.8f, 0.25f);
+
+            // Reproducir sonido de colisión (si no hay clip asignado se genera un "beep")
+            if (collisionClip == null) collisionClip = CreateBeep();
             if (audioSource != null && collisionClip != null)
             {
                 audioSource.PlayOneShot(collisionClip);
@@ -95,9 +108,9 @@ namespace VRCar.Obstacles
         private void RestoreCollisionFeedback()
         {
             // Restaurar color original
-            if (vehicleRenderer != null)
+            if (VehicleMaterial != null)
             {
-                vehicleRenderer.material.color = originalColor;
+                VehicleMaterial.color = originalColor;
             }
         }
 
@@ -131,6 +144,32 @@ namespace VRCar.Obstacles
         public void SetCollisionClip(AudioClip clip)
         {
             collisionClip = clip;
+        }
+    
+        /// <summary>Vibración de ambos controles (si hay visor conectado); sin XR no hace nada</summary>
+        public static void PulseControllers(float amplitude, float seconds)
+        {
+            foreach (var node in new[] { UnityEngine.XR.XRNode.LeftHand, UnityEngine.XR.XRNode.RightHand })
+            {
+                var dev = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(node);
+                if (dev.isValid && dev.TryGetHapticCapabilities(out var caps) && caps.supportsImpulse)
+                    dev.SendHapticImpulse(0, Mathf.Clamp01(amplitude), seconds);
+            }
+        }
+
+        private static AudioClip CreateBeep()
+        {
+            const int rate = 44100; const float duration = 0.25f;
+            int n = (int)(rate * duration);
+            var data = new float[n];
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)rate;
+                data[i] = Mathf.Sin(2f * Mathf.PI * 660f * t) * Mathf.Exp(-t * 12f) * 0.8f;
+            }
+            var clip = AudioClip.Create("CollisionBeep", n, 1, rate, false);
+            clip.SetData(data, 0);
+            return clip;
         }
     }
 }

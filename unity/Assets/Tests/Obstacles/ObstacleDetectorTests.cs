@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
+using VRCar.Obstacles;
 
 namespace VRCar.Tests.Obstacles
 {
@@ -12,18 +14,40 @@ namespace VRCar.Tests.Obstacles
         private GameObject vehicleGameObject;
         private ObstacleDetector obstacleDetector;
 
+        private readonly List<GameObject> createdObjects = new List<GameObject>();
+
+        /// <summary>Registra objetos creados en el test para limpiarlos en TearDown aunque el test falle</summary>
+        private GameObject Track(GameObject go) { createdObjects.Add(go); return go; }
+
+        /// <summary>
+        /// Distancia esperada desde el parachoques delantero hasta la cara de un cubo de 1m
+        /// centrado en z = obstacleCenterZ (el vehículo está en el origen mirando a +Z)
+        /// </summary>
+        private float BumperDistanceTo(float obstacleCenterZ)
+        {
+            return (obstacleCenterZ - 0.5f) - obstacleDetector.vehicleLength / 2f;
+        }
+
+        /// <summary>Sincroniza transforms con la física (en Edit Mode no ocurre solo) y ejecuta la detección</summary>
+        private void RunDetection()
+        {
+            Physics.SyncTransforms();
+            obstacleDetector.FixedUpdate();
+        }
+
         [SetUp]
         public void Setup()
         {
             vehicleGameObject = new GameObject("TestVehicle");
-            vehicleGameObject.AddComponent<Collider>();
             obstacleDetector = vehicleGameObject.AddComponent<ObstacleDetector>();
         }
 
         [TearDown]
         public void TearDown()
         {
-            Object.Destroy(vehicleGameObject);
+            foreach (var go in createdObjects) if (go != null) Object.DestroyImmediate(go);
+            createdObjects.Clear();
+            Object.DestroyImmediate(vehicleGameObject);
         }
 
         // ============================================================
@@ -44,7 +68,7 @@ namespace VRCar.Tests.Obstacles
         public void ObstacleDetector_WithObstacleAhead_ReturnsCorrectDistance()
         {
             // Setup: crear obstáculo
-            var obstacle = new GameObject("TestObstacle");
+            var obstacle = Track(new GameObject("TestObstacle"));
             obstacle.tag = "Obstacle";
             obstacle.transform.position = new Vector3(0, 0, 5); // 5m adelante
             obstacle.AddComponent<BoxCollider>();
@@ -53,14 +77,14 @@ namespace VRCar.Tests.Obstacles
             vehicleGameObject.transform.rotation = Quaternion.identity;
 
             // Execute
-            obstacleDetector.FixedUpdate();
+            RunDetection();
 
             // Assert
             float distance = obstacleDetector.GetClosestDistance();
-            Assert.AreApproximatelyEqual(distance, 5.0f, 0.2f,
-                "Distancia al obstáculo debe ser ~5.0m");
+            Assert.AreEqual(BumperDistanceTo(5.0f), distance, 0.05f,
+                "Distancia debe medirse desde el parachoques hasta la cara del obstáculo");
 
-            Object.Destroy(obstacle);
+            Object.DestroyImmediate(obstacle);
         }
 
         // ============================================================
@@ -77,15 +101,38 @@ namespace VRCar.Tests.Obstacles
         ///   - GetClosestDistance() retorna 3.0m (el más cercano)
         /// </summary>
         [Test]
+        public void ObstacleDetector_WhenReversing_MeasuresFromRearBumper()
+        {
+            // Obstáculo 5 m DETRÁS y otro 3 m adelante: en reversa importa el de atrás
+            var behind = Track(new GameObject("Behind"));
+            behind.tag = "Obstacle";
+            behind.transform.position = new Vector3(0, 0, -5f);
+            behind.AddComponent<BoxCollider>();
+            var ahead = Track(new GameObject("Ahead"));
+            ahead.tag = "Obstacle";
+            ahead.transform.position = new Vector3(0, 0, 3f);
+            ahead.AddComponent<BoxCollider>();
+
+            obstacleDetector.SetReversing(true);
+            RunDetection();
+            Assert.AreEqual(BumperDistanceTo(5.0f), obstacleDetector.GetClosestDistance(), 0.05f,
+                "En reversa la distancia se mide desde el parachoques trasero hacia atrás");
+
+            obstacleDetector.SetReversing(false);
+            RunDetection();
+            Assert.AreEqual(BumperDistanceTo(3.0f), obstacleDetector.GetClosestDistance(), 0.05f);
+        }
+
+        [Test]
         public void ObstacleDetector_WithMultipleObstacles_ReturnClosest()
         {
             // Setup: crear múltiples obstáculos
-            var obstacle1 = new GameObject("Obstacle1");
+            var obstacle1 = Track(new GameObject("Obstacle1"));
             obstacle1.tag = "Obstacle";
             obstacle1.transform.position = new Vector3(0, 0, 5); // 5m
             obstacle1.AddComponent<BoxCollider>();
 
-            var obstacle2 = new GameObject("Obstacle2");
+            var obstacle2 = Track(new GameObject("Obstacle2"));
             obstacle2.tag = "Obstacle";
             obstacle2.transform.position = new Vector3(0, 0, 3); // 3m (más cercano)
             obstacle2.AddComponent<BoxCollider>();
@@ -94,15 +141,15 @@ namespace VRCar.Tests.Obstacles
             vehicleGameObject.transform.rotation = Quaternion.identity;
 
             // Execute
-            obstacleDetector.FixedUpdate();
+            RunDetection();
 
             // Assert
             float distance = obstacleDetector.GetClosestDistance();
-            Assert.AreApproximatelyEqual(distance, 3.0f, 0.2f,
+            Assert.AreEqual(BumperDistanceTo(3.0f), distance, 0.05f,
                 "Debe retornar la distancia al obstáculo más cercano");
 
-            Object.Destroy(obstacle1);
-            Object.Destroy(obstacle2);
+            Object.DestroyImmediate(obstacle1);
+            Object.DestroyImmediate(obstacle2);
         }
 
         // ============================================================
@@ -122,7 +169,7 @@ namespace VRCar.Tests.Obstacles
             vehicleGameObject.transform.position = new Vector3(0, 0, 0);
 
             // Execute
-            obstacleDetector.FixedUpdate();
+            RunDetection();
 
             // Assert
             float distance = obstacleDetector.GetClosestDistance();
@@ -147,7 +194,7 @@ namespace VRCar.Tests.Obstacles
         public void ObstacleDetector_IgnoresNonObstacles()
         {
             // Setup: objeto SIN tag "Obstacle"
-            var ignoredObject = new GameObject("NotAnObstacle");
+            var ignoredObject = Track(new GameObject("NotAnObstacle"));
             ignoredObject.tag = "Untagged"; // No es un obstáculo
             ignoredObject.transform.position = new Vector3(0, 0, 5);
             ignoredObject.AddComponent<BoxCollider>();
@@ -156,14 +203,14 @@ namespace VRCar.Tests.Obstacles
             vehicleGameObject.transform.rotation = Quaternion.identity;
 
             // Execute
-            obstacleDetector.FixedUpdate();
+            RunDetection();
 
             // Assert
             float distance = obstacleDetector.GetClosestDistance();
             Assert.AreEqual(distance, float.MaxValue,
                 "Debe ignorar objetos sin tag 'Obstacle'");
 
-            Object.Destroy(ignoredObject);
+            Object.DestroyImmediate(ignoredObject);
         }
 
         // ============================================================
@@ -182,20 +229,20 @@ namespace VRCar.Tests.Obstacles
             vehicleGameObject.transform.position = Vector3.zero;
 
             // Obstáculo a la derecha frontal (corner derecho)
-            var obstacleRight = new GameObject("ObstacleRight");
+            var obstacleRight = Track(new GameObject("ObstacleRight"));
             obstacleRight.tag = "Obstacle";
-            obstacleRight.transform.position = new Vector3(1.5f, 0, 3f);
+            obstacleRight.transform.position = new Vector3(obstacleDetector.vehicleWidth / 2f, 0, 3f); // frente a la esquina derecha
             obstacleRight.AddComponent<BoxCollider>();
 
             // Execute
-            obstacleDetector.FixedUpdate();
+            RunDetection();
 
             // Assert
             float distance = obstacleDetector.GetClosestDistance();
             Assert.Less(distance, 3.5f,
                 "Debe detectar obstáculo en corner frontal");
 
-            Object.Destroy(obstacleRight);
+            Object.DestroyImmediate(obstacleRight);
         }
 
         // ============================================================
@@ -216,28 +263,28 @@ namespace VRCar.Tests.Obstacles
             vehicleGameObject.transform.position = Vector3.zero;
 
             // Obstáculo dentro de rango (10m)
-            var nearObstacle = new GameObject("NearObstacle");
+            var nearObstacle = Track(new GameObject("NearObstacle"));
             nearObstacle.tag = "Obstacle";
             nearObstacle.transform.position = new Vector3(0, 0, 8f);
             nearObstacle.AddComponent<BoxCollider>();
 
-            obstacleDetector.FixedUpdate();
+            RunDetection();
             float nearDistance = obstacleDetector.GetClosestDistance();
             Assert.Less(nearDistance, float.MaxValue, "Debe detectar obstáculo cercano");
 
-            Object.Destroy(nearObstacle);
+            Object.DestroyImmediate(nearObstacle);
 
             // Obstáculo fuera de rango (20m)
-            var farObstacle = new GameObject("FarObstacle");
+            var farObstacle = Track(new GameObject("FarObstacle"));
             farObstacle.tag = "Obstacle";
             farObstacle.transform.position = new Vector3(0, 0, 20f);
             farObstacle.AddComponent<BoxCollider>();
 
-            obstacleDetector.FixedUpdate();
+            RunDetection();
             float farDistance = obstacleDetector.GetClosestDistance();
             Assert.AreEqual(farDistance, float.MaxValue, "No debe detectar obstáculo lejano");
 
-            Object.Destroy(farObstacle);
+            Object.DestroyImmediate(farObstacle);
         }
     }
 }

@@ -28,6 +28,23 @@ unity/
 └── ... other docs
 ```
 
+## Escena de práctica: estacionamiento perpendicular
+
+Menú **VRCar → 1. Configurar XR** y luego **VRCar → 2. Crear escena de estacionamiento** (genera `Assets/Scenes/Parking_Perpendicular.unity`). Objetivo: estacionar en el espacio **A4** (líneas amarillas).
+
+| Acción | Quest (controles) | Teclado (sin visor) |
+|---|---|---|
+| Acelerar | Gatillo derecho | W / ↑ |
+| Frenar | Gatillo izquierdo | S / ↓ / Espacio |
+| Reversa | Detenido, mantener el freno ~0,6 s (en reversa el gatillo izq. retrocede y el der. frena) | Igual con S |
+| Girar el volante | Joystick derecho | A / D / ← → |
+| Reiniciar ejercicio | Mantener A o X 1 s | R |
+| Mirar | Mover la cabeza (el conductor no se desplaza) | — |
+
+En el auto: espejos laterales e interior reales, sensor de retroceso con barras y pitidos, velocímetro con marcha D/R, pantalla con la distancia y la evaluación del estacionamiento (márgenes izq./der., tope y ángulo), vibración de los controles al chocar.
+
+Modelo del auto: "Car" de Quaternius (CC0), escalado a un Peugeot 308, con interior propio (`Assets/Editor/SedanModel.cs`).
+
 ## Quick Start
 
 1. **Clone/open in Unity 6000.4.0f1**
