@@ -1,0 +1,65 @@
+name: Build APK (Quest 3)
+
+# Compila el APK de VRCar con Unity en la nube, sin necesitar tu PC.
+# Dispara: push a main que toque unity/, PRs, o a mano (Actions > Run workflow).
+
+on:
+  push:
+    branches: [main]
+    paths: ['unity/**', '.github/workflows/build-apk.yml']
+  pull_request:
+    paths: ['unity/**', '.github/workflows/build-apk.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Android APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      # Library/ acelera mucho los builds siguientes.
+      - uses: actions/cache@v4
+        with:
+          path: unity/Library
+          key: Library-Android-${{ hashFiles('unity/Assets/**', 'unity/Packages/**', 'unity/ProjectSettings/**') }}
+          restore-keys: |
+            Library-Android-
+
+      # unityVersion: auto lee unity/ProjectSettings/ProjectVersion.txt (6000.4.0f1),
+      # asi CI usa SIEMPRE la version del proyecto y nunca se desincroniza.
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: unity
+          unityVersion: auto
+          targetPlatform: Android
+          buildMethod: BuildAutomation.BuildAndroid
+          allowDirtyBuild: true
+
+      # BuildAutomation.BuildAndroid escribe en la carpeta relativa "Builds/".
+      - name: Localizar y validar el APK
+        run: |
+          APK=$(find . -name 'VRCar-Hito1.apk' -not -path './unity/Library/*' | head -n1)
+          test -n "$APK" || { echo "No se genero el APK"; exit 1; }
+          echo "APK=$APK" >> "$GITHUB_ENV"
+          ls -l "$APK"
+          unzip -tq "$APK"
+          unzip -l "$APK" | grep -q 'AndroidManifest.xml'
+          unzip -l "$APK" | grep -q 'lib/arm64-v8a/libunity.so'
+          grep -qa 'APK Sig Block 42' "$APK"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VRCar-Hito1-apk
+          path: ${{ env.APK }}
+          if-no-files-found: error
+          retention-days: 30
