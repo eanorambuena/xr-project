@@ -15,7 +15,7 @@ using Debug = UnityEngine.Debug;
 public class BuildAutomation
 {
     private static readonly string BUILD_OUTPUT_DIR = "Builds";
-    private static readonly string APK_FILENAME = "VRCar-Hito1.apk";
+    private static readonly string APK_FILENAME = "VRCar-Hito3.apk";
     private static readonly string SCENE_PATH = "Assets/Scenes/Parking_Perpendicular.unity";
 
     /// <summary>
