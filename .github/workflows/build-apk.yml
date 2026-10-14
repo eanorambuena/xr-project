@@ -48,7 +48,7 @@ jobs:
       # BuildAutomation.BuildAndroid escribe en la carpeta relativa "Builds/".
       - name: Localizar y validar el APK
         run: |
-          APK=$(find . -name 'VRCar-Hito1.apk' -not -path './unity/Library/*' | head -n1)
+          APK=$(find . -name 'VRCar-Hito3.apk' -not -path './unity/Library/*' | head -n1)
           test -n "$APK" || { echo "No se genero el APK"; exit 1; }
           echo "APK=$APK" >> "$GITHUB_ENV"
           ls -l "$APK"
@@ -59,7 +59,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: VRCar-Hito1-apk
+          name: VRCar-Hito3-apk
           path: ${{ env.APK }}
           if-no-files-found: error
           retention-days: 30

@@ -69,7 +69,7 @@ public class UnityAutomation
             var buildPlayerOptions = new BuildPlayerOptions
             {
                 scenes = scenes,
-                locationPathName = "Builds/VRCar-Hito1.apk",
+                locationPathName = "Builds/VRCar-Hito3.apk",
                 target = BuildTarget.Android,
                 options = BuildOptions.None
             };
