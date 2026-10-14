@@ -176,16 +176,40 @@ public class SceneSetup
         return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
     }
 
+    // Mapa: 160 x 120 m (±80 x ±60) rodeado por 4 paredes, como una caja
+    const float GroundHalfX = 80f, GroundHalfZ = 60f, BoundaryHeight = 8f, BoundaryThickness = 1f;
+
     static void CreateGround()
     {
         var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
         ground.name = "Ground";
-        ground.transform.localScale = new Vector3(8, 1, 6); // 80 x 60 m
+        ground.transform.localScale = new Vector3(GroundHalfX / 5f, 1, GroundHalfZ / 5f); // Plane = 10 m por unidad
         var asphalt = GetMaterial("Asphalt", Color.white, 0.1f);
         asphalt.mainTexture = AsphaltTexture();
-        asphalt.mainTextureScale = new Vector2(40f, 30f); // ~2 m por repetición
+        asphalt.mainTextureScale = new Vector2(GroundHalfX, GroundHalfZ); // ~2 m por repetición
         ground.GetComponent<Renderer>().sharedMaterial = asphalt;
         ground.isStatic = true;
+        CreateBoundaryWalls();
+    }
+
+    /// <summary>4 paredes alrededor del mapa para no salirse (con collider, tag Obstacle)</summary>
+    static void CreateBoundaryWalls()
+    {
+        var root = new GameObject("BoundaryWalls").transform;
+        var mat = GetMaterial("BoundaryWall", new Color(0.55f, 0.55f, 0.58f));
+        float t = BoundaryThickness, h = BoundaryHeight;
+        var defs = new (string, Vector3, Vector3)[]
+        {
+            ("Wall_North", new Vector3(0, h / 2f,  GroundHalfZ + t / 2f), new Vector3(2 * GroundHalfX + 2 * t, h, t)),
+            ("Wall_South", new Vector3(0, h / 2f, -GroundHalfZ - t / 2f), new Vector3(2 * GroundHalfX + 2 * t, h, t)),
+            ("Wall_East",  new Vector3( GroundHalfX + t / 2f, h / 2f, 0), new Vector3(t, h, 2 * GroundHalfZ)),
+            ("Wall_West",  new Vector3(-GroundHalfX - t / 2f, h / 2f, 0), new Vector3(t, h, 2 * GroundHalfZ)),
+        };
+        foreach (var (n, p, sz) in defs)
+        {
+            var w = Box(n, root, p, sz, mat, true);
+            w.tag = "Obstacle"; w.isStatic = true;
+        }
     }
 
     /// <summary>
@@ -342,7 +366,10 @@ public class SceneSetup
         rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
 
         var col = vehicle.AddComponent<BoxCollider>();
-        col.size = VehicleSize;
+        // Despeje al suelo: el collider no roza el asfalto, las ruedas (raycast) sostienen el auto
+        const float groundClearance = 0.15f;
+        col.size = new Vector3(VehicleSize.x, VehicleSize.y - groundClearance, VehicleSize.z);
+        col.center = new Vector3(0f, groundClearance / 2f, 0f);
         col.sharedMaterial = GetPhysicsMaterial();
 
         ModelMirrorLeft = ModelMirrorRight = null;
@@ -555,8 +582,8 @@ public class SceneSetup
         var mirrors = new (string, Vector3, Vector2, Vector3)[]
         {
             ("Mirror_Interior", new Vector3(0.0f, eyeLocal.y + 0.08f, eyeLocal.z + 0.50f), new Vector2(0.25f, 0.07f), new Vector3(0f, -0.05f, -1f)),
-            ("Mirror_Left",     ModelMirrorLeft ?? new Vector3(-VehicleSize.x / 2f - 0.10f, eyeLocal.y - 0.04f, eyeLocal.z + 0.52f), new Vector2(0.19f, 0.12f), new Vector3(-0.20f, -0.04f, -1f)),
-            ("Mirror_Right",    ModelMirrorRight ?? new Vector3(VehicleSize.x / 2f + 0.10f, eyeLocal.y - 0.04f, eyeLocal.z + 0.52f), new Vector2(0.19f, 0.12f), new Vector3(0.28f, -0.06f, -1f)),
+            ("Mirror_Left",     ModelMirrorLeft ?? new Vector3(-VehicleSize.x / 2f - 0.12f, eyeLocal.y - 0.02f, eyeLocal.z + 0.85f), new Vector2(0.26f, 0.16f), new Vector3(-0.20f, -0.04f, -1f)),
+            ("Mirror_Right",    ModelMirrorRight ?? new Vector3(VehicleSize.x / 2f + 0.12f, eyeLocal.y - 0.02f, eyeLocal.z + 0.85f), new Vector2(0.26f, 0.16f), new Vector3(0.28f, -0.06f, -1f)),
         };
 
         foreach (var (name, pos, size, view) in mirrors)

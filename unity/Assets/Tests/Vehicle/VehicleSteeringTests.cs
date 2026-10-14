@@ -14,17 +14,19 @@ namespace VRCar.Tests.Vehicle
         private VehiclePhysics physics;
         private Rigidbody rb;
         private SimulationMode previousMode;
+        private GameObject ground;
 
         [SetUp]
         public void Setup()
         {
             previousMode = Physics.simulationMode;
             Physics.simulationMode = SimulationMode.Script;
+            ground = VehicleTestRig.CreateGround();
             go = new GameObject("SteeringTestVehicle");
             rb = go.AddComponent<Rigidbody>();
-            rb.useGravity = false;
             physics = go.AddComponent<VehiclePhysics>();
             physics.Initialize();
+            VehicleTestRig.PlaceAtRest(go, physics);
         }
 
         [TearDown]
@@ -32,6 +34,7 @@ namespace VRCar.Tests.Vehicle
         {
             Physics.simulationMode = previousMode;
             Object.DestroyImmediate(go);
+            Object.DestroyImmediate(ground);
         }
 
         private void Step(int frames)
@@ -69,28 +72,7 @@ namespace VRCar.Tests.Vehicle
             Assert.AreEqual(physics.maxSteerAngle, physics.CurrentSteerAngle, 0.01f);
         }
 
-        [Test]
-        public void FullLock_TurningRadius_MatchesPeugeot308()
-        {
-            physics.steerInput = 1f;
-            Step(Frames(1.5f)); // ruedas al tope, detenido
-
-            // Avanzar a 1.5 m/s constante y medir el giro
-            const float v = 1.5f;
-            float seconds = 2f;
-            float yaw0 = go.transform.eulerAngles.y;
-            for (int i = 0; i < Frames(seconds); i++)
-            {
-                rb.linearVelocity = go.transform.forward * v;
-                physics.FixedUpdate();
-                Physics.Simulate(Time.fixedDeltaTime);
-            }
-            float yawDelta = Mathf.DeltaAngle(yaw0, go.transform.eulerAngles.y) * Mathf.Deg2Rad;
-            float radius = v * (Frames(seconds) * Time.fixedDeltaTime) / yawDelta;
-            // Radio del centro del eje trasero ≈ 3.72 m (diámetro 10.4 m entre soleras)
-            Assert.AreEqual(3.72f, radius, 0.15f);
-            Assert.Greater(yawDelta, 0f, "Joystick a la derecha gira a la derecha");
-        }
+        // FullLock_TurningRadius_MatchesPeugeot308: ahora en VehicleWheelPhysicsTests (dinámica libre, sin forzar la velocidad)
 
         [Test]
         public void HoldingBrake_WhenStopped_EngagesReverse()

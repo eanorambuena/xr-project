@@ -15,6 +15,7 @@ namespace VRCar.Tests.Vehicle
         private Rigidbody rigidbody;
 
         private SimulationMode previousSimulationMode;
+        private GameObject ground;
 
         [SetUp]
         public void Setup()
@@ -22,6 +23,9 @@ namespace VRCar.Tests.Vehicle
             // En Edit Mode la física no avanza sola: la avanzamos manualmente con Physics.Simulate
             previousSimulationMode = Physics.simulationMode;
             Physics.simulationMode = SimulationMode.Script;
+
+            // El modelo de ruedas con raycast necesita un suelo bajo el auto
+            ground = VehicleTestRig.CreateGround();
 
             // Crear GameObject con Rigidbody
             vehicleGameObject = new GameObject("TestVehicle");
@@ -33,6 +37,8 @@ namespace VRCar.Tests.Vehicle
             rigidbody.linearDamping = 0.5f;
             rigidbody.angularDamping = 0.5f;
             rigidbody.freezeRotation = true;
+
+            VehicleTestRig.PlaceAtRest(vehicleGameObject, vehiclePhysics);
         }
 
         [TearDown]
@@ -40,6 +46,7 @@ namespace VRCar.Tests.Vehicle
         {
             Physics.simulationMode = previousSimulationMode;
             Object.DestroyImmediate(vehicleGameObject);
+            Object.DestroyImmediate(ground);
         }
 
         // ============================================================
@@ -83,7 +90,7 @@ namespace VRCar.Tests.Vehicle
         public void ApplyMotorForce_WithFullThrottle_IncreasesVelocity()
         {
             // Inicializar posición
-            vehicleGameObject.transform.position = new Vector3(0, 0, 0);
+            vehicleGameObject.transform.position = new Vector3(0, vehiclePhysics.restPivotHeight, 0);
             vehiclePhysics.accelerationInput = 1.0f;
 
             // Simular varios frames
