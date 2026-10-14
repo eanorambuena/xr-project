@@ -35,6 +35,7 @@ namespace VRCar.Vehicle
         public float wheelbase = 2.613f;          // m (batalla)
         public float track = 1.56f;               // m (trocha)
         public float turningCircle = 10.4f;       // m (diámetro de giro entre soleras)
+        public float maxLateralAccel = 5f;        // m/s² — a velocidad el tope de dirección se reduce para no pasar el agarre
         public float steerRate = 40f;             // °/s de las ruedas (≈1,5 s de tope a tope)
         public float reverseEngageDelay = 0.6f;   // s manteniendo el freno detenido para entrar en reversa
         public float stoppedSpeed = 0.15f;        // m/s
@@ -160,7 +161,9 @@ namespace VRCar.Vehicle
         /// <summary>El ángulo de las ruedas sigue al input con velocidad limitada</summary>
         private void UpdateSteering(float dt)
         {
-            float target = Mathf.Clamp(steerInput, -1f, 1f) * maxSteerAngle;
+            float v = Mathf.Max(0.1f, Mathf.Abs(SignedSpeed));
+            float speedLimit = Mathf.Atan(wheelbase * maxLateralAccel / (v * v)) * Mathf.Rad2Deg;
+            float target = Mathf.Clamp(steerInput, -1f, 1f) * Mathf.Min(maxSteerAngle, speedLimit);
             CurrentSteerAngle = Mathf.MoveTowards(CurrentSteerAngle, target, steerRate * dt);
         }
 
