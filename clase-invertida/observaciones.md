@@ -1,6 +1,6 @@
 # Observaciones — láminas de la clase invertida
 
-Análisis del texto y las notas de las 80 láminas de
+Análisis del texto y las notas de las 82 láminas de
 `Clase_11-Analiticas_Inmersivas_y_Visualizacion_Situada.pptx`. No se revisaron
 las imágenes ni el diseño visual.
 
@@ -16,7 +16,9 @@ no es un defecto, sino el punto de partida.
 | 2–42 | **Visualización situada**: qué es, ejemplos, etiquetado, "hacer visible lo invisible" y filtrado |
 | 43–54 | **Analíticas inmersivas**: definición, oportunidades, cuándo sirven, ¿volver a considerar el 3D? y ejemplos |
 | 55–79 | **Caso de estudio AVAR** (Merino et al., CHI 2020): problema, arquitectura, demo paso a paso con HoloLens + Pharo, modelo de referencia, estudio con 7 usuarios y conclusión |
-| 80 | Licencia CC BY-SA |
+| 80 | Cierre del caso AVAR (nueva) |
+| 81 | Aplicación a nuestro proyecto (nueva) |
+| 82 | Licencia CC BY-SA |
 
 ## Lo que está bien
 
