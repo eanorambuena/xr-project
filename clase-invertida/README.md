@@ -14,13 +14,13 @@ del Grupo 1 ya están publicadas. Enlace a las láminas: _pendiente de agregar
 
 ## Reparto de láminas (acordado por chat, 26-10)
 
-El PPT tiene **80 láminas** y se dividió en 3 partes:
+El PPT tiene **82 láminas** (80 originales + 2 nuevas de cierre y aplicación) y se dividió en 3 partes:
 
 | Integrante | Láminas | Contenido |
 |---|---|---|
 | Estefanía Pakarati | 1–30 | Visualización situada: conceptos, ejemplos, etiquetado, ocultar/mostrar lo invisible (hasta "Problemas de corte"). Ya ha leído sobre el tema. |
 | Matías Harrison | 31–54 | Cierre de visualización situada (filtrado, lentes mágicas, agrupación de etiquetas) + Analíticas Inmersivas (43–54). |
-| Emmanuel Norambuena | 55–80 | Caso de estudio AVAR (55–79) + licencia (80). |
+| Emmanuel Norambuena | 55–82 | Caso AVAR (55–79), cierre de AVAR (80), aplicación a nuestro proyecto (81) y licencia (82). |
 
 - **Kahoot:** lo arma Matías y va **al final** de la clase.
 - Estefanía intentará llegar temprano a la clase (depende de su sueño); dijo
