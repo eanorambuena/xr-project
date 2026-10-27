@@ -8,6 +8,6 @@ del Grupo 1 ya están publicadas. Enlace a las láminas: _pendiente de agregar
 
 ## Contenido preliminar
 
-- `Clase_10-Analiticas_Inmersivas_y_Visualizacion_Situada.pptx`: láminas
+- `Clase_11-Analiticas_Inmersivas_y_Visualizacion_Situada.pptx`: láminas
   preliminares (80 láminas) sobre Analíticas Inmersivas y Visualización
-  Situada. La portada del archivo dice "Clase 9"; el nombre del archivo, "Clase 10".
+  Situada. La portada y el nombre del archivo dicen "Clase 11".
