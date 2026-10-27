@@ -9,18 +9,18 @@ del Grupo 1 ya están publicadas. Enlace a las láminas: _pendiente de agregar
 ## Contenido preliminar
 
 - `Clase_11-Analiticas_Inmersivas_y_Visualizacion_Situada.pptx`: láminas
-  preliminares (80 láminas) sobre Analíticas Inmersivas y Visualización
+  preliminares (85 láminas) sobre Analíticas Inmersivas y Visualización
   Situada. La portada y el nombre del archivo dicen "Clase 11".
 
 ## Reparto de láminas (acordado por chat, 26-10)
 
-El PPT tiene **82 láminas** (80 originales + 2 nuevas de cierre y aplicación) y se dividió en 3 partes:
+El PPT tiene **85 láminas** (80 originales + 5 nuevas: cierre de AVAR, «Después de AVAR», patrones de Lee et al., aplicación y reflexión) y se dividió en 3 partes:
 
 | Integrante | Láminas | Contenido |
 |---|---|---|
 | Estefanía Pakarati | 1–30 | Visualización situada: conceptos, ejemplos, etiquetado, ocultar/mostrar lo invisible (hasta "Problemas de corte"). Ya ha leído sobre el tema. |
 | Matías Harrison | 31–54 | Cierre de visualización situada (filtrado, lentes mágicas, agrupación de etiquetas) + Analíticas Inmersivas (43–54). |
-| Emmanuel Norambuena | 55–82 | Caso AVAR (55–79), cierre de AVAR (80), aplicación a nuestro proyecto (81) y licencia (82). |
+| Emmanuel Norambuena | 55–82 | Caso AVAR (55–79), cierre de AVAR (80), después de AVAR (81), patrones de Lee et al. con gráfico de frecuencia (82), aplicación a nuestro proyecto (83), reflexión del equipo (84) y licencia (85). |
 
 - **Kahoot:** lo arma Matías y va **al final** de la clase.
 - Estefanía intentará llegar temprano a la clase (depende de su sueño); dijo
@@ -93,3 +93,8 @@ Actuar como docente durante la sesión: abrir espacios de pregunta, gestionar lo
   "Toward Agile Situated Visualization: An Exploratory User Study", CHI 2020
   Extended Abstracts, arXiv:2002.05963v1). Las láminas 55–80 se contrastaron
   contra este texto.
+- **Paper de patrones:** `Lee_Situated_Vis_Patterns_TVCG2023_2307.09157v2.pdf` (Lee, Sedlmair y
+  Schmalstieg, IEEE TVCG 2023, arXiv:2307.09157v2). La lámina 82 usa los íconos de
+  la §3.3 y el gráfico de la Fig. 3 de la versión de arXiv del autor; las
+  descripciones son nuestras y la observación sobre Panel es de Lee et al., no
+  una crítica a AVAR.
