@@ -32,8 +32,7 @@ no es un defecto, sino el punto de partida.
 2. **Numeración inconsistente.**
    - La portada decía "Clase 9" y el archivo "Clase 10". Ya se unificó todo a
      **"Clase 11"** (portada, nombre del archivo y README).
-   - Números de lámina colados como texto: "56", "57", "58", "59", "69", "89"
-     (lámina 65) y "12" (lámina 13).
+   - ~~Números de lámina colados~~ eliminados (láminas 13, 56–59, 65, 69, 77).
 3. **Traducción automática.**
    - "Conservas discretas vs. continuas" (lámina 30) corresponde a "sparsity" (ralo o disperso).
    - "Explosiones de texturas en vídeo" (lámina 35).
