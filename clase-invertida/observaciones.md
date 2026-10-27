@@ -1,7 +1,7 @@
 # Observaciones — láminas de la clase invertida
 
 Análisis del texto y las notas de las 80 láminas de
-`Clase_10-Analiticas_Inmersivas_y_Visualizacion_Situada.pptx`. No se revisaron
+`Clase_11-Analiticas_Inmersivas_y_Visualizacion_Situada.pptx`. No se revisaron
 las imágenes ni el diseño visual.
 
 Las láminas son **preliminares porque el Grupo 1 aún no las ha trabajado**: son
@@ -30,8 +30,8 @@ no es un defecto, sino el punto de partida.
 1. ~~Parece la clase original del profesor.~~ Resuelto: es material preliminar
    aún sin intervenir por el grupo. Falta decidir qué aportará el grupo.
 2. **Numeración inconsistente.**
-   - La portada decía "Clase 9" y el archivo dice "Clase 10". La portada ya se
-     cambió a **"Clase 11"**; el nombre del archivo sigue con "Clase_10".
+   - La portada decía "Clase 9" y el archivo "Clase 10". Ya se unificó todo a
+     **"Clase 11"** (portada, nombre del archivo y README).
    - Números de lámina colados como texto: "56", "57", "58", "59", "69", "89"
      (lámina 65) y "12" (lámina 13).
 3. **Traducción automática.**
@@ -49,5 +49,4 @@ no es un defecto, sino el punto de partida.
 
 - Recortar a unas 25–35 láminas, quedándose con una técnica representativa por bloque.
 - Corregir los términos mal traducidos y quitar los números de lámina sueltos.
-- Unificar la numeración de la clase en la portada, el nombre del archivo y el README.
 - Agregar objetivos, una actividad corta y preguntas al cierre.
