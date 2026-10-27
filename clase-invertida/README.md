@@ -28,3 +28,64 @@ El PPT tiene **82 láminas** (80 originales + 2 nuevas de cierre y aplicación) 
 - Los límites de los bloques son aproximados: Estefanía propuso "hasta la 30
   me parece bien"; Matías toma desde la 31.
 - Las observaciones sobre las láminas están en `observaciones.md`.
+
+## Información oficial de la actividad (textual)
+
+DILAB
+IDI 3185 · Realidad Extendida
+Clase Invertida
+Actividad grupal · Profundizar, comunicar y conducir una discusión en XR
+Grupal Láminas base en Canvas Bloque completo de clase
+Cada grupo conducirá una sesión de clase sobre un tema asignado, demostrando comprensión sólida, rigor conceptual y capacidad de comunicar y conducir una discusión. La actividad exige preparar el tema en profundidad, ir más allá del contenido de las láminas base, y coordinar con el grupo la distribución del tiempo y las actividades de la sesión.
+
+### Insumos y acceso
+
+Los materiales base se publican en la sección Módulos de Canvas aproximadamente un mes antes de la fecha asignada:
+
+- Láminas base del tema (deben editarse directamente sobre ese archivo, no crear una presentación nueva).
+- Bibliografía obligatoria asociada al tema.
+- Indicaciones específicas de la clase.
+
+Se espera una preparación que exceda el contenido de las láminas base: lectura de la bibliografía obligatoria, búsqueda de ejemplos actuales y anticipación de preguntas plausibles del curso.
+
+### Asignación de temas y fechas
+
+| Clase | Tema | Fecha | Estudiante |
+|---|---|---|---|
+| 11 | Analíticas Inmersivas y Visualización Situada | 27 de octubre | Grupo 1 |
+| 12 | Afectos Adversos para la Salud y Evaluación en XR | 3 de noviembre | Grupo 2 |
+| 13 | Tracking para VR/AR y Coherencia visual | 10 de noviembre | Grupo 3 |
+
+### Dimensiones evaluadas
+
+Las cinco dimensiones se ponderan por igual y suman 50 puntos. Preparen la sesión atendiendo explícitamente a cada una.
+
+**I. Comprensión del tema — 10 pts.** Se espera dominio profundo y autónomo del contenido, no limitado a lo que las láminas base entregan. Cada grupo debe conectar ideas de forma coherente, contextualizar el tema en el campo de XR, y responder con solvencia a preguntas que exceden el material inicial. Las preguntas del docente y del curso son un espacio central para evidenciar este dominio.
+
+**II. Rigor conceptual — 10 pts.** Uso preciso y experto del lenguaje técnico. Definiciones correctas, matices distinguidos y relaciones entre conceptos bien articuladas. Confundir términos, ofrecer definiciones vagas o mezclar niveles de abstracción distintos deteriora el puntaje incluso cuando la comprensión general del tema es adecuada.
+
+**III. Mejora del material base — 10 pts.** Las láminas base son un punto de partida, no el producto final. Se espera que el estudiante las enriquezca con:
+
+- Ejemplos concretos, aplicaciones y casos reales de XR.
+- Visualizaciones, diagramas o aclaraciones que faciliten la comprensión.
+- Reorganización del contenido cuando mejore la secuencia pedagógica.
+
+No eliminar contenido de las láminas base.
+
+**IV. Gestión del tiempo — 10 pts.** Distribución equilibrada y calibrada del tiempo de clase entre las distintas secciones (introducción, conceptos, ejemplos, discusión), asignando peso proporcional a la densidad de cada contenido. El estudiante debe planificar y ensayar la sesión para cubrir todo el temario sin apuros ni excesos.
+
+**V. Participación y conducción de la clase — 10 pts.** Cada grupo conduce la sesión, no solo la expone. Se espera:
+
+- Pausas para preguntas y verificación de comprensión a lo largo de la exposición, no solo al final.
+- Una actividad, reflexión o dinámica que involucre al curso.
+- 2 a 3 preguntas preparadas para gatillar la discusión con el grupo.
+
+Puntaje total: 50 pts — cada dimensión pesa 10 pts.
+
+### Preparación
+
+Leer la bibliografía obligatoria completa y complementarla con búsqueda propia. Ensayar la sesión cronometrada al menos una vez.
+
+### Conducción
+
+Actuar como docente durante la sesión: abrir espacios de pregunta, gestionar los turnos, sintetizar intervenciones y reconocer honestamente cuando no se sabe algo en lugar de improvisar.
