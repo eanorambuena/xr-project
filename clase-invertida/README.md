@@ -89,3 +89,7 @@ Leer la bibliografía obligatoria completa y complementarla con búsqueda propia
 ### Conducción
 
 Actuar como docente durante la sesión: abrir espacios de pregunta, gestionar los turnos, sintetizar intervenciones y reconocer honestamente cuando no se sabe algo en lugar de improvisar.
+- **Paper del caso AVAR:** `AVAR_Merino_CHI2020_2002.05963v1.pdf` (Merino et al.,
+  "Toward Agile Situated Visualization: An Exploratory User Study", CHI 2020
+  Extended Abstracts, arXiv:2002.05963v1). Las láminas 55–80 se contrastaron
+  contra este texto.
