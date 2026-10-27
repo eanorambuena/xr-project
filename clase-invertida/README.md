@@ -93,8 +93,7 @@ Actuar como docente durante la sesión: abrir espacios de pregunta, gestionar lo
   "Toward Agile Situated Visualization: An Exploratory User Study", CHI 2020
   Extended Abstracts, arXiv:2002.05963v1). Las láminas 55–80 se contrastaron
   contra este texto.
-- **Paper de patrones:** `Lee_Situated_Vis_Patterns_TVCG2023_2307.09157v2.pdf` (Lee, Sedlmair y
-  Schmalstieg, IEEE TVCG 2023, arXiv:2307.09157v2). La lámina 82 usa los íconos de
+- **Paper de patrones:** `Lee_Situated_Vis_Patterns_TVCG2023_2307.09157v2.pdf` (Lee, B., Sedlmair, M., & Schmalstieg, D. (2023). Design patterns for situated visualization in augmented reality. *IEEE Transactions on Visualization and Computer Graphics*, 1–12. https://doi.org/10.1109/TVCG.2023.3327398; copia en arXiv:2307.09157v2). La lámina 82 usa los íconos de
   la §3.3 y el gráfico de la Fig. 3 de la versión de arXiv del autor; las
   descripciones son nuestras y la observación sobre Panel es de Lee et al., no
   una crítica a AVAR.
