@@ -18,7 +18,8 @@ using VRCar.Vehicle;
 /// Crea la escena de práctica: ESTACIONAMIENTO PERPENDICULAR (en batería).
 /// - Fila de espacios de 2.5 x 5.0 m con autos estacionados y un espacio libre (líneas amarillas)
 /// - Pasillo de 7 m y una segunda fila enfrente
-/// - Auto a escala 1:1 (Peugeot 308) con el conductor fijo en el asiento: solo gira la cabeza
+/// - Auto a escala 1:1 (Peugeot 308) con el conductor en el asiento: la cabeza se mueve libremente (6DoF) sin mover el auto
+/// - Cuerpo virtual del conductor (torso y piernas) visible al mirar hacia abajo
 /// - Espejos retrovisor interior y laterales, de tamaño real y con reflejo correcto
 /// - HUD con distancia, velocidad y evaluación del estacionamiento
 /// Controles: gatillo der. acelera · gatillo izq. frena (mantenido detenido = reversa) · joystick der. gira.
@@ -515,7 +516,8 @@ public class SceneSetup
 
     /// <summary>
     /// XR Origin (XR Interaction Toolkit) fijo en el asiento del conductor.
-    /// Solo se sigue la rotación de la cabeza: el conductor mira libremente pero no se desplaza (anti-mareo).
+    /// La cabeza se sigue en rotación Y posición (6DoF): el conductor puede girar, inclinarse hacia los lados/adelante/atrás
+    /// o asomarse por la ventana. Ese movimiento es local al XR Origin, así que el auto y el entorno NO se mueven por él.
     /// </summary>
     static Camera CreateXROrigin(Transform vehicle)
     {
@@ -537,7 +539,7 @@ public class SceneSetup
         var tpd = camGO.AddComponent<TrackedPoseDriver>();
         tpd.positionInput = new InputActionProperty(new InputAction("Position", InputActionType.Value, "<XRHMD>/centerEyePosition", expectedControlType: "Vector3"));
         tpd.rotationInput = new InputActionProperty(new InputAction("Rotation", InputActionType.Value, "<XRHMD>/centerEyeRotation", expectedControlType: "Quaternion"));
-        tpd.trackingType = TrackedPoseDriver.TrackingType.RotationOnly;
+        tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
 
         var origin = originGO.AddComponent<XROrigin>();
         origin.Camera = cam;
@@ -545,6 +547,9 @@ public class SceneSetup
         origin.RequestedTrackingOriginMode = XROrigin.TrackingOriginMode.Device;
         origin.CameraYOffset = DriverEyeHeight;
         offsetGO.transform.localPosition = new Vector3(0, DriverEyeHeight, 0);
+
+        // Cuerpo virtual del conductor (torso y piernas, sin brazos): fijo al asiento, no sigue a la cabeza
+        originGO.AddComponent<DriverBody>().Configure(offsetGO.transform, DriverEyeHeight);
 
         var iam = originGO.AddComponent<InputActionManager>();
         iam.actionAssets = new List<InputActionAsset> { AssetDatabase.LoadAssetAtPath<InputActionAsset>(InputActionsPath) };
@@ -562,7 +567,7 @@ public class SceneSetup
         var tpd = go.AddComponent<TrackedPoseDriver>();
         tpd.positionInput = new InputActionProperty(new InputAction("Position", InputActionType.Value, $"<XRController>{{{hand}}}/devicePosition", expectedControlType: "Vector3"));
         tpd.rotationInput = new InputActionProperty(new InputAction("Rotation", InputActionType.Value, $"<XRController>{{{hand}}}/deviceRotation", expectedControlType: "Quaternion"));
-        var model = Box("Model", go.transform, Vector3.zero, new Vector3(0.05f, 0.05f, 0.12f), GetMaterial("Controller", new Color(0.9f, 0.9f, 0.9f)), false);
+        // Los mandos no se dibujan (sin modelo): solo sirven de input. Sin cubos ni brazos flotando que confundan al usuario.
         // Sin visor los mandos no se mueven: se dejan bajo el piso para que no estorben la vista
         go.transform.localPosition = new Vector3(hand == "LeftHand" ? -0.2f : 0.2f, -1.5f, 0.3f);
     }
