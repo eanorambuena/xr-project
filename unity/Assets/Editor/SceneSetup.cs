@@ -33,7 +33,9 @@ public class SceneSetup
     const string InputActionsPath = "Assets/InputActions/VRCarInput.inputactions";
 
     // Peugeot 308 (m)
-    static readonly Vector3 VehicleSize = new Vector3(1.856f, 1.535f, 4.255f);
+    static readonly Vector3 SedanSize = new Vector3(1.856f, 1.535f, 4.255f);
+    // Medidas del vehículo activo: las del Peugeot, o las de la pickup si está elegida (collider, juez y cámaras las usan)
+    static Vector3 VehicleSize => VehicleKind == "pickup" ? PickupModel.Specs.Size : SedanSize;
     // Posición de los ojos del conductor (relativa al centro del auto, altura sobre el suelo).
     // Si hay modelo 3D se recalcula a partir de su volante.
     static float DriverEyeHeight = 1.2f;
@@ -48,6 +50,30 @@ public class SceneSetup
     /// </summary>
     [MenuItem("VRCar/Usar modelo 3D del auto (experimental)", priority = 20)]
     static void ToggleCarModel() => EditorPrefs.SetBool(UseCarModelPref, !EditorPrefs.GetBool(UseCarModelPref, false));
+
+    // Tipo de vehículo a construir al crear la escena: "sedan" (Peugeot 308, por defecto) o "pickup" (1:1, PickupModel)
+    const string VehicleKindPref = "VRCar.VehicleKind";
+    static string VehicleKind => EditorPrefs.GetString(VehicleKindPref, "sedan");
+
+    [MenuItem("VRCar/Vehículo/Sedán (Peugeot 308)", priority = 21)]
+    static void UseSedan() => EditorPrefs.SetString(VehicleKindPref, "sedan");
+
+    [MenuItem("VRCar/Vehículo/Sedán (Peugeot 308)", true)]
+    static bool UseSedanValidate()
+    {
+        Menu.SetChecked("VRCar/Vehículo/Sedán (Peugeot 308)", VehicleKind == "sedan");
+        return true;
+    }
+
+    [MenuItem("VRCar/Vehículo/Pickup (1:1)", priority = 22)]
+    static void UsePickup() => EditorPrefs.SetString(VehicleKindPref, "pickup");
+
+    [MenuItem("VRCar/Vehículo/Pickup (1:1)", true)]
+    static bool UsePickupValidate()
+    {
+        Menu.SetChecked("VRCar/Vehículo/Pickup (1:1)", VehicleKind == "pickup");
+        return true;
+    }
 
     [MenuItem("VRCar/Usar modelo 3D del auto (experimental)", true)]
     static bool ToggleCarModelValidate()
@@ -374,8 +400,15 @@ public class SceneSetup
         col.sharedMaterial = GetPhysicsMaterial();
 
         ModelMirrorLeft = ModelMirrorRight = null;
-        bool built = EditorPrefs.GetBool(UseCarModelPref, false) && CreateVehicleModel(vehicle);
-        if (!built && SedanModel.Build(vehicle, VehicleSize, out var sedan))
+        // La pickup tiene prioridad: el modelo experimental (sedán concept) no se mezcla con su collider
+        bool built = VehicleKind != "pickup" && EditorPrefs.GetBool(UseCarModelPref, false) && CreateVehicleModel(vehicle);
+        if (!built && VehicleKind == "pickup" && PickupModel.Build(vehicle, VehicleSize, out var pickup))
+        {
+            DriverSeat = pickup.driverSeat;
+            DriverEyeHeight = pickup.eyeHeight;
+            built = true;
+        }
+        if (!built && VehicleKind == "sedan" && SedanModel.Build(vehicle, VehicleSize, out var sedan))
         {
             DriverSeat = sedan.driverSeat;
             DriverEyeHeight = sedan.eyeHeight;
