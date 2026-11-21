@@ -18,8 +18,9 @@ public static class PickupModel
     /// <summary>Medidas reales de referencia (m). Pickup mediana tipo Toyota Hilux / Ford Ranger.</summary>
     public static class Specs
     {
-        public const float Length = 5.25f;        // largo total
-        public const float Width = 1.90f;         // ancho con espejos
+        public const float Length = 5.25f;        // largo total (paragolpes incluidos)
+        public const float Width = 2.20f;         // ancho con espejos (la carrocería mide 1,85 m)
+        public static Vector3 Size => new Vector3(Width, Height, Length);
         public const float Height = 1.80f;        // alto total
         public const float Wheelbase = 3.20f;     // batalla (entre ejes)
         public const float Track = 1.60f;         // trocha
@@ -63,19 +64,19 @@ public static class PickupModel
         var light = Mat("PickupLight", new Color(0.95f, 0.95f, 0.85f), 0.8f);
         var tail = Mat("PickupTail", new Color(0.7f, 0.05f, 0.05f), 0.6f);
 
-        float hw = Specs.Width / 2f - 0.05f; // mitad del ancho de carrocería (sin espejos)
+        const float hw = 0.925f; // mitad del ancho de carrocería (1,85 m); los espejos quedan dentro de Specs.Width
 
         // ---------- Chasis y frente ----------
         Box("Chassis", root.transform, new Vector3(0, 0.40f, 0), new Vector3(1.7f, 0.22f, 5.0f), trim);
         Box("Hood", root.transform, new Vector3(0, 1.02f, 1.75f), new Vector3(1.85f, 0.10f, 1.30f), paint);
         Box("FrontFender", root.transform, new Vector3(0, 0.72f, 1.85f), new Vector3(1.85f, 0.45f, 1.30f), paint);
         Box("Grille", root.transform, new Vector3(0, 0.85f, 2.52f), new Vector3(1.40f, 0.30f, 0.06f), dark);
-        Box("FrontBumper", root.transform, new Vector3(0, 0.50f, 2.58f), new Vector3(1.90f, 0.22f, 0.12f), trim);
-        Box("RearBumper", root.transform, new Vector3(0, 0.50f, -2.58f), new Vector3(1.90f, 0.22f, 0.12f), trim);
+        Box("FrontBumper", root.transform, new Vector3(0, 0.50f, 2.56f), new Vector3(1.90f, 0.22f, 0.12f), trim);
+        Box("RearBumper", root.transform, new Vector3(0, 0.50f, -2.56f), new Vector3(1.90f, 0.22f, 0.12f), trim);
         foreach (float x in new[] { -0.70f, 0.70f })
         {
             Box("Headlight", root.transform, new Vector3(x, 0.98f, 2.52f), new Vector3(0.28f, 0.10f, 0.04f), light);
-            Box("TailLight", root.transform, new Vector3(x, 1.02f, -2.58f), new Vector3(0.28f, 0.12f, 0.04f), tail);
+            Box("TailLight", root.transform, new Vector3(x, 1.02f, -2.56f), new Vector3(0.28f, 0.12f, 0.04f), tail);
         }
 
         // ---------- Cabina (paredes finas, para ver el interior) ----------
@@ -92,7 +93,7 @@ public static class PickupModel
             Box(side < 0 ? "SideGlassL" : "SideGlassR", root.transform, new Vector3(side * (hw - 0.03f), 1.48f, cabCenterZ),
                 new Vector3(0.02f, 0.46f, cabLen - 0.2f), glass);
             // Espejo lateral (caja)
-            Box(side < 0 ? "MirrorL" : "MirrorR", root.transform, new Vector3(side * (hw + 0.14f), 1.15f, 0.70f),
+            Box(side < 0 ? "MirrorL" : "MirrorR", root.transform, new Vector3(side * (hw + 0.09f), 1.15f, 0.70f),
                 new Vector3(0.16f, 0.12f, 0.22f), paint);
         }
         // Techo (pintura) y parabrisas / luneta (vidrio)
@@ -115,10 +116,11 @@ public static class PickupModel
         // ---------- Ruedas (cilindros; eje X) ----------
         float wr = Specs.WheelRadius;
         float halfWb = Specs.Wheelbase / 2f, halfTr = Specs.Track / 2f;
-        Transform fl = Wheel(root.transform, "WheelFL", new Vector3(-halfTr, wr, halfWb), wr, tire, rim);
-        Transform fr = Wheel(root.transform, "WheelFR", new Vector3(halfTr, wr, halfWb), wr, tire, rim);
-        Transform rl = Wheel(root.transform, "WheelRL", new Vector3(-halfTr, wr, -halfWb), wr, tire, rim);
-        Transform rr = Wheel(root.transform, "WheelRR", new Vector3(halfTr, wr, -halfWb), wr, tire, rim);
+        // Las ruedas son solo visuales (no giran ni se dirigen): VehicleVisuals no se conecta a esta camioneta todavía
+        Wheel(root.transform, "WheelFL", new Vector3(-halfTr, wr, halfWb), wr, tire, rim);
+        Wheel(root.transform, "WheelFR", new Vector3(halfTr, wr, halfWb), wr, tire, rim);
+        Wheel(root.transform, "WheelRL", new Vector3(-halfTr, wr, -halfWb), wr, tire, rim);
+        Wheel(root.transform, "WheelRR", new Vector3(halfTr, wr, -halfWb), wr, tire, rim);
 
         // ---------- Interior ----------
         var seat = new Vector3(-0.38f, 0f, -0.25f);
