@@ -87,6 +87,8 @@ public static class EditorCommandBridge
             case "snap": Snap(); break;
             case "snap-mirrors": SnapMirrorCheck(); break;
             case "dump-mirrors": DumpMirrors(); break;
+            case "measure-glass": MeasureGlass(); break;
+            case "islands": Islands(); break;
             case "autodrive": AutoDrive(); break;
             case "autopark": AutoParkTest.Start(); break;
             case "autopark-video": AutoParkTest.Start(record: true); break;
@@ -264,6 +266,60 @@ public static class EditorCommandBridge
         File.WriteAllText("Temp/inspect.txt", sb.ToString());
         UnityEngine.Object.DestroyImmediate(go);
         Log("inspect OK");
+    }
+
+    /// <summary>
+    /// Mide los vidrios de la carrocería (submallas "Windows"/"Glass") en coordenadas del vehículo:
+    /// parabrisas = vértices de vidrio delanteros. Sirve para ubicar espejos donde va el auto real.
+    /// </summary>
+    /// <summary>Islas (componentes conexos por posición) de la malla de carrocería del sedán, en espacio de malla</summary>
+    static void Islands()
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Models/PolyCars/QuaterniusCar.glb");
+        Transform body = null;
+        foreach (var t in prefab.GetComponentsInChildren<Transform>()) if (t.name == "NormalCar1_Cube.012") body = t;
+        var mesh = body.GetComponent<MeshFilter>().sharedMesh;
+        var sb = new System.Text.StringBuilder();
+        foreach (var isl in SedanModel.MeshIslands(mesh))
+            sb.AppendLine($"tris={isl.tris.Count / 3} sub={isl.sub} min={isl.bounds.min.ToString("F3")} max={isl.bounds.max.ToString("F3")}");
+        sb.AppendLine($"mesh bounds {mesh.bounds.min.ToString("F3")} {mesh.bounds.max.ToString("F3")}");
+        File.WriteAllText("Temp/islands.txt", sb.ToString());
+        Log("islands OK");
+    }
+
+    static void MeasureGlass()
+    {
+        var sb = new System.Text.StringBuilder();
+        var car = GameObject.FindWithTag("Vehicle").transform;
+        foreach (var r in car.GetComponentsInChildren<MeshRenderer>())
+        {
+            var mf = r.GetComponent<MeshFilter>();
+            if (mf == null || mf.sharedMesh == null) continue;
+            var mesh = mf.sharedMesh; var verts = mesh.vertices;
+            for (int s = 0; s < mesh.subMeshCount && s < r.sharedMaterials.Length; s++)
+            {
+                var mat = r.sharedMaterials[s]; if (mat == null) continue;
+                if (!(mat.name.Contains("Glass") || mat.name.Contains("Windows"))) continue;
+                var pts = new System.Collections.Generic.List<Vector3>();
+                foreach (var i in mesh.GetTriangles(s)) pts.Add(car.InverseTransformPoint(r.transform.TransformPoint(verts[i])));
+                if (pts.Count == 0) continue;
+                float maxZ = float.MinValue; foreach (var p in pts) maxZ = Mathf.Max(maxZ, p.z);
+                // Parabrisas: vidrio en los 1,2 m delanteros del vidrio, ancho central
+                Vector3 mn = Vector3.one * 99, mx = -Vector3.one * 99; Vector3 top = new Vector3(0, -99, 0); Vector3 lowL = new Vector3(0, 0, -99);
+                foreach (var p in pts)
+                {
+                    if (p.z < maxZ - 1.2f) continue;
+                    mn = Vector3.Min(mn, p); mx = Vector3.Max(mx, p);
+                    if (Mathf.Abs(p.x) < 0.3f && p.y > top.y) top = p;
+                    // Base del pilar A izquierdo: vidrio más exterior (|x| grande) y más adelantado
+                    if (p.x < -0.55f && p.z > lowL.z) lowL = p;
+                }
+                sb.AppendLine($"{r.name} sub{s} {mat.name}: frontBox min={mn.ToString("F3")} max={mx.ToString("F3")} topCentre={top.ToString("F3")} lowestLeftFront={lowL.ToString("F3")}");
+            }
+        }
+        var cam = Camera.main; if (cam != null) sb.AppendLine($"Eye={car.InverseTransformPoint(cam.transform.position).ToString("F3")}");
+        File.WriteAllText("Temp/glass.txt", sb.ToString());
+        Log("measure-glass OK");
     }
 
     static void DumpMirrors()

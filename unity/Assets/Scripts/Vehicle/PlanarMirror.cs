@@ -22,6 +22,8 @@ namespace VRCar.Vehicle
         public int textureHeight = 256;
         public LayerMask cullingMask = ~0;
         public Shader mirrorShader;
+        [Tooltip("Renderers que no se dibujan en el reflejo (p. ej. el propio auto en el retrovisor)")]
+        public Renderer[] hiddenInReflection;
 
         private Camera mirrorCamera;
         private RenderTexture leftTexture, rightTexture;
@@ -72,11 +74,24 @@ namespace VRCar.Vehicle
             if (material == null)
             {
                 var shader = mirrorShader != null ? mirrorShader : Shader.Find("VRCar/StereoMirror");
+                // Si el shader falta o no compila en esta plataforma el vidrio saldría fucsia:
+                // se usa un shader de Unity que siempre existe (mismo reflejo, sin estéreo)
+                if (shader == null || !shader.isSupported)
+                {
+                    Debug.LogWarning(name + ": VRCar/StereoMirror no disponible, uso Unlit/Texture");
+                    shader = Shader.Find("Unlit/Texture");
+                }
                 material = new Material(shader) { name = name + " Mat" };
                 GetComponent<MeshRenderer>().sharedMaterial = material;
             }
             material.SetTexture("_LeftTex", leftTexture);
             material.SetTexture("_RightTex", rightTexture);
+            if (material.HasProperty("_MainTex"))
+            {
+                material.SetTexture("_MainTex", leftTexture);
+                material.mainTextureScale = new Vector2(-1f, 1f); // un espejo invierte izquierda/derecha
+                material.mainTextureOffset = new Vector2(1f, 0f);
+            }
         }
 
         private void LateUpdate() { Render(); }
@@ -122,7 +137,18 @@ namespace VRCar.Vehicle
             // Sin sombras en el reflejo: en un espejo chico no se notan y ahorran un pase de sombras por ojo
             var prevShadows = QualitySettings.shadows;
             QualitySettings.shadows = ShadowQuality.Disable;
+            // Espejo interior: la luneta es "transparente", no se dibuja el propio auto (tapa el reflejo con negro)
+            bool[] wasEnabled = null;
+            if (hiddenInReflection != null && hiddenInReflection.Length > 0)
+            {
+                wasEnabled = new bool[hiddenInReflection.Length];
+                for (int i = 0; i < hiddenInReflection.Length; i++)
+                    if (hiddenInReflection[i] != null) { wasEnabled[i] = hiddenInReflection[i].enabled; hiddenInReflection[i].enabled = false; }
+            }
             mirrorCamera.Render();
+            if (wasEnabled != null)
+                for (int i = 0; i < hiddenInReflection.Length; i++)
+                    if (hiddenInReflection[i] != null) hiddenInReflection[i].enabled = wasEnabled[i];
             QualitySettings.shadows = prevShadows;
         }
 

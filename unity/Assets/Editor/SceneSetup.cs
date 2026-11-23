@@ -57,6 +57,9 @@ public class SceneSetup
     }
     // Espejos laterales del modelo (posición local en el auto), si existen
     static Vector3? ModelMirrorLeft, ModelMirrorRight;
+    // Vértices de los espejos del modelo (local al vehículo): si existen, nuestro espejo se pone
+    // delante de cada uno de modo que, visto desde el asiento, lo tape por completo
+    static Vector3[] ModelMirrorHullLeft, ModelMirrorHullRight;
 
     // Estacionamiento (m)
     const float SpotWidth = 2.5f, SpotLength = 5.0f, AisleWidth = 7.0f;
@@ -374,11 +377,14 @@ public class SceneSetup
         col.sharedMaterial = GetPhysicsMaterial();
 
         ModelMirrorLeft = ModelMirrorRight = null;
+        ModelMirrorHullLeft = ModelMirrorHullRight = null;
         bool built = EditorPrefs.GetBool(UseCarModelPref, false) && CreateVehicleModel(vehicle);
         if (!built && SedanModel.Build(vehicle, VehicleSize, out var sedan))
         {
             DriverSeat = sedan.driverSeat;
             DriverEyeHeight = sedan.eyeHeight;
+            // Los espejos del modelo se conservan; los nuestros se ponen delante de ellos
+            ModelMirrorHullLeft = sedan.mirrorLeft; ModelMirrorHullRight = sedan.mirrorRight;
             built = true;
         }
         if (!built)
@@ -504,7 +510,17 @@ public class SceneSetup
                                   "BodyDoorRMirror", "BodyDoorRMirrorColor1", "BodyDoorRMirrorColor2" })
         {
             var t = FindDeep(m, n);
-            if (t != null) foreach (var r in t.GetComponents<Renderer>()) r.enabled = false;
+            if (t == null) continue;
+            foreach (var r in t.GetComponents<Renderer>())
+            {
+                // Posición del espejo real del modelo (coords. del vehículo) para colocar el nuestro ahí
+                if (n.EndsWith("Mirror"))
+                {
+                    var lp = vehicle.transform.InverseTransformPoint(r.bounds.center);
+                    if (n.StartsWith("BodyDoorL")) ModelMirrorLeft = lp; else ModelMirrorRight = lp;
+                }
+                r.enabled = false;
+            }
         }
 
         var visuals = vehicle.AddComponent<VehicleVisuals>();
@@ -583,33 +599,74 @@ public class SceneSetup
         Vector3 eyeLocal = new Vector3(DriverSeat.x, floorY + DriverEyeHeight, DriverSeat.z);
         var housing = GetMaterial("MirrorHousing", new Color(0.08f, 0.08f, 0.09f));
 
+        // Extensión real de la carrocería (sin espejos ni ruedas): techo y semiancho
+        float roofY = VehicleSize.y / 2f, bodyHalf = VehicleSize.x / 2f - 0.05f;
+        var visual = vehicle.Find("Visual");
+        if (visual != null)
+        {
+            float rY = float.MinValue, rX = 0f;
+            foreach (var r in visual.GetComponentsInChildren<Renderer>())
+            {
+                if (r.name.Contains("Mirror") || r.name.Contains("Wheel") || r.name.Contains("Tire")) continue;
+                var b = r.bounds;
+                for (int i = 0; i < 8; i++)
+                {
+                    var c = b.center + Vector3.Scale(b.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
+                    var l = vehicle.InverseTransformPoint(c);
+                    rY = Mathf.Max(rY, l.y); rX = Mathf.Max(rX, Mathf.Abs(l.x));
+                }
+            }
+            if (rY > float.MinValue) { roofY = rY; bodyHalf = rX; }
+        }
+        // Retrovisor: el vástago une el techo con la carcasa (sin flotar), cerca del conductor
+        // Coordenadas medidas en el sedán (vidrio real): borde superior del parabrisas ~0.47 m
+        // delante del ojo y ~0.20 m sobre él; base del pilar A ~1.0 m delante y ~0.25 m abajo.
+        float intY = Mathf.Min(roofY - 0.08f, eyeLocal.y + 0.13f), intZ = eyeLocal.z + 0.47f;
+        float sideX = bodyHalf + 0.09f, sideY = eyeLocal.y - 0.16f, sideZ = eyeLocal.z + 1.00f;
+
         // (nombre, posición local, tamaño del vidrio, dirección que debe mostrar)
         var mirrors = new (string, Vector3, Vector2, Vector3)[]
         {
-            ("Mirror_Interior", new Vector3(0.0f, eyeLocal.y + 0.08f, eyeLocal.z + 0.50f), new Vector2(0.25f, 0.07f), new Vector3(0f, -0.05f, -1f)),
-            ("Mirror_Left",     ModelMirrorLeft ?? new Vector3(-VehicleSize.x / 2f - 0.12f, eyeLocal.y - 0.02f, eyeLocal.z + 0.85f), new Vector2(0.26f, 0.16f), new Vector3(-0.20f, -0.04f, -1f)),
-            ("Mirror_Right",    ModelMirrorRight ?? new Vector3(VehicleSize.x / 2f + 0.12f, eyeLocal.y - 0.02f, eyeLocal.z + 0.85f), new Vector2(0.26f, 0.16f), new Vector3(0.28f, -0.06f, -1f)),
+            ("Mirror_Interior", new Vector3(0.0f, intY, intZ), new Vector2(0.25f, 0.07f), new Vector3(0f, -0.05f, -1f)),
+            ("Mirror_Left",     ModelMirrorLeft ?? new Vector3(-sideX, sideY, sideZ), new Vector2(0.26f, 0.16f), new Vector3(-0.20f, -0.04f, -1f)),
+            ("Mirror_Right",    ModelMirrorRight ?? new Vector3(sideX, sideY, sideZ), new Vector2(0.26f, 0.16f), new Vector3(0.28f, -0.06f, -1f)),
         };
 
-        foreach (var (name, pos, size, view) in mirrors)
+        foreach (var (name, p0, s0, view) in mirrors)
         {
+            Vector3 pos = p0; Vector2 size = s0;
+            var hull = name == "Mirror_Left" ? ModelMirrorHullLeft : name == "Mirror_Right" ? ModelMirrorHullRight : null;
             var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
             go.name = name;
             Object.DestroyImmediate(go.GetComponent<Collider>());
             go.transform.SetParent(vehicle, false);
-            go.transform.localPosition = pos;
             // Normal del vidrio = bisectriz entre la dirección al ojo y la dirección que se quiere ver
-            Vector3 toEye = (eyeLocal - pos).normalized;
-            Vector3 normal = (toEye + view.normalized).normalized;
+            Vector3 normal;
+            if (hull != null)
+            {
+                CoverFromEye(hull, eyeLocal, view, s0, out pos, out size, out normal);
+                // Ajuste hecho a ojo en el Editor desde el asiento del conductor (espejo izquierdo,
+                // 23-11-2026): 15,7 cm hacia fuera y 1 cm hacia el conductor. Se aplica simétrico
+                pos += new Vector3(Mathf.Sign(pos.x) * 0.157f, 0f, -0.01f);
+            }
+            else
+            {
+                normal = ((eyeLocal - pos).normalized + view.normalized).normalized;
+                pos += normal * 0.025f; // un poco hacia el conductor
+            }
             // La cara visible del Quad mira hacia -forward → forward = -normal
             go.transform.localRotation = Quaternion.LookRotation(-normal, Vector3.up);
-            // Un poco hacia el conductor para que la carcasa del modelo no tape el vidrio
-            go.transform.localPosition = pos + normal * 0.025f;
+            go.transform.localPosition = pos;
             go.transform.localScale = new Vector3(size.x, size.y, 1f);
             var mirror = go.AddComponent<PlanarMirror>();
             mirror.eye = eye;
             mirror.eyeCamera = eye.GetComponent<Camera>();
             mirror.mirrorShader = Shader.Find("VRCar/StereoMirror");
+            if (name == "Mirror_Interior")
+            {
+                var vis = vehicle.Find("Visual");
+                if (vis != null) mirror.hiddenInReflection = vis.GetComponentsInChildren<Renderer>();
+            }
 
             // Carcasa detrás del vidrio
             var back = Box(name + "_Housing", vehicle, pos + normal * -0.03f, new Vector3(size.x + 0.02f, size.y + 0.02f, 0.03f), housing, false);
@@ -617,17 +674,60 @@ public class SceneSetup
             if (name != "Mirror_Interior")
             {
                 // Brazo que une el espejo a la puerta
-                float side = Mathf.Sign(pos.x), bodyX = side * (VehicleSize.x / 2f - 0.06f);
+                float side = Mathf.Sign(pos.x), bodyX = side * (bodyHalf - 0.04f);
+                // Con espejo del modelo: el brazo nace donde ese espejo se une a la puerta
+                if (hull != null) { bodyX = side * float.MaxValue; foreach (var h in hull) if (Mathf.Abs(h.x) < Mathf.Abs(bodyX)) bodyX = h.x; }
                 float len = Mathf.Abs(pos.x - bodyX);
                 Box(name + "_Arm", vehicle, new Vector3((pos.x + bodyX) / 2f, pos.y - size.y / 2f + 0.01f, pos.z + 0.03f),
                     new Vector3(len, 0.025f, 0.045f), housing, false);
             }
             else
             {
-                Box(name + "_Stem", vehicle, new Vector3(pos.x, pos.y + size.y / 2f + 0.05f, pos.z + 0.05f),
-                    new Vector3(0.025f, 0.10f, 0.025f), housing, false);
+                // De la parte superior de la carcasa hasta 1 cm dentro del techo (contacto en ambos extremos)
+                float housingTop = pos.y + (size.y + 0.02f) / 2f - 0.005f;
+                float stemTop = roofY + 0.01f;
+                Box(name + "_Stem", vehicle, new Vector3(pos.x, (housingTop + stemTop) / 2f, pos.z + 0.03f),
+                    new Vector3(0.025f, stemTop - housingTop, 0.025f), housing, false);
             }
         }
+    }
+
+    /// <summary>
+    /// Vidrio que, visto desde el ojo, tapa por completo el espejo del modelo (puntos de su malla):
+    /// plano orientado según la ley de reflexión, apenas delante del punto más cercano al ojo, y
+    /// rectángulo = sombra del espejo proyectada desde el ojo sobre ese plano (+1 cm por lado),
+    /// nunca menor que el tamaño estándar (centrado sobre esa sombra).
+    /// </summary>
+    static void CoverFromEye(Vector3[] hull, Vector3 eye, Vector3 view, Vector2 minSize, out Vector3 pos, out Vector2 size, out Vector3 normal)
+    {
+        Vector3 c = Vector3.zero;
+        foreach (var p in hull) c += p;
+        c /= hull.Length;
+        normal = ((eye - c).normalized + view.normalized).normalized;
+        var rot = Quaternion.LookRotation(-normal, Vector3.up);
+        Vector3 right = rot * Vector3.right, up = rot * Vector3.up;
+        float d = float.MinValue;
+        foreach (var p in hull) d = Mathf.Max(d, Vector3.Dot(p, normal));
+        d += 0.01f; // 1 cm delante de la cara trasera del espejo del modelo: queda entero detrás
+        float eyeD = Vector3.Dot(eye, normal);
+        Vector2 mn = Vector2.one * float.MaxValue, mx = -mn;
+        foreach (var p in hull)
+        {
+            float t = (d - eyeD) / Vector3.Dot(p - eye, normal); // rayo ojo→punto cortado por el plano
+            Vector3 q = eye + t * (p - eye);
+            var uv = new Vector2(Vector3.Dot(q, right), Vector3.Dot(q, up));
+            mn = Vector2.Min(mn, uv); mx = Vector2.Max(mx, uv);
+        }
+        // El espejo del modelo va bajo, casi en la línea de la puerta: desde el asiento la mitad
+        // queda tapada por el marco. Se alarga hacia arriba y hacia fuera (el lado que no tapa la
+        // puerta) para que el vidrio visible tenga el tamaño de un retrovisor real
+        // El del acompañante queda detrás del pilar A: se alarga más hacia fuera para asomar a su derecha
+        mx.y += 0.05f;
+        float outward = Mathf.Sign(c.x) == Mathf.Sign(eye.x) ? 0.03f : 0.07f;
+        if (c.x < 0) mn.x -= outward; else mx.x += outward;
+        Vector2 mid = (mn + mx) / 2f;
+        size = Vector2.Max(mx - mn + Vector2.one * 0.02f, minSize);
+        pos = right * mid.x + up * mid.y + normal * d;
     }
 
     static HUDManager CreateHUD(Transform vehicle, Camera cam)

@@ -24,11 +24,13 @@ public static class SedanModel
     {
         public Vector3 driverSeat;   // x, z relativos al centro del auto
         public float eyeHeight;      // sobre el suelo
+        public Vector3[] mirrorLeft, mirrorRight; // vértices de los espejos del modelo (local al vehículo)
     }
 
     public static bool Build(GameObject vehicle, Vector3 size, out Result result)
     {
         result = default;
+        Vector3[] mirrorL = null, mirrorR = null;
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ModelPath);
         if (prefab == null) return false;
 
@@ -62,6 +64,14 @@ public static class SedanModel
             else { if (n.StartsWith("Blue")) mats[i] = paint; innerMats[i] = trim; }
         }
         bodyR.sharedMaterials = mats;
+        // Espejos del modelo: se dejan tal cual; SceneSetup pone el PlanarMirror delante de cada uno
+        // para que, desde el asiento, lo tape por completo
+        foreach (var pts in ModelMirrors(body.GetComponent<MeshFilter>().sharedMesh))
+        {
+            var w = new Vector3[pts.Length];
+            for (int i = 0; i < w.Length; i++) w[i] = vehicle.transform.InverseTransformPoint(body.TransformPoint(pts[i]));
+            if (w[0].x < 0) mirrorL = w; else mirrorR = w;
+        }
         var inner = new GameObject("BodyInside");
         inner.transform.SetParent(body, false);
         // Por dentro: el techo (sobre la línea de las ventanas) va en un tapiz claro, el resto en plástico gris
@@ -167,7 +177,7 @@ public static class SedanModel
         visuals.spinAxis = Vector3.right;
         visuals.wheelRadius = 0.262f * sw;
 
-        result = new Result { driverSeat = seat, eyeHeight = eye };
+        result = new Result { driverSeat = seat, eyeHeight = eye, mirrorLeft = mirrorL, mirrorRight = mirrorR };
         return true;
     }
 
@@ -271,6 +281,72 @@ public static class SedanModel
         roofSub = count;
         SaveMesh(m);
         return m;
+    }
+
+    /// <summary>
+    /// Vértices (espacio de malla) de cada espejo lateral del modelo: isla pequeña (&lt;30 cm por eje)
+    /// que sobresale por el costado de la carrocería.
+    /// </summary>
+    public static System.Collections.Generic.List<Vector3[]> ModelMirrors(Mesh src)
+    {
+        var found = new System.Collections.Generic.List<Vector3[]>();
+        float half = src.bounds.extents.x;
+        var v = src.vertices;
+        foreach (var isl in MeshIslands(src))
+        {
+            var sz = isl.bounds.size;
+            if (sz.x >= 0.3f || sz.y >= 0.3f || sz.z >= 0.3f || Mathf.Abs(isl.bounds.center.x) <= 0.85f * half) continue;
+            var pts = new System.Collections.Generic.List<Vector3>();
+            foreach (int i in isl.tris) pts.Add(v[i]);
+            found.Add(pts.ToArray());
+        }
+        return found;
+    }
+
+    public struct Island { public int sub; public System.Collections.Generic.List<int> tris; public Bounds bounds; }
+
+    /// <summary>Componentes conexos de triángulos (vértices unidos por posición), por submalla</summary>
+    public static System.Collections.Generic.List<Island> MeshIslands(Mesh m)
+    {
+        var v = m.vertices;
+        // Unir vértices por posición (la malla duplica vértices en las aristas duras)
+        var key = new System.Collections.Generic.Dictionary<Vector3Int, int>();
+        var id = new int[v.Length];
+        for (int i = 0; i < v.Length; i++)
+        {
+            var k = Vector3Int.RoundToInt(v[i] * 10000f);
+            if (!key.TryGetValue(k, out id[i])) { id[i] = key.Count; key[k] = id[i]; }
+        }
+        var parent = new int[key.Count];
+        for (int i = 0; i < parent.Length; i++) parent[i] = i;
+        int F(int x) { while (parent[x] != x) x = parent[x] = parent[parent[x]]; return x; }
+        var all = new System.Collections.Generic.List<int[]>();
+        for (int s = 0; s < m.subMeshCount; s++)
+        {
+            var t = m.GetTriangles(s); all.Add(t);
+            for (int i = 0; i < t.Length; i += 3)
+            { parent[F(id[t[i]])] = F(id[t[i + 1]]); parent[F(id[t[i + 1]])] = F(id[t[i + 2]]); }
+        }
+        var map = new System.Collections.Generic.Dictionary<(int, int), int>();
+        var result = new System.Collections.Generic.List<Island>();
+        for (int s = 0; s < all.Count; s++)
+        {
+            var t = all[s];
+            for (int i = 0; i < t.Length; i += 3)
+            {
+                var k = (s, F(id[t[i]]));
+                if (!map.TryGetValue(k, out int idx))
+                {
+                    idx = result.Count; map[k] = idx;
+                    result.Add(new Island { sub = s, tris = new System.Collections.Generic.List<int>(), bounds = new Bounds(v[t[i]], Vector3.zero) });
+                }
+                var isl = result[idx];
+                isl.tris.Add(t[i]); isl.tris.Add(t[i + 1]); isl.tris.Add(t[i + 2]);
+                isl.bounds.Encapsulate(v[t[i]]); isl.bounds.Encapsulate(v[t[i + 1]]); isl.bounds.Encapsulate(v[t[i + 2]]);
+                result[idx] = isl;
+            }
+        }
+        return result;
     }
 
     static Mesh TorusMesh(float R, float r, int seg = 48, int side = 10)
