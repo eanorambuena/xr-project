@@ -16,10 +16,11 @@ using UnityEngine;
 /// </summary>
 public static class PickupModel
 {
-    /// <summary>Medidas reales de referencia (m). Pickup mediana tipo Toyota Hilux / Ford Ranger.</summary>
-    const float BodyLength = 5.25f; // largo de diseño de la carrocería antes de escalar
+    /// <summary>Largo de diseño de la carrocería (m), antes de escalarla al largo de <see cref="Specs"/>.</summary>
+    const float BodyLength = 5.25f;
 
-        public static class Specs
+    /// <summary>Medidas reales de referencia (m). Pickup compacta, pensada para caber en la plaza de 5,0 m.</summary>
+    public static class Specs
     {
         public const float Length = 4.80f;        // largo total (paragolpes incluidos); cabe en la plaza más angosta (5,0 m)
         public const float Width = 2.20f;         // ancho con espejos (la carrocería mide 1,85 m)
