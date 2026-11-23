@@ -24,6 +24,7 @@ public static class PickupModel
     {
         public const float Length = 4.80f;        // largo total (paragolpes incluidos); cabe en la plaza más angosta (5,0 m)
         public const float Width = 2.20f;         // ancho con espejos (la carrocería mide 1,85 m)
+        public const float BodyWidth = 1.85f;     // ancho de la carrocería (sin espejos)
         public static Vector3 Size => new Vector3(Width, Height, Length);
         public const float Height = 1.80f;        // alto total
         public const float Wheelbase = 2.90f;     // batalla (pickup compacta)

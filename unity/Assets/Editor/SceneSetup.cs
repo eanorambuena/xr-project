@@ -428,7 +428,15 @@ public class SceneSetup
                 GetMaterial("Dashboard", new Color(0.1f, 0.1f, 0.12f)), false);
         }
 
-        vehicle.AddComponent<VehiclePhysics>();
+        var physics = vehicle.AddComponent<VehiclePhysics>();
+        if (VehicleKind == "pickup")
+        {
+            // Calibración de la pickup: batalla, trocha, diámetro de giro y masa de inercia de la carrocería
+            physics.wheelbase = PickupModel.Specs.Wheelbase;
+            physics.track = PickupModel.Specs.Track;
+            physics.turningCircle = PickupModel.Specs.TurningCircle;
+            physics.bodySize = PickupModel.Specs.Size;
+        }
         vehicle.AddComponent<EngineSound>();
         vehicle.AddComponent<ExerciseReset>();
         var input = vehicle.AddComponent<InputMapper>();
@@ -436,7 +444,8 @@ public class SceneSetup
         so.FindProperty("inputActions").objectReferenceValue = AssetDatabase.LoadAssetAtPath<InputActionAsset>(InputActionsPath);
         so.ApplyModifiedPropertiesWithoutUndo();
 
-        vehicle.AddComponent<ObstacleDetector>();
+        var detector = vehicle.AddComponent<ObstacleDetector>();
+        if (VehicleKind == "pickup") detector.vehicleWidth = PickupModel.Specs.BodyWidth; // los sensores salen de la carrocería, sin espejos
         vehicle.AddComponent<AudioSource>().playOnAwake = false;
         vehicle.AddComponent<CollisionFeedback>();
         return vehicle;
