@@ -437,7 +437,11 @@ public class SceneSetup
             physics.wheelbase = PickupModel.Specs.Wheelbase;
             physics.track = PickupModel.Specs.Track;
             physics.turningCircle = PickupModel.Specs.TurningCircle;
-            physics.bodySize = PickupModel.Specs.Size;
+            // Carrocería sin espejos (1,85 m), igual que el collider
+            physics.bodySize = new Vector3(PickupModel.Specs.BodyWidth, PickupModel.Specs.Height, PickupModel.Specs.Length);
+            // El piso del modelo queda Height/2 bajo el pivote; sin esto la carrocería se hunde en el asfalto
+            physics.wheelRadius = PickupModel.Specs.WheelRadius;
+            physics.restPivotHeight = PickupModel.Specs.Height / 2f;
         }
         vehicle.AddComponent<EngineSound>();
         vehicle.AddComponent<ExerciseReset>();
