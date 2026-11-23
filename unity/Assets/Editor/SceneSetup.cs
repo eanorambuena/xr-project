@@ -633,11 +633,6 @@ public partial class SceneSetup
         go.transform.localPosition = new Vector3(hand == "LeftHand" ? -0.2f : 0.2f, -1.5f, 0.3f);
     }
 
-    /// <summary>
-    /// Espejos de tamaño real, ajustados como lo haría un conductor:
-    /// - Retrovisor interior 25 x 7 cm, centrado, mirando la luneta trasera
-    /// - Laterales 19 x 12 cm, mostrando apenas el costado del propio auto
-    /// </summary>
     /// <summary>Semiancho de la carrocería en coordenadas del vehículo, medido de los renderers de "Visual".</summary>
     static float BodyHalfWidth(Transform vehicle)
     {
@@ -647,7 +642,7 @@ public partial class SceneSetup
         float max = 0f;
         foreach (var r in visual.GetComponentsInChildren<Renderer>())
         {
-            if (r.name.Contains("Mirror") || r.name.Contains("Wheel") || r.name.Contains("Tire")) continue;
+            if (r.name.Contains("Mirror") || r.name.Contains("Wheel") || r.name.Contains("Tire") || r.name.Contains("Tyre") || r.name.Contains("Rim")) continue;
             var b = r.bounds;
             for (int i = 0; i < 8; i++)
             {
@@ -671,6 +666,11 @@ public partial class SceneSetup
         return max > float.MinValue ? Mathf.Min(max, top) : top;
     }
 
+    /// <summary>
+    /// Espejos de tamaño real, ajustados como lo haría un conductor:
+    /// - Retrovisor interior 25 x 7 cm, centrado, mirando la luneta trasera
+    /// - Laterales 19 x 12 cm, mostrando apenas el costado del propio auto
+    /// </summary>
     static void CreateMirrors(Transform vehicle, Transform eye)
     {
         float floorY = -VehicleSize.y / 2f;

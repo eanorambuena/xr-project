@@ -56,7 +56,7 @@ namespace VRCar.Tests.Vehicle
             Assume.That(visual, Is.Not.Null, "El vehículo no tiene 'Visual'");
             foreach (var r in visual.GetComponentsInChildren<Renderer>())
             {
-                if (r.name.Contains("Mirror") || r.name.Contains("Wheel") || r.name.Contains("Tire")) continue;
+                if (r.name.Contains("Mirror") || r.name.Contains("Wheel") || r.name.Contains("Tire") || r.name.Contains("Tyre") || r.name.Contains("Rim")) continue;
                 var b = r.bounds;
                 for (int i = 0; i < 8; i++)
                 {
