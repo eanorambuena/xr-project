@@ -26,7 +26,7 @@ using VRCar.Vehicle;
 /// Sin visor: W/↑ acelera · S/↓/Espacio frena/reversa · A/D gira.
 /// Menú: VRCar → 2. Crear escena de estacionamiento
 /// </summary>
-public class SceneSetup
+public partial class SceneSetup
 {
     public const string ScenePath = "Assets/Scenes/Parking_Perpendicular.unity";
     const string MaterialsFolder = "Assets/Materials";
@@ -73,12 +73,15 @@ public class SceneSetup
         CreateLight();
         CreateGround();
         var spot = CreateParkingLot();
+        AddTargetMarker(spot, Vector3.zero);   // flecha flotante sobre el espacio A4
         CreateSurroundings();
         var vehicle = CreateVehicle();
         var xrCamera = CreateXROrigin(vehicle.transform);
         CreateMirrors(vehicle.transform, xrCamera.transform);
         var hud = CreateHUD(vehicle.transform, xrCamera);
-        new GameObject("GameManager").AddComponent<GameManager>();
+        var gameManager = new GameObject("GameManager");
+        gameManager.AddComponent<GameManager>();
+        gameManager.AddComponent<ExperienceController>();   // B termina y muestra el resultado; A reintenta; B otra vez vuelve al menú
 
         var judgment = new GameObject("ParkingJudgment").AddComponent<ParkingJudgment>();
         judgment.Configure(spot, SpotWidth, SpotLength, vehicle.GetComponent<BoxCollider>(), hud);
@@ -293,6 +296,7 @@ public class SceneSetup
                 head.isStatic = true;
             }
         }
+        root.gameObject.AddComponent<PerpendicularParkingCourse>(); // ancho del espacio A4 según dificultad
         return target;
     }
 
@@ -401,6 +405,7 @@ public class SceneSetup
         so.FindProperty("inputActions").objectReferenceValue = AssetDatabase.LoadAssetAtPath<InputActionAsset>(InputActionsPath);
         so.ApplyModifiedPropertiesWithoutUndo();
 
+        vehicle.AddComponent<WheelSteering>();   // dirección con los dos controles como volante (reemplaza al joystick)
         vehicle.AddComponent<ObstacleDetector>();
         vehicle.AddComponent<AudioSource>().playOnAwake = false;
         vehicle.AddComponent<CollisionFeedback>();
@@ -532,6 +537,8 @@ public class SceneSetup
         camGO.tag = "MainCamera";
         camGO.transform.SetParent(offsetGO.transform, false);
         var cam = camGO.AddComponent<Camera>();
+        cam.clearFlags = CameraClearFlags.SolidColor;   // siempre borra: en el visor, sin nada que dibuje el fondo queda la imagen anterior
+        cam.backgroundColor = new Color(0.55f, 0.72f, 0.92f);   // color de cielo
         cam.nearClipPlane = 0.03f;
         cam.farClipPlane = 500f;
         camGO.AddComponent<AudioListener>();
@@ -726,8 +733,9 @@ public class SceneSetup
         r.offsetMin = Vector2.zero; r.offsetMax = Vector2.zero;
     }
 
+    /// <summary>Deja en el build todas las escenas que existen (menú primero). Ver SceneSetup.Scenarios.cs</summary>
     static void SetBuildScene(string path)
     {
-        EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(path, true) };
+        RegisterScenesInBuild();
     }
 }
