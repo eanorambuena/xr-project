@@ -395,7 +395,9 @@ public class SceneSetup
         var col = vehicle.AddComponent<BoxCollider>();
         // Despeje al suelo: el collider no roza el asfalto, las ruedas (raycast) sostienen el auto
         const float groundClearance = 0.15f;
-        col.size = new Vector3(VehicleSize.x, VehicleSize.y - groundClearance, VehicleSize.z);
+        // Pickup: ancho de carrocería (sin espejos), igual que el sedán; el juez usa este mismo collider
+        float colWidth = VehicleKind == "pickup" ? PickupModel.Specs.BodyWidth : VehicleSize.x;
+        col.size = new Vector3(colWidth, VehicleSize.y - groundClearance, VehicleSize.z);
         col.center = new Vector3(0f, groundClearance / 2f, 0f);
         col.sharedMaterial = GetPhysicsMaterial();
 
