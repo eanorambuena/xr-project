@@ -105,9 +105,7 @@ public static class PickupModel
             // Ventanilla lateral (transparente)
             Box(side < 0 ? "SideGlassL" : "SideGlassR", body.transform, new Vector3(side * (hw - 0.03f), 1.48f, cabCenterZ),
                 new Vector3(0.02f, 0.46f, cabLen - 0.2f), glass);
-            // Espejo lateral (caja)
-            Box(side < 0 ? "MirrorL" : "MirrorR", body.transform, new Vector3(side * (hw + 0.09f), 1.15f, 0.70f),
-                new Vector3(0.16f, 0.12f, 0.22f), paint);
+            // Los espejos laterales los crea SceneSetup.CreateMirrors (un solo juego, con vidrio plano)
         }
         // Techo (pintura) y parabrisas / luneta (vidrio)
         Box("Roof", body.transform, new Vector3(0, Specs.Height - 0.02f, cabCenterZ), new Vector3(1.80f, 0.04f, cabLen), paint);

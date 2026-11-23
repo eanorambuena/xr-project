@@ -671,7 +671,7 @@ public class SceneSetup
             if (name != "Mirror_Interior")
             {
                 // Brazo que une el espejo a la puerta
-                float side = Mathf.Sign(pos.x), bodyX = side * (VehicleSize.x / 2f - 0.06f);
+                float side = Mathf.Sign(pos.x), bodyX = side * ((VehicleKind == "pickup" ? PickupModel.Specs.BodyWidth : VehicleSize.x) / 2f - 0.06f);
                 float len = Mathf.Abs(pos.x - bodyX);
                 Box(name + "_Arm", vehicle, new Vector3((pos.x + bodyX) / 2f, pos.y - size.y / 2f + 0.01f, pos.z + 0.03f),
                     new Vector3(len, 0.025f, 0.045f), housing, false);
