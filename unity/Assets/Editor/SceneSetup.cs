@@ -445,7 +445,11 @@ public class SceneSetup
         so.ApplyModifiedPropertiesWithoutUndo();
 
         var detector = vehicle.AddComponent<ObstacleDetector>();
-        if (VehicleKind == "pickup") detector.vehicleWidth = PickupModel.Specs.BodyWidth; // los sensores salen de la carrocería, sin espejos
+        if (VehicleKind == "pickup")
+        {
+            detector.vehicleWidth = PickupModel.Specs.BodyWidth; // los sensores salen de la carrocería, sin espejos
+            detector.vehicleLength = PickupModel.Specs.Length;   // sensores delanteros y traseros en los paragolpes reales
+        }
         vehicle.AddComponent<AudioSource>().playOnAwake = false;
         vehicle.AddComponent<CollisionFeedback>();
         return vehicle;
