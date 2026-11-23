@@ -18,7 +18,8 @@ namespace VRCar.Obstacles
         public float detectionRange = 10f;           // Rango máximo de detección (m)
         public float vehicleWidth = 1.856f;          // Ancho del vehículo Peugeot 308 (m)
         public float vehicleLength = 4.255f;         // Largo del vehículo (m)
-        public float lowSensorHeight = 0.10f;        // Altura de los sensores bajos sobre la base del auto (m)
+        public float lowSensorHeight = 0.10f;        // Altura de los sensores bajos sobre el piso (m)
+        public float groundClearance = 0f;           // Despeje entre el piso y la base del collider (m)
 
         // Estado actual
         private float closestDistance = float.MaxValue;
@@ -83,7 +84,7 @@ namespace VRCar.Obstacles
             var box = GetComponent<BoxCollider>();
             if (box != null)
             {
-                float bottom = box.center.y - box.size.y / 2f;
+                float bottom = box.center.y - box.size.y / 2f - groundClearance;
                 Vector3 low = transform.up * (bottom + lowSensorHeight);
                 CheckRaycast(frontLeftCorner + low, dir);
                 CheckRaycast(frontRightCorner + low, dir);

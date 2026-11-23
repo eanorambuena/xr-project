@@ -4,6 +4,7 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace VRCar.Tests.Vehicle
 {
@@ -15,20 +16,33 @@ namespace VRCar.Tests.Vehicle
     public class MirrorPlacementTests
     {
         const string KindPref = "VRCar.VehicleKind";
+        const string UseCarModelPref = "VRCar.UseCarModel";
         string previousKind;
+        bool previousUseCarModel;
+        // Escena temporal aditiva: no reemplaza la escena abierta del desarrollador (ni sus cambios sin guardar)
+        static Scene scratchScene;
 
         static Type SetupType =>
             AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany_Types()
                 .FirstOrDefault_Named("SceneSetup");
 
-        [SetUp] public void SetUp() => previousKind = EditorPrefs.GetString(KindPref, "sedan");
+        [SetUp]
+        public void SetUp()
+        {
+            previousKind = EditorPrefs.GetString(KindPref, "sedan");
+            previousUseCarModel = EditorPrefs.GetBool(UseCarModelPref, false);
+            // Los tests miden el modelo procedural: no depender de la preferencia de la máquina
+            EditorPrefs.SetBool(UseCarModelPref, false);
+        }
 
         [TearDown]
         public void TearDown()
         {
             EditorPrefs.SetString(KindPref, previousKind);
-            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            EditorPrefs.SetBool(UseCarModelPref, previousUseCarModel);
+            if (scratchScene.IsValid()) EditorSceneManager.CloseScene(scratchScene, true);
+            scratchScene = default;
         }
 
         static object Call(string method, params object[] args)
@@ -41,7 +55,9 @@ namespace VRCar.Tests.Vehicle
         static Transform Build(string kind)
         {
             EditorPrefs.SetString(KindPref, kind);
-            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            if (scratchScene.IsValid()) EditorSceneManager.CloseScene(scratchScene, true);
+            scratchScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+            SceneManager.SetActiveScene(scratchScene);
             var vehicle = (GameObject)Call("CreateVehicle");
             var cam = (Camera)Call("CreateXROrigin", vehicle.transform);
             Call("CreateMirrors", vehicle.transform, cam.transform);
@@ -53,7 +69,7 @@ namespace VRCar.Tests.Vehicle
         {
             halfWidth = 0f; roofY = float.MinValue;
             var visual = vehicle.Find("Visual");
-            Assume.That(visual, Is.Not.Null, "El vehículo no tiene 'Visual'");
+            Assert.That(visual, Is.Not.Null, "El vehículo no tiene 'Visual'");
             foreach (var r in visual.GetComponentsInChildren<Renderer>())
             {
                 if (r.name.Contains("Mirror") || r.name.Contains("Wheel") || r.name.Contains("Tire") || r.name.Contains("Tyre") || r.name.Contains("Rim")) continue;
@@ -89,6 +105,27 @@ namespace VRCar.Tests.Vehicle
 
         [TestCase("sedan")]
         [TestCase("pickup")]
+        public void SideMirrorGlass_DoesNotEnterBodywork_AndStaysInDeclaredWidth(string kind)
+        {
+            var v = Build(kind);
+            BodyExtents(v, out float half, out _);
+            foreach (var n in new[] { "Mirror_Left", "Mirror_Right" })
+            {
+                var m = v.Find(n);
+                Assert.NotNull(m, kind + ": falta " + n);
+                // Ancho del quad del vidrio; se usa el ancho completo (conservador: la rotación lo reduce)
+                float x = Mathf.Abs(v.InverseTransformPoint(m.position).x);
+                float inner = x - m.localScale.x / 2f, outer = x + m.localScale.x / 2f;
+                Assert.GreaterOrEqual(inner, half - 0.005f, kind + " " + n + ": el vidrio entra en la carrocería");
+                if (kind == "pickup")
+                    Assert.LessOrEqual(outer, PickupWidthWithMirrors / 2f + 0.005f, kind + " " + n + ": sale del ancho declarado");
+            }
+        }
+
+        const float PickupWidthWithMirrors = 2.46f; // igual que PickupModel.Specs.Width
+
+        [TestCase("sedan")]
+        [TestCase("pickup")]
         public void InteriorMirror_IsCentred_AndBelowTheRoof(string kind)
         {
             var v = Build(kind);
@@ -111,7 +148,7 @@ namespace VRCar.Tests.Vehicle
             {
                 float z = v.InverseTransformPoint(v.Find(n).position).z;
                 Assert.Greater(z, eyeZ, kind + " " + n + ": debe estar delante de los ojos");
-                Assert.Less(z, 2.5f, kind + " " + n + ": dentro del largo del vehículo");
+                Assert.Less(z, kind == "pickup" ? 2.40f : 2.13f, kind + " " + n + ": dentro del largo del vehículo");
             }
         }
     }

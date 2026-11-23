@@ -456,6 +456,7 @@ public partial class SceneSetup
 
         vehicle.AddComponent<WheelSteering>();   // dirección con los dos controles como volante (reemplaza al joystick)
         var detector = vehicle.AddComponent<ObstacleDetector>();
+        detector.groundClearance = groundClearance; // los sensores bajos miden desde el piso, no desde la base del collider
         if (VehicleKind == "pickup")
         {
             detector.vehicleWidth = PickupModel.Specs.BodyWidth; // los sensores salen de la carrocería, sin espejos
@@ -684,8 +685,8 @@ public partial class SceneSetup
         var mirrors = new (string, Vector3, Vector2, Vector3)[]
         {
             ("Mirror_Interior", new Vector3(0.0f, Mathf.Min(eyeLocal.y + 0.08f, roofY - 0.20f), eyeLocal.z + 0.50f), new Vector2(0.25f, 0.07f), new Vector3(0f, -0.05f, -1f)),
-            ("Mirror_Left",     ModelMirrorLeft ?? new Vector3(-bodyHalf - 0.09f, eyeLocal.y - 0.02f, eyeLocal.z + 0.85f), new Vector2(0.26f, 0.16f), new Vector3(-0.20f, -0.04f, -1f)),
-            ("Mirror_Right",    ModelMirrorRight ?? new Vector3(bodyHalf + 0.09f, eyeLocal.y - 0.02f, eyeLocal.z + 0.85f), new Vector2(0.26f, 0.16f), new Vector3(0.28f, -0.06f, -1f)),
+            ("Mirror_Left",     ModelMirrorLeft ?? new Vector3(-bodyHalf - 0.16f, eyeLocal.y - 0.02f, eyeLocal.z + 0.85f), new Vector2(0.26f, 0.16f), new Vector3(-0.20f, -0.04f, -1f)),
+            ("Mirror_Right",    ModelMirrorRight ?? new Vector3(bodyHalf + 0.16f, eyeLocal.y - 0.02f, eyeLocal.z + 0.85f), new Vector2(0.26f, 0.16f), new Vector3(0.28f, -0.06f, -1f)),
         };
 
         foreach (var (name, pos, size, view) in mirrors)

@@ -23,7 +23,7 @@ public static class PickupModel
     public static class Specs
     {
         public const float Length = 4.80f;        // largo total (paragolpes incluidos); cabe en la plaza más angosta (5,0 m)
-        public const float Width = 2.20f;         // ancho con espejos (la carrocería mide 1,85 m)
+        public const float Width = 2.46f;         // ancho con espejos (la carrocería mide 1,85 m; los espejos quedan fuera de la puerta)
         public const float BodyWidth = 1.85f;     // ancho de la carrocería (sin espejos)
         public static Vector3 Size => new Vector3(Width, Height, Length);
         public const float Height = 1.80f;        // alto total
@@ -77,15 +77,15 @@ public static class PickupModel
         var light = Mat("PickupLight", new Color(0.95f, 0.95f, 0.85f), 0.8f);
         var tail = Mat("PickupTail", new Color(0.7f, 0.05f, 0.05f), 0.6f);
 
-        const float hw = 0.925f; // mitad del ancho de carrocería (puertas ~1,90 m con el marco); los espejos quedan dentro de Specs.Width
+        const float hw = 0.925f; // mitad del ancho de carrocería (1,85 m, igual que Specs.BodyWidth); las puertas quedan a ras de este plano
 
         // ---------- Chasis y frente ----------
         Box("Chassis", body.transform, new Vector3(0, 0.40f, 0), new Vector3(1.7f, 0.22f, 5.0f), trim);
         Box("Hood", body.transform, new Vector3(0, 1.02f, 1.75f), new Vector3(1.85f, 0.10f, 1.30f), paint);
         Box("FrontFender", body.transform, new Vector3(0, 0.72f, 1.85f), new Vector3(1.85f, 0.45f, 1.30f), paint);
         Box("Grille", body.transform, new Vector3(0, 0.85f, 2.52f), new Vector3(1.40f, 0.30f, 0.06f), dark);
-        Box("FrontBumper", body.transform, new Vector3(0, 0.50f, 2.56f), new Vector3(1.90f, 0.22f, 0.12f), trim);
-        Box("RearBumper", body.transform, new Vector3(0, 0.50f, -2.56f), new Vector3(1.90f, 0.22f, 0.12f), trim);
+        Box("FrontBumper", body.transform, new Vector3(0, 0.50f, 2.56f), new Vector3(1.85f, 0.22f, 0.12f), trim);
+        Box("RearBumper", body.transform, new Vector3(0, 0.50f, -2.56f), new Vector3(1.85f, 0.22f, 0.12f), trim);
         foreach (float x in new[] { -0.70f, 0.70f })
         {
             Box("Headlight", body.transform, new Vector3(x, 0.98f, 2.52f), new Vector3(0.28f, 0.10f, 0.04f), light);
@@ -100,7 +100,7 @@ public static class PickupModel
         foreach (float side in new[] { -1f, 1f })
         {
             // Puerta: panel de carrocería (pintura) por fuera, y el mismo volumen se ve por dentro
-            Box(side < 0 ? "DoorL" : "DoorR", body.transform, new Vector3(side * hw, 0.95f, cabCenterZ),
+            Box(side < 0 ? "DoorL" : "DoorR", body.transform, new Vector3(side * (hw - 0.025f), 0.95f, cabCenterZ),
                 new Vector3(0.05f, 0.70f, cabLen), paint);
             // Ventanilla lateral (transparente)
             Box(side < 0 ? "SideGlassL" : "SideGlassR", body.transform, new Vector3(side * (hw - 0.03f), 1.48f, cabCenterZ),
@@ -166,8 +166,8 @@ public static class PickupModel
             driverSeat = seat,
             eyeHeight = eye,
             // Espejos en coordenadas del vehículo: y = 1,15 m sobre el piso, z ya escalado
-            mirrorLeft = new Vector3(-(hw + 0.09f), 1.15f - Specs.Height / 2f, 0.70f * k),
-            mirrorRight = new Vector3(hw + 0.09f, 1.15f - Specs.Height / 2f, 0.70f * k),
+            mirrorLeft = new Vector3(-(hw + 0.16f), 1.15f - Specs.Height / 2f, 0.70f * k),
+            mirrorRight = new Vector3(hw + 0.16f, 1.15f - Specs.Height / 2f, 0.70f * k),
         };
         return true;
     }
