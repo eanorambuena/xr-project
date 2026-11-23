@@ -1,14 +1,9 @@
 name: Build APK (Quest 3)
 
 # Compila el APK de VRCar con Unity en la nube, sin necesitar tu PC.
-# Dispara: push a main que toque unity/, PRs, o a mano (Actions > Run workflow).
+# Solo manual (Actions > Run workflow): requiere los secrets UNITY_LICENSE/UNITY_EMAIL/UNITY_PASSWORD.
 
 on:
-  push:
-    branches: [main]
-    paths: ['unity/**', '.github/workflows/build-apk.yml']
-  pull_request:
-    paths: ['unity/**', '.github/workflows/build-apk.yml']
   workflow_dispatch:
 
 concurrency:

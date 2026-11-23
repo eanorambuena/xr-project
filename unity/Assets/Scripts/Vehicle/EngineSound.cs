@@ -48,12 +48,11 @@ namespace VRCar.Vehicle
             source.volume = Volume(throttleSmoothed, idleVolume, maxVolume);
         }
 
-        /// <summary>Loop de 1 s: armónicos de un 4 cilindros a ~800 rpm (27 Hz de encendido) + ruido suave.</summary>
+        /// <summary>Loop de 1 s: armónicos de un 4 cilindros a ~800 rpm (27 Hz de encendido), sin ruido blanco.</summary>
         private static AudioClip CreateEngineLoop()
         {
             const int rate = 22050; int n = rate;
             var data = new float[n];
-            var rng = new System.Random(7);
             float f0 = 27f; // debe ser entero de ciclos en 1 s para que el loop no haga clic
             for (int i = 0; i < n; i++)
             {
@@ -64,7 +63,7 @@ namespace VRCar.Vehicle
                         + 0.08f * Mathf.Sin(2 * Mathf.PI * f0 * 7 * t);
                 // pulsos de encendido
                 v *= 0.75f + 0.25f * Mathf.Sin(2 * Mathf.PI * f0 * 2 * t);
-                v += 0.04f * (float)(rng.NextDouble() * 2 - 1);
+                // Sin ruido blanco: el siseo de banda ancha molestaba. Solo armónicos.
                 data[i] = v * 0.5f;
             }
             var clip = AudioClip.Create("EngineLoop", n, 1, rate, false);

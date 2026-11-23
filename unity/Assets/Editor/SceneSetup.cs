@@ -33,7 +33,9 @@ public partial class SceneSetup
     const string InputActionsPath = "Assets/InputActions/VRCarInput.inputactions";
 
     // Peugeot 308 (m)
-    static readonly Vector3 VehicleSize = new Vector3(1.856f, 1.535f, 4.255f);
+    static readonly Vector3 SedanSize = new Vector3(1.856f, 1.535f, 4.255f);
+    // Medidas del vehículo activo: las del Peugeot, o las de la pickup si está elegida (collider, juez y cámaras las usan)
+    static Vector3 VehicleSize => VehicleKind == "pickup" ? PickupModel.Specs.Size : SedanSize;
     // Posición de los ojos del conductor (relativa al centro del auto, altura sobre el suelo).
     // Si hay modelo 3D se recalcula a partir de su volante.
     static float DriverEyeHeight = 1.2f;
@@ -48,6 +50,30 @@ public partial class SceneSetup
     /// </summary>
     [MenuItem("VRCar/Usar modelo 3D del auto (experimental)", priority = 20)]
     static void ToggleCarModel() => EditorPrefs.SetBool(UseCarModelPref, !EditorPrefs.GetBool(UseCarModelPref, false));
+
+    // Tipo de vehículo a construir al crear la escena: "sedan" (Peugeot 308, por defecto) o "pickup" (1:1, PickupModel)
+    const string VehicleKindPref = "VRCar.VehicleKind";
+    static string VehicleKind => EditorPrefs.GetString(VehicleKindPref, "sedan");
+
+    [MenuItem("VRCar/Vehículo/Sedán (Peugeot 308)", priority = 21)]
+    static void UseSedan() => EditorPrefs.SetString(VehicleKindPref, "sedan");
+
+    [MenuItem("VRCar/Vehículo/Sedán (Peugeot 308)", true)]
+    static bool UseSedanValidate()
+    {
+        Menu.SetChecked("VRCar/Vehículo/Sedán (Peugeot 308)", VehicleKind == "sedan");
+        return true;
+    }
+
+    [MenuItem("VRCar/Vehículo/Pickup (1:1)", priority = 22)]
+    static void UsePickup() => EditorPrefs.SetString(VehicleKindPref, "pickup");
+
+    [MenuItem("VRCar/Vehículo/Pickup (1:1)", true)]
+    static bool UsePickupValidate()
+    {
+        Menu.SetChecked("VRCar/Vehículo/Pickup (1:1)", VehicleKind == "pickup");
+        return true;
+    }
 
     [MenuItem("VRCar/Usar modelo 3D del auto (experimental)", true)]
     static bool ToggleCarModelValidate()
@@ -373,13 +399,24 @@ public partial class SceneSetup
         var col = vehicle.AddComponent<BoxCollider>();
         // Despeje al suelo: el collider no roza el asfalto, las ruedas (raycast) sostienen el auto
         const float groundClearance = 0.15f;
-        col.size = new Vector3(VehicleSize.x, VehicleSize.y - groundClearance, VehicleSize.z);
+        // Pickup: ancho de carrocería (sin espejos), igual que el sedán; el juez usa este mismo collider
+        float colWidth = VehicleKind == "pickup" ? PickupModel.Specs.BodyWidth : VehicleSize.x;
+        col.size = new Vector3(colWidth, VehicleSize.y - groundClearance, VehicleSize.z);
         col.center = new Vector3(0f, groundClearance / 2f, 0f);
         col.sharedMaterial = GetPhysicsMaterial();
 
         ModelMirrorLeft = ModelMirrorRight = null;
-        bool built = EditorPrefs.GetBool(UseCarModelPref, false) && CreateVehicleModel(vehicle);
-        if (!built && SedanModel.Build(vehicle, VehicleSize, out var sedan))
+        // La pickup tiene prioridad: el modelo experimental (sedán concept) no se mezcla con su collider
+        bool built = VehicleKind != "pickup" && EditorPrefs.GetBool(UseCarModelPref, false) && CreateVehicleModel(vehicle);
+        if (!built && VehicleKind == "pickup" && PickupModel.Build(vehicle, VehicleSize, out var pickup))
+        {
+            DriverSeat = pickup.driverSeat;
+            DriverEyeHeight = pickup.eyeHeight;
+            ModelMirrorLeft = pickup.mirrorLeft;   // mismos espejos que el modelo: un solo juego, dentro del ancho
+            ModelMirrorRight = pickup.mirrorRight;
+            built = true;
+        }
+        if (!built && VehicleKind == "sedan" && SedanModel.Build(vehicle, VehicleSize, out var sedan))
         {
             DriverSeat = sedan.driverSeat;
             DriverEyeHeight = sedan.eyeHeight;
@@ -397,7 +434,19 @@ public partial class SceneSetup
                 GetMaterial("Dashboard", new Color(0.1f, 0.1f, 0.12f)), false);
         }
 
-        vehicle.AddComponent<VehiclePhysics>();
+        var physics = vehicle.AddComponent<VehiclePhysics>();
+        if (VehicleKind == "pickup")
+        {
+            // Calibración de la pickup: batalla, trocha, diámetro de giro y masa de inercia de la carrocería
+            physics.wheelbase = PickupModel.Specs.Wheelbase;
+            physics.track = PickupModel.Specs.Track;
+            physics.turningCircle = PickupModel.Specs.TurningCircle;
+            // Carrocería sin espejos (1,85 m), igual que el collider
+            physics.bodySize = new Vector3(PickupModel.Specs.BodyWidth, PickupModel.Specs.Height, PickupModel.Specs.Length);
+            // El piso del modelo queda Height/2 bajo el pivote; sin esto la carrocería se hunde en el asfalto
+            physics.wheelRadius = PickupModel.Specs.WheelRadius;
+            physics.restPivotHeight = PickupModel.Specs.Height / 2f;
+        }
         vehicle.AddComponent<EngineSound>();
         vehicle.AddComponent<ExerciseReset>();
         var input = vehicle.AddComponent<InputMapper>();
@@ -406,7 +455,13 @@ public partial class SceneSetup
         so.ApplyModifiedPropertiesWithoutUndo();
 
         vehicle.AddComponent<WheelSteering>();   // dirección con los dos controles como volante (reemplaza al joystick)
-        vehicle.AddComponent<ObstacleDetector>();
+        var detector = vehicle.AddComponent<ObstacleDetector>();
+        detector.groundClearance = groundClearance; // los sensores bajos miden desde el piso, no desde la base del collider
+        if (VehicleKind == "pickup")
+        {
+            detector.vehicleWidth = PickupModel.Specs.BodyWidth; // los sensores salen de la carrocería, sin espejos
+            detector.vehicleLength = PickupModel.Specs.Length;   // sensores delanteros y traseros en los paragolpes reales
+        }
         vehicle.AddComponent<AudioSource>().playOnAwake = false;
         vehicle.AddComponent<CollisionFeedback>();
         return vehicle;
@@ -579,6 +634,39 @@ public partial class SceneSetup
         go.transform.localPosition = new Vector3(hand == "LeftHand" ? -0.2f : 0.2f, -1.5f, 0.3f);
     }
 
+    /// <summary>Semiancho de la carrocería en coordenadas del vehículo, medido de los renderers de "Visual".</summary>
+    static float BodyHalfWidth(Transform vehicle)
+    {
+        float fallback = (VehicleKind == "pickup" ? PickupModel.Specs.BodyWidth : VehicleSize.x) / 2f;
+        var visual = vehicle.Find("Visual");
+        if (visual == null) return fallback;
+        float max = 0f;
+        foreach (var r in visual.GetComponentsInChildren<Renderer>())
+        {
+            if (r.name.Contains("Mirror") || r.name.Contains("Wheel") || r.name.Contains("Tire") || r.name.Contains("Tyre") || r.name.Contains("Rim")) continue;
+            var b = r.bounds;
+            for (int i = 0; i < 8; i++)
+            {
+                var c = b.center + Vector3.Scale(b.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
+                max = Mathf.Max(max, Mathf.Abs(vehicle.InverseTransformPoint(c).x));
+            }
+        }
+        // Medida plausible: entre 80 % y 100 % del ancho nominal
+        return max > 0f ? Mathf.Clamp(max, fallback * 0.8f, fallback) : fallback;
+    }
+
+    /// <summary>Altura (y local) del techo del modelo; si no hay modelo, la del collider.</summary>
+    static float RoofLocalY(Transform vehicle)
+    {
+        var visual = vehicle.Find("Visual");
+        float top = VehicleSize.y / 2f;
+        if (visual == null) return top;
+        float max = float.MinValue;
+        foreach (var r in visual.GetComponentsInChildren<Renderer>())
+            max = Mathf.Max(max, vehicle.InverseTransformPoint(r.bounds.max).y);
+        return max > float.MinValue ? Mathf.Min(max, top) : top;
+    }
+
     /// <summary>
     /// Espejos de tamaño real, ajustados como lo haría un conductor:
     /// - Retrovisor interior 25 x 7 cm, centrado, mirando la luneta trasera
@@ -589,13 +677,16 @@ public partial class SceneSetup
         float floorY = -VehicleSize.y / 2f;
         Vector3 eyeLocal = new Vector3(DriverSeat.x, floorY + DriverEyeHeight, DriverSeat.z);
         var housing = GetMaterial("MirrorHousing", new Color(0.08f, 0.08f, 0.09f));
+        // Semiancho real de la carrocería (medido del modelo, sin espejos): los laterales se pegan a ella
+        float bodyHalf = BodyHalfWidth(vehicle);
+        float roofY = RoofLocalY(vehicle);
 
         // (nombre, posición local, tamaño del vidrio, dirección que debe mostrar)
         var mirrors = new (string, Vector3, Vector2, Vector3)[]
         {
-            ("Mirror_Interior", new Vector3(0.0f, eyeLocal.y + 0.08f, eyeLocal.z + 0.50f), new Vector2(0.25f, 0.07f), new Vector3(0f, -0.05f, -1f)),
-            ("Mirror_Left",     ModelMirrorLeft ?? new Vector3(-VehicleSize.x / 2f - 0.12f, eyeLocal.y - 0.02f, eyeLocal.z + 0.85f), new Vector2(0.26f, 0.16f), new Vector3(-0.20f, -0.04f, -1f)),
-            ("Mirror_Right",    ModelMirrorRight ?? new Vector3(VehicleSize.x / 2f + 0.12f, eyeLocal.y - 0.02f, eyeLocal.z + 0.85f), new Vector2(0.26f, 0.16f), new Vector3(0.28f, -0.06f, -1f)),
+            ("Mirror_Interior", new Vector3(0.0f, Mathf.Min(eyeLocal.y + 0.08f, roofY - 0.20f), eyeLocal.z + 0.50f), new Vector2(0.25f, 0.07f), new Vector3(0f, -0.05f, -1f)),
+            ("Mirror_Left",     ModelMirrorLeft ?? new Vector3(-bodyHalf - 0.16f, eyeLocal.y - 0.02f, eyeLocal.z + 0.85f), new Vector2(0.26f, 0.16f), new Vector3(-0.20f, -0.04f, -1f)),
+            ("Mirror_Right",    ModelMirrorRight ?? new Vector3(bodyHalf + 0.16f, eyeLocal.y - 0.02f, eyeLocal.z + 0.85f), new Vector2(0.26f, 0.16f), new Vector3(0.28f, -0.06f, -1f)),
         };
 
         foreach (var (name, pos, size, view) in mirrors)
@@ -624,7 +715,7 @@ public partial class SceneSetup
             if (name != "Mirror_Interior")
             {
                 // Brazo que une el espejo a la puerta
-                float side = Mathf.Sign(pos.x), bodyX = side * (VehicleSize.x / 2f - 0.06f);
+                float side = Mathf.Sign(pos.x), bodyX = side * (bodyHalf - 0.06f);
                 float len = Mathf.Abs(pos.x - bodyX);
                 Box(name + "_Arm", vehicle, new Vector3((pos.x + bodyX) / 2f, pos.y - size.y / 2f + 0.01f, pos.z + 0.03f),
                     new Vector3(len, 0.025f, 0.045f), housing, false);
