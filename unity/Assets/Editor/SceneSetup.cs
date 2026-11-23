@@ -631,18 +631,54 @@ public class SceneSetup
     /// - Retrovisor interior 25 x 7 cm, centrado, mirando la luneta trasera
     /// - Laterales 19 x 12 cm, mostrando apenas el costado del propio auto
     /// </summary>
+    /// <summary>Semiancho de la carrocería en coordenadas del vehículo, medido de los renderers de "Visual".</summary>
+    static float BodyHalfWidth(Transform vehicle)
+    {
+        float fallback = (VehicleKind == "pickup" ? PickupModel.Specs.BodyWidth : VehicleSize.x) / 2f;
+        var visual = vehicle.Find("Visual");
+        if (visual == null) return fallback;
+        float max = 0f;
+        foreach (var r in visual.GetComponentsInChildren<Renderer>())
+        {
+            if (r.name.Contains("Mirror") || r.name.Contains("Wheel") || r.name.Contains("Tire")) continue;
+            var b = r.bounds;
+            for (int i = 0; i < 8; i++)
+            {
+                var c = b.center + Vector3.Scale(b.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
+                max = Mathf.Max(max, Mathf.Abs(vehicle.InverseTransformPoint(c).x));
+            }
+        }
+        // Medida plausible: entre 80 % y 100 % del ancho nominal
+        return max > 0f ? Mathf.Clamp(max, fallback * 0.8f, fallback) : fallback;
+    }
+
+    /// <summary>Altura (y local) del techo del modelo; si no hay modelo, la del collider.</summary>
+    static float RoofLocalY(Transform vehicle)
+    {
+        var visual = vehicle.Find("Visual");
+        float top = VehicleSize.y / 2f;
+        if (visual == null) return top;
+        float max = float.MinValue;
+        foreach (var r in visual.GetComponentsInChildren<Renderer>())
+            max = Mathf.Max(max, vehicle.InverseTransformPoint(r.bounds.max).y);
+        return max > float.MinValue ? Mathf.Min(max, top) : top;
+    }
+
     static void CreateMirrors(Transform vehicle, Transform eye)
     {
         float floorY = -VehicleSize.y / 2f;
         Vector3 eyeLocal = new Vector3(DriverSeat.x, floorY + DriverEyeHeight, DriverSeat.z);
         var housing = GetMaterial("MirrorHousing", new Color(0.08f, 0.08f, 0.09f));
+        // Semiancho real de la carrocería (medido del modelo, sin espejos): los laterales se pegan a ella
+        float bodyHalf = BodyHalfWidth(vehicle);
+        float roofY = RoofLocalY(vehicle);
 
         // (nombre, posición local, tamaño del vidrio, dirección que debe mostrar)
         var mirrors = new (string, Vector3, Vector2, Vector3)[]
         {
-            ("Mirror_Interior", new Vector3(0.0f, eyeLocal.y + 0.08f, eyeLocal.z + 0.50f), new Vector2(0.25f, 0.07f), new Vector3(0f, -0.05f, -1f)),
-            ("Mirror_Left",     ModelMirrorLeft ?? new Vector3(-VehicleSize.x / 2f - 0.12f, eyeLocal.y - 0.02f, eyeLocal.z + 0.85f), new Vector2(0.26f, 0.16f), new Vector3(-0.20f, -0.04f, -1f)),
-            ("Mirror_Right",    ModelMirrorRight ?? new Vector3(VehicleSize.x / 2f + 0.12f, eyeLocal.y - 0.02f, eyeLocal.z + 0.85f), new Vector2(0.26f, 0.16f), new Vector3(0.28f, -0.06f, -1f)),
+            ("Mirror_Interior", new Vector3(0.0f, Mathf.Min(eyeLocal.y + 0.08f, roofY - 0.20f), eyeLocal.z + 0.50f), new Vector2(0.25f, 0.07f), new Vector3(0f, -0.05f, -1f)),
+            ("Mirror_Left",     ModelMirrorLeft ?? new Vector3(-bodyHalf - 0.09f, eyeLocal.y - 0.02f, eyeLocal.z + 0.85f), new Vector2(0.26f, 0.16f), new Vector3(-0.20f, -0.04f, -1f)),
+            ("Mirror_Right",    ModelMirrorRight ?? new Vector3(bodyHalf + 0.09f, eyeLocal.y - 0.02f, eyeLocal.z + 0.85f), new Vector2(0.26f, 0.16f), new Vector3(0.28f, -0.06f, -1f)),
         };
 
         foreach (var (name, pos, size, view) in mirrors)
@@ -671,7 +707,7 @@ public class SceneSetup
             if (name != "Mirror_Interior")
             {
                 // Brazo que une el espejo a la puerta
-                float side = Mathf.Sign(pos.x), bodyX = side * ((VehicleKind == "pickup" ? PickupModel.Specs.BodyWidth : VehicleSize.x) / 2f - 0.06f);
+                float side = Mathf.Sign(pos.x), bodyX = side * (bodyHalf - 0.06f);
                 float len = Mathf.Abs(pos.x - bodyX);
                 Box(name + "_Arm", vehicle, new Vector3((pos.x + bodyX) / 2f, pos.y - size.y / 2f + 0.01f, pos.z + 0.03f),
                     new Vector3(len, 0.025f, 0.045f), housing, false);
