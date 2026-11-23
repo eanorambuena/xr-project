@@ -406,6 +406,8 @@ public class SceneSetup
         {
             DriverSeat = pickup.driverSeat;
             DriverEyeHeight = pickup.eyeHeight;
+            ModelMirrorLeft = pickup.mirrorLeft;   // mismos espejos que el modelo: un solo juego, dentro del ancho
+            ModelMirrorRight = pickup.mirrorRight;
             built = true;
         }
         if (!built && VehicleKind == "sedan" && SedanModel.Build(vehicle, VehicleSize, out var sedan))

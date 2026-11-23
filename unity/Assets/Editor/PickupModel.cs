@@ -10,21 +10,24 @@ using UnityEngine;
 /// Al igual que SedanModel, el llamador ubica la raíz en el piso del auto.
 ///
 /// Limitaciones conocidas (es un modelo de bloques, no una malla de diseño):
-/// - Sin ruedas giratorias conectadas a VehicleVisuals (solo se devuelven los pivotes).
-/// - Sin espejos reflejados ni interior detallado; el tablero y los asientos son cajas.
+/// - Las ruedas son solo visuales: no giran ni se dirigen (VehicleVisuals no se conecta todavía).
+/// - Los espejos son los mismos que se pasan a CreateMirrors (un solo juego, dentro del ancho declarado).
+/// - El interior (tablero, asientos, volante) son cajas simples.
 /// </summary>
 public static class PickupModel
 {
     /// <summary>Medidas reales de referencia (m). Pickup mediana tipo Toyota Hilux / Ford Ranger.</summary>
-    public static class Specs
+    const float BodyLength = 5.25f; // largo de diseño de la carrocería antes de escalar
+
+        public static class Specs
     {
-        public const float Length = 5.25f;        // largo total (paragolpes incluidos)
+        public const float Length = 4.80f;        // largo total (paragolpes incluidos); cabe en la plaza más angosta (5,0 m)
         public const float Width = 2.20f;         // ancho con espejos (la carrocería mide 1,85 m)
         public static Vector3 Size => new Vector3(Width, Height, Length);
         public const float Height = 1.80f;        // alto total
-        public const float Wheelbase = 3.20f;     // batalla (entre ejes)
+        public const float Wheelbase = 2.90f;     // batalla (pickup compacta)
         public const float Track = 1.60f;         // trocha
-        public const float TurningCircle = 12.4f; // diámetro de giro entre soleras
+        public const float TurningCircle = 11.0f; // diámetro de giro entre soleras (aprox.)
         public const float WheelRadius = 0.36f;   // radio de rodadura (neumático 265/65 R17 aprox.)
         public const float EyeHeight = 1.45f;     // altura de los ojos del conductor sentado
     }
@@ -33,6 +36,8 @@ public static class PickupModel
     {
         public Vector3 driverSeat;   // x, z relativos al centro del vehículo (y = piso)
         public float eyeHeight;      // sobre el piso
+        public Vector3 mirrorLeft;   // espejo izquierdo (vidrio y carcasa), coordenadas del vehículo
+        public Vector3 mirrorRight;  // espejo derecho
     }
 
     static readonly Color PaintColor = new Color(0.62f, 0.10f, 0.10f);
@@ -54,6 +59,12 @@ public static class PickupModel
         root.transform.SetParent(vehicle.transform, false);
         root.transform.localPosition = new Vector3(0f, -size.y / 2f, 0f);
 
+        // Toda la carrocería se escala en Z para caber en la plaza; las ruedas van fuera, con la batalla real
+        float k = Specs.Length / BodyLength;
+        var body = new GameObject("Body").transform;
+        body.SetParent(root.transform, false);
+        body.localScale = new Vector3(1f, 1f, k);
+
         var paint = Mat("PickupPaint", PaintColor, 0.6f);
         var glass = Mat("PickupGlass", new Color(0.55f, 0.65f, 0.72f, 0.2f), 0.95f, transparent: true);
         var trim = Mat("PickupTrim", TrimColor, 0.1f);
@@ -64,54 +75,54 @@ public static class PickupModel
         var light = Mat("PickupLight", new Color(0.95f, 0.95f, 0.85f), 0.8f);
         var tail = Mat("PickupTail", new Color(0.7f, 0.05f, 0.05f), 0.6f);
 
-        const float hw = 0.925f; // mitad del ancho de carrocería (1,85 m); los espejos quedan dentro de Specs.Width
+        const float hw = 0.925f; // mitad del ancho de carrocería (puertas ~1,90 m con el marco); los espejos quedan dentro de Specs.Width
 
         // ---------- Chasis y frente ----------
-        Box("Chassis", root.transform, new Vector3(0, 0.40f, 0), new Vector3(1.7f, 0.22f, 5.0f), trim);
-        Box("Hood", root.transform, new Vector3(0, 1.02f, 1.75f), new Vector3(1.85f, 0.10f, 1.30f), paint);
-        Box("FrontFender", root.transform, new Vector3(0, 0.72f, 1.85f), new Vector3(1.85f, 0.45f, 1.30f), paint);
-        Box("Grille", root.transform, new Vector3(0, 0.85f, 2.52f), new Vector3(1.40f, 0.30f, 0.06f), dark);
-        Box("FrontBumper", root.transform, new Vector3(0, 0.50f, 2.56f), new Vector3(1.90f, 0.22f, 0.12f), trim);
-        Box("RearBumper", root.transform, new Vector3(0, 0.50f, -2.56f), new Vector3(1.90f, 0.22f, 0.12f), trim);
+        Box("Chassis", body.transform, new Vector3(0, 0.40f, 0), new Vector3(1.7f, 0.22f, 5.0f), trim);
+        Box("Hood", body.transform, new Vector3(0, 1.02f, 1.75f), new Vector3(1.85f, 0.10f, 1.30f), paint);
+        Box("FrontFender", body.transform, new Vector3(0, 0.72f, 1.85f), new Vector3(1.85f, 0.45f, 1.30f), paint);
+        Box("Grille", body.transform, new Vector3(0, 0.85f, 2.52f), new Vector3(1.40f, 0.30f, 0.06f), dark);
+        Box("FrontBumper", body.transform, new Vector3(0, 0.50f, 2.56f), new Vector3(1.90f, 0.22f, 0.12f), trim);
+        Box("RearBumper", body.transform, new Vector3(0, 0.50f, -2.56f), new Vector3(1.90f, 0.22f, 0.12f), trim);
         foreach (float x in new[] { -0.70f, 0.70f })
         {
-            Box("Headlight", root.transform, new Vector3(x, 0.98f, 2.52f), new Vector3(0.28f, 0.10f, 0.04f), light);
-            Box("TailLight", root.transform, new Vector3(x, 1.02f, -2.56f), new Vector3(0.28f, 0.12f, 0.04f), tail);
+            Box("Headlight", body.transform, new Vector3(x, 0.98f, 2.52f), new Vector3(0.28f, 0.10f, 0.04f), light);
+            Box("TailLight", body.transform, new Vector3(x, 1.02f, -2.56f), new Vector3(0.28f, 0.12f, 0.04f), tail);
         }
 
         // ---------- Cabina (paredes finas, para ver el interior) ----------
         const float cabFront = 0.90f, cabRear = -1.10f;
         float cabLen = cabFront - cabRear;               // 2.0 m
         float cabCenterZ = (cabFront + cabRear) / 2f;
-        Box("CabFloor", root.transform, new Vector3(0, 0.60f, cabCenterZ), new Vector3(1.75f, 0.04f, cabLen), trim);
+        Box("CabFloor", body.transform, new Vector3(0, 0.60f, cabCenterZ), new Vector3(1.75f, 0.04f, cabLen), trim);
         foreach (float side in new[] { -1f, 1f })
         {
             // Puerta: panel de carrocería (pintura) por fuera, y el mismo volumen se ve por dentro
-            Box(side < 0 ? "DoorL" : "DoorR", root.transform, new Vector3(side * hw, 0.95f, cabCenterZ),
+            Box(side < 0 ? "DoorL" : "DoorR", body.transform, new Vector3(side * hw, 0.95f, cabCenterZ),
                 new Vector3(0.05f, 0.70f, cabLen), paint);
             // Ventanilla lateral (transparente)
-            Box(side < 0 ? "SideGlassL" : "SideGlassR", root.transform, new Vector3(side * (hw - 0.03f), 1.48f, cabCenterZ),
+            Box(side < 0 ? "SideGlassL" : "SideGlassR", body.transform, new Vector3(side * (hw - 0.03f), 1.48f, cabCenterZ),
                 new Vector3(0.02f, 0.46f, cabLen - 0.2f), glass);
             // Espejo lateral (caja)
-            Box(side < 0 ? "MirrorL" : "MirrorR", root.transform, new Vector3(side * (hw + 0.09f), 1.15f, 0.70f),
+            Box(side < 0 ? "MirrorL" : "MirrorR", body.transform, new Vector3(side * (hw + 0.09f), 1.15f, 0.70f),
                 new Vector3(0.16f, 0.12f, 0.22f), paint);
         }
         // Techo (pintura) y parabrisas / luneta (vidrio)
-        Box("Roof", root.transform, new Vector3(0, Specs.Height - 0.02f, cabCenterZ), new Vector3(1.80f, 0.04f, cabLen), paint);
-        var windshield = Box("Windshield", root.transform, new Vector3(0, 1.50f, 0.50f), new Vector3(1.72f, 0.62f, 0.03f), glass);
+        Box("Roof", body.transform, new Vector3(0, Specs.Height - 0.02f, cabCenterZ), new Vector3(1.80f, 0.04f, cabLen), paint);
+        var windshield = Box("Windshield", body.transform, new Vector3(0, 1.50f, 0.50f), new Vector3(1.72f, 0.62f, 0.03f), glass);
         windshield.transform.localRotation = Quaternion.Euler(-38f, 0, 0);
-        Box("RearWindow", root.transform, new Vector3(0, 1.50f, cabRear + 0.01f), new Vector3(1.72f, 0.46f, 0.02f), glass);
-        Box("CabRearWall", root.transform, new Vector3(0, 0.92f, cabRear), new Vector3(1.75f, 0.60f, 0.04f), paint);
+        Box("RearWindow", body.transform, new Vector3(0, 1.50f, cabRear + 0.01f), new Vector3(1.72f, 0.46f, 0.02f), glass);
+        Box("CabRearWall", body.transform, new Vector3(0, 0.92f, cabRear), new Vector3(1.75f, 0.60f, 0.04f), paint);
 
         // ---------- Caja (bed) ----------
         float bedZ0 = cabRear - 0.02f, bedZ1 = -2.55f;
         float bedCenterZ = (bedZ0 + bedZ1) / 2f, bedLen = bedZ0 - bedZ1;
-        Box("BedFloor", root.transform, new Vector3(0, 0.90f, bedCenterZ), new Vector3(1.70f, 0.04f, bedLen), trim);
+        Box("BedFloor", body.transform, new Vector3(0, 0.90f, bedCenterZ), new Vector3(1.70f, 0.04f, bedLen), trim);
         foreach (float side in new[] { -1f, 1f })
-            Box(side < 0 ? "BedSideL" : "BedSideR", root.transform, new Vector3(side * 0.85f, 1.18f, bedCenterZ),
+            Box(side < 0 ? "BedSideL" : "BedSideR", body.transform, new Vector3(side * 0.85f, 1.18f, bedCenterZ),
                 new Vector3(0.07f, 0.56f, bedLen), paint);
-        Box("BedFrontWall", root.transform, new Vector3(0, 1.18f, bedZ0), new Vector3(1.70f, 0.56f, 0.05f), paint);
-        Box("Tailgate", root.transform, new Vector3(0, 1.18f, bedZ1), new Vector3(1.70f, 0.56f, 0.05f), paint);
+        Box("BedFrontWall", body.transform, new Vector3(0, 1.18f, bedZ0), new Vector3(1.70f, 0.56f, 0.05f), paint);
+        Box("Tailgate", body.transform, new Vector3(0, 1.18f, bedZ1), new Vector3(1.70f, 0.56f, 0.05f), paint);
 
         // ---------- Ruedas (cilindros; eje X) ----------
         float wr = Specs.WheelRadius;
@@ -123,10 +134,10 @@ public static class PickupModel
         Wheel(root.transform, "WheelRR", new Vector3(halfTr, wr, -halfWb), wr, tire, rim);
 
         // ---------- Interior ----------
-        var seat = new Vector3(-0.38f, 0f, -0.25f);
+        var seat = new Vector3(-0.38f, 0f, -0.25f * k);
         float eye = Specs.EyeHeight;
         var interior = new GameObject("Interior").transform;
-        interior.SetParent(root.transform, false);
+        interior.SetParent(body.transform, false);
         // Tablero
         Box("Dashboard", interior, new Vector3(0, 1.00f, 0.72f), new Vector3(1.70f, 0.30f, 0.34f), dark);
         Box("CenterConsole", interior, new Vector3(0, 0.78f, 0.05f), new Vector3(0.24f, 0.20f, 0.95f), dark);
@@ -150,7 +161,14 @@ public static class PickupModel
         Box("RearSeatCushion", interior, new Vector3(0, 0.66f, -0.85f), new Vector3(1.60f, 0.12f, 0.50f), fabric);
         Box("RearSeatBack", interior, new Vector3(0, 1.00f, -1.02f), new Vector3(1.60f, 0.55f, 0.12f), fabric);
 
-        result = new Result { driverSeat = seat, eyeHeight = eye };
+        result = new Result
+        {
+            driverSeat = seat,
+            eyeHeight = eye,
+            // Espejos en coordenadas del vehículo: y = 1,15 m sobre el piso, z ya escalado
+            mirrorLeft = new Vector3(-(hw + 0.09f), 1.15f - Specs.Height / 2f, 0.70f * k),
+            mirrorRight = new Vector3(hw + 0.09f, 1.15f - Specs.Height / 2f, 0.70f * k),
+        };
         return true;
     }
 
