@@ -1,0 +1,17 @@
+{
+  // Extensiones recomendadas para trabajar en este repo.
+  // VS Code las ofrece al abrir el proyecto (Extensions: Show Recommended Extensions).
+  "recommendations": [
+    // Claude Code: el asistente con el que se ha ido escribiendo y revisando el informe.
+    "Anthropic.claude-code",
+
+    // LaTeX Workshop: compilar y previsualizar report/main.tex, y saltar
+    // entre el PDF y el .tex. Es la pieza clave para no depender de Overleaf.
+    "james-yu.latex-workshop",
+
+    // Corrector ortográfico + diccionario español: el informe está en español
+    // y el corrector base de VS Code solo trae inglés.
+    "streetsidesoftware.code-spell-checker",
+    "streetsidesoftware.code-spell-checker-spanish"
+  ]
+}

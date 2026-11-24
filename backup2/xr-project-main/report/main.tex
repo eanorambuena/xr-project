@@ -1,0 +1,306 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% La línea anterior solo es necesaria para identificar financiamiento en el
+% primer pie de página. Si no aplica, se puede comentar.
+% T1: sin esto el PDF guarda los acentos como "i sin punto + tilde", asi
+% que buscar o copiar texto acentuado desde el PDF sale roto, y LaTeX no
+% divide en silabas ninguna palabra con tilde (peor justificado).
+\usepackage[T1]{fontenc}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{placeins}
+\graphicspath{{figures/}}
+\usetikzlibrary{arrows.meta, positioning}
+% El cuerpo del informe esta en espanol, asi que se traducen los rotulos
+% que IEEEtran define en ingles. El abstract y las keywords se dejan en
+% ingles a proposito (su contenido tambien lo esta), por lo que
+% \abstractname e \IEEEkeywordsname no se tocan. \figurename queda como
+% "Fig.", que es la abreviatura correcta tambien en espanol.
+\renewcommand{\refname}{Referencias}
+\renewcommand{\tablename}{TABLA}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+\title{VR Car: un Simulador de Conducción en Realidad Virtual para Alumnos de Escuelas de Manejo}
+
+\author{
+\IEEEauthorblockN{1\textsuperscript{st} Estefanía Pakarati}
+\IEEEauthorblockA{\textit{Pontificia Universidad Católica de Chile} \\
+Santiago, Chile \\
+estefania.pakarati@uc.cl}
+\and
+\IEEEauthorblockN{2\textsuperscript{nd} Emmanuel Norambuena}
+\IEEEauthorblockA{\textit{Pontificia Universidad Católica de Chile} \\
+Santiago, Chile \\
+eanorambuena@uc.cl}
+\and
+\IEEEauthorblockN{3\textsuperscript{rd} Matías Harrison}
+\IEEEauthorblockA{\textit{Pontificia Universidad Católica de Chile} \\
+Santiago, Chile \\
+matiasharrison@uc.cl}
+}
+
+\maketitle
+
+\begin{abstract}
+In addition to traffic regulations, novice drivers must acquire an embodied awareness of the vehicle's dimensions and surrounding distances—a skill that 2D screen-based driving simulators fail to convey, as they lack the 1:1 scale and stereoscopic depth of real-world environments. We propose a virtual reality (VR) driving simulator, developed in Unity for the Meta Quest 3 headset, wherein the user experiences the vehicle's cabin and overall volume at full scale while performing basic driving maneuvers. This immersive experience is expected to enhance the user's spatial ability to intuitively judge the vehicle's boundaries and its proximity to obstacles. Should this perceptual improvement be confirmed, it could translate into a reduced risk associated with initial distance misjudgments during subsequent real-world driving lessons.
+\end{abstract}
+
+\begin{IEEEkeywords}
+virtual reality, extended reality, driving simulation, spatial perception, driver education
+\end{IEEEkeywords}
+
+% ============================================================
+% I. INTRODUCCIÓN (~0.5 pág.)
+% ============================================================
+\section{Introducción}
+\label{sec:introduccion}
+
+Aprender a conducir exige que la persona construya, además del conocimiento
+de las reglas de tránsito, un sentido corporal del vehículo: cuánto mide,
+dónde terminan sus esquinas, qué tan cerca puede pasar de un obstáculo o de
+otro auto sin colisionar. Este componente propioceptivo suele adquirirse
+recién dentro del vehículo real, bajo la supervisión de un instructor, lo
+que concentra el aprendizaje en sesiones costosas, de disponibilidad
+limitada y con margen de error nulo ante cualquier equivocación de un
+conductor novato. Los simuladores de conducción en pantalla 2D (juegos de
+manejo, simuladores de escritorio) permiten practicar reglas y reacciones,
+pero al mostrarse en una pantalla plana y a una escala que no es 1:1,
+no logran transmitir el tamaño real del vehículo ni la profundidad
+necesaria para juzgar distancias con el cuerpo, que es precisamente la
+habilidad más difícil de enseñar fuera del auto real.
+
+Proponemos abordar este problema mediante un simulador de conducción en
+realidad virtual dirigido a personas que están aprendiendo a conducir
+(alumnos de escuelas de manejo, conductores primerizos), en el que la
+persona experimenta el habitáculo y el volumen del vehículo a escala 1:1
+mediante un visor de VR con seguimiento de cabeceo, en vez de una pantalla
+2D. A diferencia de un simulador tradicional, la realidad virtual permite
+que la persona perciba, con su propio cuerpo, dónde terminan las esquinas
+del auto y cuán cerca pasa de un obstáculo — una noción espacial que un
+monitor no puede transmitir porque no reproduce la estereopsis ni la
+escala real del entorno. Con esto se espera reducir la brecha de
+percepción espacial con la que los conductores novatos llegan a sus
+primeras clases prácticas. Determinar si esa mejora perceptual se
+traduce, además, en un menor riesgo durante las clases prácticas reales
+requeriría un estudio longitudinal con alumnos de escuelas de manejo que
+excede el alcance de este proyecto, centrado en el prototipo y en la
+percepción de escala; lo dejamos señalado como línea de trabajo futura.
+
+% ============================================================
+% II. TRABAJOS RELACIONADOS Y MARCO TEÓRICO (~1 pág.)
+% ============================================================
+\section{Trabajos relacionados y marco teórico}
+\label{sec:relacionados}
+
+Los simuladores de conducción han transitado desde configuraciones basadas en monitores bidimensionales (2D) hacia entornos inmersivos, buscando experiencias de entrenamiento más transferibles al mundo físico. Este trabajo se sitúa en la intersección de dos áreas: el estado actual de la simulación de conducción en realidad virtual (VR) y los fundamentos perceptuales que justifican su uso para el entrenamiento espacial.
+
+\subsection{Simuladores de conducción en realidad virtual}
+
+Históricamente, los simuladores de conducción en VR existentes se han enfocado de manera casi exclusiva en el entrenamiento de reglas de tránsito, la evaluación cognitiva y la anticipación de riesgos, dejando en un segundo plano la propiocepción vehicular del usuario. En esta línea, Agrawal et al.~\cite{agrawal2018} entrenaron a 36 conductores jóvenes bajo tres condiciones —V-RAPT, un programa de anticipación de peligros latentes entregado en un visor de VR; RAPT, ese mismo entrenamiento en su formato original de escritorio, basado en vistas en planta de la vía sobre una pantalla 2D; y un grupo placebo— y los evaluaron después en un simulador de conducción. Los conductores entrenados con el visor anticiparon un 86,25\,\% de los peligros latentes, frente a un 62,36\,\% del grupo entrenado en pantalla plana y un 30,97\,\% del placebo, y resultaron además mejores en la mitigación de amenazas. El contraste es directamente pertinente aquí porque aísla el aporte del formato inmersivo sobre un mismo contenido de entrenamiento. Sin embargo, dicho enfoque es eminentemente cognitivo y atencional; no evalúa ni entrena explícitamente el juicio geométrico del tamaño del vehículo ni la estimación de distancias a escala real (1:1), elementos críticos para maniobras de baja velocidad como el estacionamiento o el paso por vías estrechas.
+
+Más recientemente, el desarrollo de hardware standalone ha permitido arquitecturas de simulación más ágiles. Chidambaram et al.~\cite{chidambaram2025} presentan \textit{DriveSimQuest}, una plataforma de simulación de conducción e investigación construida específicamente sobre visores Meta Quest utilizando el motor Unity. Este trabajo es altamente relevante desde el punto de vista arquitectónico, ya que demuestra la viabilidad de utilizar este hardware específico para simulaciones vehiculares complejas. No obstante, el propósito de \textit{DriveSimQuest} está fuertemente orientado a capturar señales conductuales e interacciones multimodales del usuario, tales como el seguimiento de la mirada (gaze) y el reconocimiento de gestos para la investigación en interacción humano-computadora en el vehículo. Al igual que el trabajo de Agrawal et al.~\cite{agrawal2018}, ninguno de estos sistemas aborda el problema perceptual del juicio de dimensiones del habitáculo ni la calibración del esquema corporal extendido hacia los límites del chasis del automóvil, lo cual constituye la brecha fundamental que este proyecto busca resolver.
+
+\subsection{Marco teórico: inmersión, presencia y percepción}
+
+El sustento teórico de por qué la VR permite abordar esta brecha de manera superior a un simulador tradicional de escritorio o pantalla 2D proviene de tres líneas principales de investigación.
+
+En primer lugar, es necesario comprender la naturaleza de la simulación inmersiva. LaValle~\cite{lavalle2016} define la realidad virtual como la inducción de un comportamiento dirigido en un organismo mediante estimulación sensorial artificial, mientras dicho organismo tiene poca o ninguna conciencia de esa interferencia — una definición centrada en el efecto perceptual buscado, no en un requisito técnico particular. El mismo texto identifica la interactividad como un componente crucial de la mayoría de los sistemas VR: cuando la estimulación sensorial responde a los movimientos del cuerpo del usuario (cabeza, manos, etc.), el sistema es de \textit{lazo cerrado}; en caso contrario, es de \textit{lazo abierto}. Un simulador de conducción 2D es, en este sentido, mayormente de lazo abierto respecto de la postura del usuario: si el usuario inclina su cuerpo para intentar mirar por un espejo retrovisor o asomarse por la ventana, la imagen en la pantalla permanece estática en relación con su punto de vista. El sistema propuesto, en cambio, cierra ese lazo mediante el \textit{tracking} continuo de la cabeza del usuario y el renderizado sincronizado del entorno, habilitando una exploración visual natural del habitáculo.
+
+Esta capacidad técnica se traduce en respuestas psicológicas. Slater~\cite{slater2018} distingue entre \textit{inmersión} y \textit{presencia}. Define la inmersión como una propiedad objetiva del sistema: el grado en que este puede sostener las contingencias sensomotoras naturales de la percepción, es decir, en qué medida la estimulación responde a la acción perceptual del usuario —razón por la cual aspectos como la resolución y la visión estéreo están intrínsecamente ligados a ella—. La presencia, en cambio, es la respuesta subjetiva del usuario: la ilusión de ``estar ahí'' (\textit{Place Illusion}) en el entorno virtual. Bajo esa definición, un sistema que permite percibir con todo el cuerpo (agacharse a mirar debajo de algo, asomarse alrededor de un objeto) alcanza un nivel de inmersión mayor que uno que solo ofrece mirar una pantalla, pues en cuanto el usuario gira la cabeza fuera del monitor deja de percibir el mundo virtual~\cite{slater2018}. Esa es exactamente la limitación de un simulador de escritorio para nuestro problema: el alumno no puede asomarse a comprobar dónde termina el parachoques. Slater plantea que a distintos niveles de inmersión corresponden distintos niveles de esta ilusión y del grado en que las personas responden como si los eventos virtuales estuvieran ocurriendo realmente; sobre esa correspondencia se apoya la expectativa de que el alumno reaccione a las dimensiones del vehículo virtual como lo haría ante las de uno real.
+
+En segundo lugar, la literatura sobre percepción de profundidad es clave —y también la principal fuente de riesgo— para el juicio de distancias vehiculares. El Jamiy y Marsh~\cite{eljamiy2019} revisan los estudios sobre estimación de distancia en pantallas montadas en la cabeza (HMDs), y su punto de partida es una advertencia: el propio visor degrada la percepción de profundidad del contenido virtual, con una tendencia documentada a subestimar las distancias egocéntricas respecto del mundo físico. Su revisión sistematiza las señales visuales de profundidad involucradas y las propuestas de diseño para corregir ese sesgo. Esto plantea una tensión que este proyecto debe asumir de forma explícita: se busca enseñar juicio de distancias en un medio que se sabe que las distorsiona. El argumento a favor no es que el HMD sea perceptualmente perfecto, sino que aporta dos señales que una pantalla plana no puede entregar —la estereopsis, o disparidad binocular, y el paralaje de movimiento asociado al desplazamiento de la cabeza—, que son las que permiten juzgar corporalmente qué tan cerca pasa el parachoques de un obstáculo. La magnitud del sesgo residual dentro del prototipo es, en consecuencia, una variable a medir en las pruebas de usuario y no un supuesto del diseño.
+
+Finalmente, el proceso por el cual el conductor interioriza el volumen del vehículo depende de factores propioceptivos. Pouke et al.~\cite{pouke2022} sintetizan el llamado efecto de \textit{escalamiento corporal} (body scaling effect): el propio cuerpo opera como señal de tamaño familiar —los miembros funcionan como una regla perceptual— sobre la que se basan las proporciones atribuidas al entorno cercano, de modo que tamaños y distancias no se estiman de forma absoluta sino relativa al cuerpo. Su propio estudio experimental confirma que la escala corporal afecta la plausibilidad física percibida del entorno, aunque no logró replicar el efecto esperado sobre la estimación de tamaños, lo que sugiere que el fenómeno es más frágil de lo que suele asumirse. Aun con esa salvedad, el principio basta para justificar a nivel teórico por qué experimentar el habitáculo a escala 1:1 en primera persona es un requisito del diseño: al usar su propio cuerpo como ancla perceptual —las manos en el volante, la altura respecto del techo, la extensión de los brazos—, el usuario puede internalizar los límites geométricos del auto de un modo que una vista en tercera persona o un monitor tradicional no permiten.
+
+% ============================================================
+% III. PROPUESTA DE SOLUCIÓN (~2.5 pág.)
+% ============================================================
+\section{Propuesta de solución}
+\label{sec:propuesta}
+
+\subsection{Casos de uso}
+
+\textbf{Caso de uso 1: Juicio de esquinas.}
+\begin{itemize}
+    \item \textbf{Usuario:} alumno de escuela de manejo, sentado en el
+    asiento del conductor dentro del simulador.
+    \item \textbf{Acción:} conducir el vehículo a través de un espacio
+    angosto (p. ej. entre conos o un portón) sin golpear las esquinas
+    del auto.
+    \item \textbf{Objetivo:} internalizar, con el propio cuerpo,
+    dónde terminan físicamente las esquinas del vehículo.
+\end{itemize}
+
+\textbf{Caso de uso 2: Estacionamiento y aproximación a un obstáculo.}
+\begin{itemize}
+    \item \textbf{Usuario:} alumno de escuela de manejo.
+    \item \textbf{Acción:} estacionar o detener el vehículo a una
+    distancia segura de un obstáculo (otro auto, un muro, una
+    persona), tanto en maniobras frontales como en reversa.
+    \item \textbf{Objetivo:} practicar el juicio de distancia
+    frontal/trasera antes de enfrentarlo en un vehículo real.
+\end{itemize}
+
+\textbf{Caso de uso 3: Manejo básico en circuito.}
+\begin{itemize}
+    \item \textbf{Usuario:} alumno de escuela de manejo.
+    \item \textbf{Acción:} acelerar, frenar y girar en un circuito
+    simple con curvas y un cruce.
+    \item \textbf{Objetivo:} practicar el control básico del
+    vehículo junto con la percepción de escala en movimiento, no solo
+    en situaciones estáticas.
+\end{itemize}
+
+\subsection{Descripción del sistema}
+
+El usuario se sienta en una silla física que actúa como referencia
+postural del asiento del conductor y se coloca el Meta Quest~3. Antes de
+comenzar, una escena breve de calibración le pide ajustar la altura de
+ojos de la cámara virtual a la altura real de su cabeza sobre la silla,
+de modo que el punto de vista dentro del habitáculo coincida con su
+posición física; sin este ajuste, la escala 1:1 que el sistema busca
+transmitir quedaría distorsionada y el juicio de distancias perdería
+validez.
+
+Ya calibrado, el usuario queda situado dentro del habitáculo y puede
+mirar libremente gracias al head tracking del visor —revisar los espejos,
+el borde del capó, los pilares, la esquina trasera—, tal como aprendería
+a hacerlo en un auto real. El vehículo se controla con los dos controles
+del Quest~3: el gatillo derecho acelera, el gatillo izquierdo frena, y el
+joystick derecho dirige, simulando un volante simplificado sin requerir
+hardware adicional.
+
+El sistema no incorpora ningún método de locomoción artificial propio de
+otras aplicaciones VR (teleportación, \textit{dash}, etc.), ya que en un
+simulador de manejo el movimiento visual continuo es inherente a la tarea
+y no puede evitarse como en una app de desplazamiento libre. La mitigación
+relevante para el mareo por movimiento (vección) no es entonces la ausencia
+de locomoción, sino que el usuario ve en todo momento el habitáculo del
+vehículo fijo en su campo visual periférico, actuando como marco de
+referencia visual estático —una estrategia de mitigación de vección
+documentada en la literatura de simuladores de manejo y vuelo, y que el
+diseño del sistema incorpora ``gratis'' al modelar el interior completo del
+auto alrededor del usuario. Aun así, cierto riesgo de incomodidad es
+inherente a cualquier simulador de conducción, y queda como punto a
+evaluar en las pruebas de usuario hacia la Entrega 2.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig1_arquitectura.png}
+\caption{Arquitectura de hardware y software del prototipo.}
+\label{fig:arquitectura}
+\end{figure}
+
+Como resume la Fig.~\ref{fig:arquitectura}, el Quest~3 reporta pose de
+cabeza e input a Unity, que actualiza la física del vehículo —colisiones
+calculadas sobre las esquinas reales del modelo, el punto crítico para el
+Caso de uso 1— y renderiza el entorno de vuelta al visor en estéreo. Un
+módulo adicional calcula en cada frame la distancia mínima entre las
+esquinas del vehículo y los obstáculos cercanos mediante
+\textit{raycasting}; ese valor alimenta un HUD de distancia anclado al
+parabrisas virtual y un tono audible cuya frecuencia aumenta al acercarse
+a un obstáculo (panel~3 de la Fig.~\ref{fig:storyboard}), de modo que el
+usuario no necesite leer un número mientras conduce —la señal principal
+sigue siendo su propia percepción espacial del entorno, consistente con el
+marco teórico de la Sección~II.
+
+El prototipo se organiza en tres escenas independientes, una por caso de
+uso —un espacio angosto delimitado por conos (CU1), un estacionamiento con
+un vehículo y un muro (CU2), y un circuito corto con curva y cruce (CU3)—,
+seleccionables desde un menú simple dentro del visor. Esta separación
+permite iterar CU1 de forma aislada hacia la Entrega 2 sin bloquear el
+desarrollo posterior de los otros dos casos de uso. La Fig.~\ref{fig:storyboard}
+ilustra este flujo completo para el Caso de uso 1, desde la calibración
+inicial hasta la detención segura frente a un obstáculo.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig3_storyboard.png}
+\caption{Storyboard del Caso de uso 1 (juicio de esquinas): calibración,
+conducción, retroalimentación y detención segura.}
+\label{fig:storyboard}
+\end{figure}
+
+\FloatBarrier
+
+\subsection{Tecnologías y alcance}
+
+Como hardware objetivo se eligió Meta Quest 3 por sobre alternativas
+como Apple Vision Pro o un sistema PC VR con base stations (p. ej.
+Valve Index): es standalone (no depende de un PC dedicado ni de
+sensores externos, lo que facilita su uso en un contexto de escuela
+de manejo), cuenta con controles físicos que permiten mapear input de
+aceleración/freno/giro (a diferencia de Vision Pro, que solo ofrece
+manos y ojos como input), y tiene un costo significativamente menor
+que ambas alternativas — relevante para un proyecto de curso. Como
+motor se eligió Unity con XR Interaction Toolkit, por su soporte
+maduro y nativo para Quest y su documentación extensa para
+interacción en VR. Ambas decisiones coinciden con las de
+\textit{DriveSimQuest}~\cite{chidambaram2025}, que también optó por
+Unity antes que Unreal y por una arquitectura standalone sobre Quest
+en lugar de PC VR, priorizando la facilidad de despliegue por sobre
+la máxima calidad gráfica.
+
+Dentro del alcance del prototipo de este curso están: la simulación
+de manejo básica (acelerar, frenar, girar en un circuito simple), la
+percepción de escala 1:1 del vehículo, y los tres casos de uso
+descritos (juicio de esquinas, estacionamiento/obstáculo, manejo en
+circuito). Quedan fuera de alcance: la simulación de tránsito con
+otros vehículos o peatones, la física vehicular avanzada (transmisión,
+tracción, condiciones climáticas), y el cumplimiento de reglas de
+tránsito complejas — funcionalidades propias de un simulador de
+manejo completo, no del enfoque de este proyecto en percepción
+espacial.
+
+% ============================================================
+% IV. PLAN DE TRABAJO (~0.5 pág.)
+% ============================================================
+\section{Plan de trabajo}
+\label{sec:plan}
+
+Hacia el prototipo lo-fi (Entrega 2, 13 de octubre) el foco es
+validar la interacción básica (movimiento, HUD, un caso de uso) sin
+arte final; hacia el prototipo final (Entrega 3, 24 de noviembre) se
+integran los 3 casos de uso, el entorno completo y las pruebas con
+usuarios. La Tabla~\ref{tab:cronograma} detalla las actividades
+comprometidas, alineadas a la sesión semanal del curso (martes).
+
+\begin{table}[htbp]
+\caption{Cronograma hacia las próximas entregas}
+\begin{center}
+\begin{tabular}{|p{3.4cm}|p{1.6cm}|p{1.6cm}|}
+\hline
+\textbf{Actividad} & \textbf{Resp.} & \textbf{Fecha} \\
+\hline
+Prototipo Unity: escena base + movimiento del vehículo & Equipo & 22-sep \\
+\hline
+Implementar CU1 (juicio de esquinas) + HUD de distancia & Equipo & 06-oct \\
+\hline
+Entrega 2 --- prototipo lo-fi & Equipo & 13-oct \\
+\hline
+Implementar CU2 y CU3 & Equipo & 27-oct \\
+\hline
+Arte final (storyboard, entorno) e integración & Equipo & 10-nov \\
+\hline
+Pruebas con usuarios y ajustes & Equipo & 17-nov \\
+\hline
+Entrega 3 --- prototipo final & Equipo & 24-nov \\
+\hline
+\end{tabular}
+\label{tab:cronograma}
+\end{center}
+\end{table}
+
+% ============================================================
+% REFERENCIAS (no cuentan para el límite de 5 páginas)
+% ============================================================
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

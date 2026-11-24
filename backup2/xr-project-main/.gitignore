@@ -1,0 +1,12 @@
+.claude/
+skills-lock.json
+
+# Auxiliares de compilacion LaTeX (latexmk -outdir=.build)
+report/.build/
+unity/.utmp/
+
+# Basura de macOS (se cuela al comprimir con Finder)
+.DS_Store
+._*
+__MACOSX/
+mono_crash.*

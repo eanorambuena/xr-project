@@ -1,0 +1,36 @@
+# Normaliza saltos de linea (evita "cambios" fantasma entre Mac y Windows)
+* text=auto
+
+# Archivos de texto de Unity: siempre LF
+*.cs text eol=lf
+*.shader text eol=lf
+*.cginc text eol=lf
+*.asmdef text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.sh text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.meta text eol=lf
+*.unity text eol=lf merge=unityyamlmerge
+*.prefab text eol=lf merge=unityyamlmerge
+*.mat text eol=lf merge=unityyamlmerge
+*.asset text eol=lf merge=unityyamlmerge
+*.controller text eol=lf merge=unityyamlmerge
+*.anim text eol=lf merge=unityyamlmerge
+*.tex text eol=lf
+
+# Binarios
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.mp3 binary
+*.wav binary
+*.ogg binary
+*.glb binary
+*.fbx binary
+*.zip binary
+*.pptx binary
+*.pdf binary
+*.apk binary
