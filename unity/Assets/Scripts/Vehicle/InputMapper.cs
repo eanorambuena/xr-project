@@ -174,8 +174,8 @@ namespace VRCar.Vehicle
                 vehiclePhysics.steerInput = wheel.Steer;
             else if (Mathf.Abs(actionSteer) > 0.01f)
                 vehiclePhysics.steerInput = actionSteer;
-            else if (allowLeftStickSteering)
-                vehiclePhysics.steerInput = AlternativeSteerInput;
+            else
+                vehiclePhysics.steerInput = AlternativeSteerInput;   // 0 si no hay joystick (o está deshabilitado): no deja la dirección pegada
         }
 
         private void UpdateButtonsAndSticks()
