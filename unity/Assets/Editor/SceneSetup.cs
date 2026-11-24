@@ -400,6 +400,7 @@ public partial class SceneSetup
         vehicle.AddComponent<VehiclePhysics>();
         vehicle.AddComponent<EngineSound>();
         vehicle.AddComponent<ExerciseReset>();
+        vehicle.AddComponent<CarRadio>();   // radio: 3 pistas en Resources/Radio, joystick derecho para controlarla
         var input = vehicle.AddComponent<InputMapper>();
         var so = new SerializedObject(input);
         so.FindProperty("inputActions").objectReferenceValue = AssetDatabase.LoadAssetAtPath<InputActionAsset>(InputActionsPath);
@@ -617,6 +618,8 @@ public partial class SceneSetup
             mirror.eye = eye;
             mirror.eyeCamera = eye.GetComponent<Camera>();
             mirror.mirrorShader = Shader.Find("VRCar/StereoMirror");
+            // Espejos laterales: aumento suave del campo (1.08–1.18 según cómo se sienta en el Quest 3); el interior queda en 1
+            mirror.sideMagnification = name == "Mirror_Interior" ? 1.0f : 1.12f;
 
             // Carcasa detrás del vidrio
             var back = Box(name + "_Housing", vehicle, pos + normal * -0.03f, new Vector3(size.x + 0.02f, size.y + 0.02f, 0.03f), housing, false);

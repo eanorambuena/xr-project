@@ -5,7 +5,8 @@ skills-lock.json
 report/.build/
 unity/.utmp/
 
-# Metadatos de macOS (Finder, unidades exFAT, ZIP hechos en Mac)
-._*
+# Basura de macOS (se cuela al comprimir con Finder)
 .DS_Store
+._*
 __MACOSX/
+mono_crash.*

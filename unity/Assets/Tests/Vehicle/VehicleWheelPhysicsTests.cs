@@ -96,7 +96,7 @@ namespace VRCar.Tests.Vehicle
         {
             rb.linearVelocity = car.transform.forward * 8f;
             physics.brakeInput = 1f;
-            // Se frena hasta detenerse (mantener el freno ya detenido activaría la reversa, por diseño)
+            // Se frena hasta detenerse
             float t = 0f;
             while (Mathf.Abs(physics.SignedSpeed) > 0.05f && t < 6f)
             {
@@ -125,7 +125,8 @@ namespace VRCar.Tests.Vehicle
         [Test]
         public void Reverse_WithFullLock_RearWheelsDoNotSlide()
         {
-            physics.brakeInput = 1f;
+            physics.SetGear(GearMode.Reverse);
+            physics.accelerationInput = 1f;
             physics.steerInput = -1f;
             Step(5f);
             Assert.IsTrue(physics.IsReversing);

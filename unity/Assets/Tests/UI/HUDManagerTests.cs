@@ -188,7 +188,7 @@ namespace VRCar.Tests.UI
             var physics = vehicleGameObject.AddComponent<VRCar.Vehicle.VehiclePhysics>();
             physics.Initialize();
             Physics.simulationMode = SimulationMode.Script;
-            physics.brakeInput = 1f;   // detenido + freno mantenido = reversa
+            physics.SetGear(VRCar.Vehicle.GearMode.Reverse);   // marcha R
             for (int i = 0; i < 60; i++) { physics.FixedUpdate(); Physics.Simulate(Time.fixedDeltaTime); }
             Physics.simulationMode = SimulationMode.FixedUpdate;
             Assert.IsTrue(physics.IsReversing);

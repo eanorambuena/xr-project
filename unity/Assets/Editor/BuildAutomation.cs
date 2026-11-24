@@ -62,10 +62,10 @@ public class BuildAutomation
             string apkPath = Path.Combine(BUILD_OUTPUT_DIR, APK_FILENAME);
 
             // Configure build settings
-            EditorBuildSettingsScene[] scenes = new EditorBuildSettingsScene[]
-            {
-                new EditorBuildSettingsScene(SCENE_PATH, true)
-            };
+            // Menú de escenarios (primero) + todos los escenarios que existan
+            string[] scenePaths = SceneSetup.ScenePathsInOrder();
+            if (scenePaths.Length == 0) scenePaths = new[] { SCENE_PATH };
+            EditorBuildSettingsScene[] scenes = System.Array.ConvertAll(scenePaths, sp => new EditorBuildSettingsScene(sp, true));
             EditorBuildSettings.scenes = scenes;
 
             // Set platform and build options
@@ -87,7 +87,7 @@ public class BuildAutomation
             BuildOptions buildOptions = BuildOptions.None;
 
             // Perform build
-            BuildReport report = BuildPipeline.BuildPlayer(new[] { SCENE_PATH }, apkPath, BuildTarget.Android, buildOptions);
+            BuildReport report = BuildPipeline.BuildPlayer(scenePaths, apkPath, BuildTarget.Android, buildOptions);
 
             // Report results
             if (report.summary.result == BuildResult.Succeeded)

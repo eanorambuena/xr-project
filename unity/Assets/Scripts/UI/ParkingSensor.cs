@@ -13,6 +13,8 @@ namespace VRCar.UI
     public class ParkingSensor : MonoBehaviour
     {
         public const float MaxRange = 1.5f, StopDistance = 0.30f;
+        /// <summary>Segundos de adelanto del pitido: a 0,5 m/s el pitido continuo empieza a ~60 cm del obstáculo</summary>
+        public const float ReactionSeconds = 0.6f;
         static readonly float[] Thresholds = { 1.5f, 1.0f, 0.6f, StopDistance };
         static readonly Color[] BarColors =
         {
@@ -48,6 +50,15 @@ namespace VRCar.UI
             return Mathf.Lerp(0.12f, 0.8f, t);
         }
 
+        /// <summary>
+        /// Distancia "de aviso": el auto no frena al instante (a ~2 m/s necesita cerca de 1 m para detenerse), así que
+        /// el pitido se adelanta según la velocidad con que se acerca. Así el pitido rápido suena ANTES de chocar.
+        /// </summary>
+        public static float WarningDistance(float distance, float closingSpeed)
+        {
+            return distance - Mathf.Max(0f, closingSpeed) * ReactionSeconds;
+        }
+
         public static string Label(float distance)
         {
             if (distance >= MaxRange) return "--";
@@ -68,7 +79,8 @@ namespace VRCar.UI
                 if (bars[i] != null) bars[i].color = i < level ? BarColors[i] : BarOff;
             if (label != null) label.text = Label(d);
 
-            float interval = BeepInterval(d);
+            float closing = Mathf.Max(0f, -physics.SignedSpeed);   // en reversa la velocidad es negativa
+            float interval = BeepInterval(WarningDistance(d, closing));
             if (audioSource == null || float.IsPositiveInfinity(interval)) return;
             if (beep == null) beep = CreateBeep();
             if (Time.time >= nextBeep)

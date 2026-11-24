@@ -65,7 +65,8 @@ public class UnityAutomation
             }
 
             // Build settings
-            var scenes = new[] { "Assets/Scenes/Parking_Perpendicular.unity" };
+            // Menú de escenarios (primero) + todos los escenarios que existan
+            var scenes = SceneSetup.ScenePathsInOrder();
             var buildPlayerOptions = new BuildPlayerOptions
             {
                 scenes = scenes,

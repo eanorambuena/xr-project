@@ -67,10 +67,10 @@ namespace VRCar.Tests.Vehicle
         {
             Assert.AreEqual(vehiclePhysics.maxSpeed, 20f, 0.01f,
                 "maxSpeed debe ser 20 m/s");
-            Assert.AreEqual(vehiclePhysics.accelerationForce, 5000f, 1f,
-                "accelerationForce debe ser 5000 N");
-            Assert.AreEqual(vehiclePhysics.brakingForce, 3000f, 1f,
-                "brakingForce debe ser 3000 N");
+            Assert.AreEqual(vehiclePhysics.accelerationForce, 5200f, 1f,
+                "accelerationForce debe ser 5200 N");
+            Assert.AreEqual(vehiclePhysics.brakingForce, 4600f, 1f,
+                "brakingForce debe ser 4600 N");
         }
 
         // ============================================================

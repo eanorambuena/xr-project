@@ -10,7 +10,7 @@ namespace VRCar.Core
     /// Cuando el auto se detiene dentro del espacio, informa márgenes laterales,
     /// distancia al fondo y ángulo respecto a las líneas.
     /// </summary>
-    public class ParkingJudgment : MonoBehaviour
+    public class ParkingJudgment : MonoBehaviour, IParkingZone, IParkingScore
     {
         [SerializeField] private Transform spot;              // centro del espacio; forward = hacia el tope
         [SerializeField] private float spotWidth = 2.5f;     // m (norma chilena típica)
@@ -22,6 +22,40 @@ namespace VRCar.Core
 
         private float stoppedTime;
         private bool reported;
+        private string levelLabel;
+        public float SpotWidth => spotWidth;
+
+        /// <summary>Fracción de las esquinas del auto que están dentro del espacio ahora mismo (0..1)</summary>
+        public float VehicleOverlap =>
+            spot == null || vehicleCollider == null ? 0f
+            : Evaluate(VehicleCorners(vehicleCollider), vehicleCollider.transform.forward, spot, spotWidth, spotLength).Overlap;
+
+        /// <summary>Fracción de la superficie del auto dentro del rectángulo del espacio (0..1)</summary>
+        public float Accuracy =>
+            spot == null || vehicleCollider == null ? 0f
+            : ParkingAccuracy.InsideFraction(VehicleCorners(vehicleCollider), spot, -spotWidth * 0.5f, spotWidth * 0.5f, -spotLength * 0.5f, spotLength * 0.5f);
+
+        /// <summary>Desalineación respecto a las líneas del espacio (°)</summary>
+        public float AngleDegrees =>
+            spot == null || vehicleCollider == null ? 0f
+            : Evaluate(VehicleCorners(vehicleCollider), vehicleCollider.transform.forward, spot, spotWidth, spotLength).AngleDeg;
+
+        /// <summary>Descentrado de lado a lado: la mitad de la diferencia entre los márgenes izquierdo y derecho (m)</summary>
+        public float CenterOffset
+        {
+            get
+            {
+                if (spot == null || vehicleCollider == null) return 0f;
+                var r = Evaluate(VehicleCorners(vehicleCollider), vehicleCollider.transform.forward, spot, spotWidth, spotLength);
+                return Mathf.Abs(r.LeftMargin - r.RightMargin) * 0.5f;
+            }
+        }
+
+        /// <summary>Actualizar el ancho del espacio y la etiqueta de dificultad (lo hace PerpendicularParkingCourse)</summary>
+        public void SetLevel(float width, string label)
+        {
+            spotWidth = width; levelLabel = label;
+        }
 
         public void Configure(Transform spotTransform, float width, float length, BoxCollider vehicle, HUDManager hudManager)
         {
@@ -30,7 +64,8 @@ namespace VRCar.Core
 
         private void Start()
         {
-            hud?.ShowMessage("Estaciona en el espacio A4 (líneas amarillas)");
+            string level = string.IsNullOrEmpty(levelLabel) ? "" : $" · {levelLabel} ({spotWidth.ToString("F1", CultureInfo.InvariantCulture)} m)";
+            hud?.ShowMessage($"Estaciona en el espacio A4 (líneas amarillas){level}\nPulsa B para terminar y ver tu resultado");
         }
 
         private void Update()

@@ -42,7 +42,7 @@ namespace VRCar.Vehicle
         private void Update()
         {
             if (source == null || physics == null) return;
-            float throttle = physics.IsReversing ? physics.brakeInput : physics.accelerationInput;
+            float throttle = physics.accelerationInput;
             throttleSmoothed = Mathf.MoveTowards(throttleSmoothed, throttle, Time.deltaTime * 3f);
             source.pitch = Pitch(physics.GetCurrentSpeedKmh(), throttleSmoothed, idlePitch, maxPitch);
             source.volume = Volume(throttleSmoothed, idleVolume, maxVolume);

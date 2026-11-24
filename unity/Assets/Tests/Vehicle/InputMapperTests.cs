@@ -110,6 +110,16 @@ namespace VRCar.Tests.Vehicle
                 "Left trigger debe mapear a brakeInput");
         }
 
+        [Test]
+        public void InputMapper_BrakeTrigger_DoesNotChangeTheGear()
+        {
+            vehiclePhysics.SetGear(GearMode.Drive);
+            mockLeftController.SetTriggerValue(1f);   // frenar no cambia de marcha ni pide reversa
+            inputMapper.Update();
+            Assert.AreEqual(GearMode.Drive, vehiclePhysics.CurrentGear);
+            Assert.IsFalse(vehiclePhysics.IsHandbrakeEngaged);
+        }
+
         /// <summary>
         /// TEST 2.2b: LeftTrigger_FullPress
         /// </summary>

@@ -23,6 +23,7 @@ namespace VRCar.Vehicle
 
         private Quaternion restFL, restFR, restRL, restRR, restWheel;
         private float spin;
+        private WheelSteering wheelInput;   // si los controles hacen de volante, el volante del auto copia el giro de las manos
         private bool captured;
 
         private void Capture()
@@ -34,6 +35,7 @@ namespace VRCar.Vehicle
             if (rearRight) restRR = rearRight.localRotation;
             if (steeringWheel) restWheel = steeringWheel.localRotation;
             if (physics == null) physics = GetComponent<VehiclePhysics>();
+            wheelInput = GetComponent<WheelSteering>();
             captured = true;
         }
 
@@ -52,7 +54,9 @@ namespace VRCar.Vehicle
             if (frontRight) frontRight.localRotation = Quaternion.AngleAxis(steerSign * right, steerAxis) * restFR * Quaternion.AngleAxis(-spin, spinAxis);
             if (rearLeft) rearLeft.localRotation = restRL * Quaternion.AngleAxis(spin, spinAxis);
             if (rearRight) rearRight.localRotation = restRR * Quaternion.AngleAxis(-spin, spinAxis);
-            if (steeringWheel) steeringWheel.localRotation = restWheel * Quaternion.AngleAxis(-delta * steeringRatio, Vector3.forward);
+            // Con los controles como volante, el volante del auto gira igual que las manos (1:1); si no, según el ángulo de las ruedas
+            float wheelDeg = wheelInput != null && wheelInput.HasInput ? wheelInput.WheelAngle : delta * steeringRatio;
+            if (steeringWheel) steeringWheel.localRotation = restWheel * Quaternion.AngleAxis(-wheelDeg, Vector3.forward);
         }
 
         /// <summary>

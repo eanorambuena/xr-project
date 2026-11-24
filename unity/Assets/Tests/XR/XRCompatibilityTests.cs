@@ -177,7 +177,8 @@ namespace VRCar.Tests.XR
                 Assert.AreEqual(0.01111f, Time.fixedDeltaTime, 0.00001f,
                     "Fixed timestep should be ~0.01111s for 90 FPS");
 
-                // Apply force
+                // Apply force (en D para que acelere)
+                vehiclePhysics.SetGear(GearMode.Drive);
                 vehiclePhysics.accelerationInput = 1f;
                 vehiclePhysics.FixedUpdate(); Physics.Simulate(Time.fixedDeltaTime);
 

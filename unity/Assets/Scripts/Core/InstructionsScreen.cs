@@ -118,15 +118,15 @@ namespace VRCar.Core
             goal = NewText("Goal", t, "", new Vector2(-410, -88), new Vector2(560, 140), 21, TextLight, FontStyles.Normal);
             goal.alignment = TextAlignmentOptions.TopLeft;
             goal.textWrappingMode = TextWrappingModes.Normal;
-            note = NewText("Note", t, "Esta guía desaparece cuando\nel auto empiece a moverse.", new Vector2(-410, -225), new Vector2(620, 70), 22, Accent, FontStyles.Bold);
+            note = NewText("Note", t, "Partes en N: agarre derecho = D.\nLa guía se va cuando el auto se mueva.", new Vector2(-410, -225), new Vector2(620, 70), 22, Accent, FontStyles.Bold);
             note.alignment = TextAlignmentOptions.MidlineLeft;
 
             // Derecha: los controles como filas del menú
             ControlRow(t, "VOLANTE", "Mueve los 2 controles", 175f);
             ControlRow(t, "ACELERAR", "Gatillo derecho", 93f);
             ControlRow(t, "FRENAR", "Gatillo izquierdo", 11f);
-            ControlRow(t, "REVERSA", "Botón Y  (auto detenido)", -71f);
-            ControlRow(t, "TERMINAR", "Botón B", -153f);
+            ControlRow(t, "MARCHA", "Agarre der. = D  ·  izq. = R", -71f);
+            ControlRow(t, "TERMINAR", "Botón B  ·  freno de mano: Y", -153f);
 
             // Atajos: A/X = reiniciar, menú izquierdo = centrar el volante
             HoldButton(t, "A / X", "MANTÉN: REINICIAR", new Vector2(195, -262));

@@ -75,6 +75,7 @@ public static class AutoParkTest
         if (physics == null || spot == null) { Debug.LogError("autopark: falta vehículo o espacio"); return; }
         var mapper = physics.GetComponent<InputMapper>();
         if (mapper != null) mapper.enabled = false;
+        physics.SetGear(GearMode.Drive);   // el auto parte en Neutro: la prueba arranca en D
         startTurnX = spot.position.x + turnStartOffset;
         File.WriteAllText(LogPath, $"autopark start turnX={startTurnX:F2}\n");
         sensorSnapped = false; turnSnapped = false;
@@ -132,9 +133,9 @@ public static class AutoParkTest
                 if (Mathf.Abs(physics.SignedSpeed) < 0.05f && elapsed > 0.3f) Set(Phase.TurnWheel);
                 break;
             case Phase.TurnWheel:
-                // Volante a tope a la izquierda, detenido (freno suave: todavía no entra la reversa del todo)
+                // Volante a tope a la izquierda, detenido, y se pone la marcha R
                 physics.steerInput = -1f;
-                physics.brakeInput = 0.3f;
+                physics.SetGear(GearMode.Reverse);
                 if (physics.IsReversing && Mathf.Abs(physics.CurrentSteerAngle + physics.maxSteerAngle) < 0.5f) Set(Phase.ReverseTurn);
                 break;
             case Phase.ReverseTurn:
@@ -146,12 +147,12 @@ public static class AutoParkTest
                     EditorCommandBridge.Snap();
                     EditorCommandBridge.SnapPrefix = "snap";
                 }
-                physics.brakeInput = physics.SignedSpeed > -0.8f ? 0.45f : 0f; // ~3 km/h
+                physics.accelerationInput = physics.SignedSpeed > -0.8f ? 0.45f : 0f; // ~3 km/h
                 if (Mathf.Abs(Mathf.DeltaAngle(t.eulerAngles.y, 180f)) < 4f) Set(Phase.Straighten);
                 break;
             case Phase.Straighten:
                 physics.steerInput = 0f;
-                physics.brakeInput = physics.SignedSpeed > -0.6f ? 0.35f : 0f;
+                physics.accelerationInput = physics.SignedSpeed > -0.6f ? 0.35f : 0f;
                 if (Mathf.Abs(physics.CurrentSteerAngle) < 0.5f) Set(Phase.ReverseStraight);
                 break;
             case Phase.ReverseStraight:
@@ -165,8 +166,8 @@ public static class AutoParkTest
                     EditorCommandBridge.Snap();
                 }
                 if (t.position.z < spot.position.z - 0.25f)
-                    physics.brakeInput = physics.SignedSpeed > -0.6f ? 0.35f : 0f;
-                else { physics.accelerationInput = 0.8f; if (Mathf.Abs(physics.SignedSpeed) < 0.05f) Set(Phase.Settle); }
+                    physics.accelerationInput = physics.SignedSpeed > -0.6f ? 0.35f : 0f;
+                else { physics.brakeInput = 0.8f; if (Mathf.Abs(physics.SignedSpeed) < 0.05f) Set(Phase.Settle); }
                 break;
             case Phase.Settle:
                 // soltar todo: el auto queda detenido y se evalúa el estacionamiento

@@ -220,6 +220,105 @@ búsqueda). Hallazgos:
    control básico del vehículo junto con la percepción de escala en
    movimiento.
 
+## Escenarios del simulador (menú de selección)
+
+La app arranca en un **menú de escenarios** (`ScenarioMenu`, escena `ScenarioMenu`, primera del
+build) y desde ahí se entra a cada escenario. Lista y orden en `ScenarioCatalog.cs`; una escena
+está "disponible" si existe en el build (si no, el menú la muestra como "próximamente").
+
+| # | Escenario | Escena | Caso de uso | Estado |
+|---|---|---|---|---|
+| 1 | Estacionamiento en batería | `Parking_Perpendicular` | CU2 | Hecho (dificultad: ancho del espacio 3.0 / 2.5 / 2.2 m) |
+| 2 | Estacionamiento en paralelo | `Parking_Parallel` | CU2 | Hecho (dificultad: 3 niveles) |
+| 3 | Estacionar en pendiente | `Parking_Slope` | CU2 | Hecho (dificultad: inclinación 7 / 12 / 18 % y largo del hueco) |
+
+Ideas para más adelante (fuera del menú por ahora): calle angosta con autos a ambos lados (`Street_Narrow`, CU1 / CU3).
+Se probó y descartó un "reversa al portón" (garaje con portón, `Parking_Gate`): quedaba muy parecido al estacionamiento en batería.
+
+- **Dirección con los controles como volante:** `WheelSteering` (en el auto; lo agrega `CreateVehicle`). El giro del volante es la
+  inclinación de la línea mano izquierda → mano derecha en el espacio del auto (derecha abajo = a la derecha); no depende de
+  hacia dónde mire el usuario ni de la distancia entre las manos. `lockAngle` = 70° de giro para el tope de las ruedas,
+  zona muerta 2°, suavizado 0.06 s. Con los dos controles rastreados (`isTracked`) reemplaza al joystick en `InputMapper`;
+  sin visor o sin un control, siguen el teclado y el joystick. Recentrar: tecla C o mantener 1 s el botón de menú
+  izquierdo (el cero queda guardado al cambiar de escena). `VehicleVisuals` gira el volante del auto 1:1 con las manos.
+  Para probar sin visor: en Play, en el componente `WheelSteering` del auto, marcar `Simulate` y mover `Simulated Angle`.
+  Aceleración (gatillo derecho) y freno (gatillo izquierdo) siguen en gatillos.
+- **Marchas R/N/D y freno de mano:** el freno es solo freno. La caja tiene 3 marchas (`GearMode`: Reversa, Neutro, Directa) y el auto
+  **parte en Neutro**: hay que subir a D (o bajar a R) para moverse. **Agarre derecho = subir** (R→N→D, `ShiftGearUp`), **agarre
+  izquierdo = bajar** (D→N→R, `ShiftGearDown`); solo se cambia con el auto casi detenido (`maxGearShiftSpeed` 0,6 m/s). El cluster
+  muestra R/N/D. **Y (control izquierdo) = freno de mano** (también Espacio/H en PC): detiene el auto y, si ya se movió ≥
+  `minTravelBeforeFinish` (0,25 m), dispara `VehiclePhysics.OnHandbrakeFinished` → `ExperienceController` termina el intento
+  (abre `ResultsScreen`). X queda libre (mantener A/X reinicia). Ya no existe el botón de reversa Y ni `reverseRequested`/`ToggleReverse`.
+  Un futuro selector USB solo tiene que llamar `SetGear`. NO implementar pedales/cambio USB hasta que se pida.
+- **Radio (`CarRadio`):** 3 pistas `.mp3` en `Assets/Resources/Radio/` (hay que ponerlas a mano). Joystick derecho: click = on/off,
+  izq/der = pista, arriba/abajo = volumen 0–20 (teclado: T on/off, `,` `.` pista, `+` `-` volumen). `OnRadioFeedback` se muestra
+  2,5 s en el mensaje del HUD (`HUDManager`).
+- **HUD de distancia:** muestra "Frente: x m · Atrás: y m" (`ObstacleDetector.GetFrontDistance/GetRearDistance`; `GetClosestDistance`
+  sigue la marcha). **Espejos laterales:** `PlanarMirror.sideMagnification` = 1,12 (ajustable 1,08–1,18) en `Mirror_Left/Right`; interior 1,0.
+- **Volante / joystick:** si el volante de 2 controles está quieto, el joystick izquierdo (`AlternativeSteerInput`) puede girar.
+  `InputMapper` expone `OnSelectPressed` (A), `OnBackPressed` (B), `OnReturnToMenuHeld` (B sostenido; en el auto B ya termina, así que casi no se usa).
+- **Cuneta no cuenta como choque (paralelo y pendiente):** las veredas de esas escenas llevan `CurbSurface` (además del tag
+  `Obstacle`: el sensor las detecta y el auto no las sube). `CollisionFeedback` da el feedback (sonido, vibración) pero no dispara
+  `ObstacleHit`, así que no suma choques. Hay que regenerar las escenas. En batería el tope sí sigue contando.
+- **Sensor de estacionamiento:** los pitidos se adelantan según la velocidad (`ParkingSensor.WarningDistance` = distancia −
+  velocidad de acercamiento × `ReactionSeconds` 0,6 s): el pitido rápido/continuo suena antes de chocar, no al tocar. Barras y "STOP"
+  siguen usando la distancia real.
+- **Guía de manejo:** `InstructionsScreen` (la crea `ExperienceController` en cada escenario) muestra "CÓMO SE MANEJA" frente al
+  conductor (volante, acelerar, frenar, marchas con los agarres, terminar B / freno de mano Y, mantener A/X reinicia, mantener menú izq. centra el volante) con el
+  diseño del menú y sobre todo lo demás (mismo método que `ResultsScreen`: `ScreenKit.AlwaysOnTop`). Se ve mientras `ExperienceStats.Started` sea falso y
+  desaparece cuando el auto empieza a moverse (velocidad ≥ `StartSpeed`); al reiniciar el ejercicio vuelve a aparecer, y se oculta al
+  terminar. No congela el juego. Se coloca hacia donde mira el auto y se re-coloca durante el primer segundo (el visor tarda en fijar la cabeza).
+- **Controles del menú:** joystick arriba/abajo elige escenario, izquierda/derecha la dificultad,
+  gatillo o A/X inicia. Con teclado: flechas, números, Enter. La dificultad elegida queda en
+  `ScenarioSession` y la leen las escenas al iniciar.
+- **Fin de la experiencia:** `ExperienceController` (en el GameManager de cada escenario). **B del control derecho**
+  (o Esc / M) termina: congela el juego (`timeScale = 0`) y muestra `ResultsScreen` frente al conductor, con el diseño del
+  menú (`ScreenKit` tiene las piezas comunes) y dibujada por encima de todo con la cámara principal (`ScreenKit.AlwaysOnTop`: materiales sin test de profundidad y cola 4000; NO usar una segunda cámara, en el Quest dejaba el efecto "hall de espejos"). Ahí **A**
+  (o Enter / Espacio) reintenta (recarga la escena, misma dificultad) y **B** otra vez vuelve al menú. Se ignoran los
+  botones los primeros 0.6 s. Datos (`ExperienceStats`): choques/topes = golpes contra objetos con tag `Obstacle`
+  (`CollisionFeedback.ObstacleHit`; golpes a menos de 0.75 s cuentan como uno); tiempo = desde que el auto se mueve por
+  primera vez hasta pulsar B; **precisión** = % de la superficie del auto que queda dentro del rectángulo pintado
+  (`ParkingAccuracy`, vía `IParkingScore` que implementan `ParkingJudgment` y `ParallelParkingJudgment`); aprueba con
+  `ExperienceStats.PassAccuracy` = 90 % (se compara el porcentaje redondeado que ve el usuario) **y** con un máximo de
+  `ExperienceStats.MaxCollisions` = 1 choque. El estado final es el **peor de tres criterios** (`ExperienceStats.GradeFor`):
+  precisión (APROBADO ≥ 90 %, REGULAR ≥ 75 %), choques (≤ 1 / ≤ 3) y **alineación** (≤ 5° / ≤ 10°, `PassAngle` y
+  `RegularAngle`); aprueba solo si los tres aprueban y reprueba si cualquiera reprueba. REGULAR es el estado
+  intermedio (ámbar). Cada dato de la pantalla se pinta con el color de su propio estado. La pantalla también muestra **alineación** (°
+  respecto a las líneas) y **centrado** (cm; batería: de lado a lado, paralelo: entre el auto de adelante y el de atrás),
+  el centrado es solo informativo y no afecta el aprobado (`IParkingScore.AngleDegrees` / `CenterOffset`). Mantener A/X sigue
+  reiniciando el ejercicio sin salir (`ExerciseReset`, que además pone en cero choques y tiempo). `ReturnToMenu` ya
+  no escucha botones: solo queda `ReturnToMenu.Go()`.
+  Reiniciar el ejercicio sigue siendo R o mantener A/X.
+- **Flecha del objetivo:** en los dos escenarios de estacionamiento hay una flecha amarilla flotante
+  (`TargetMarker`, objeto `TargetMarker`) que apunta hacia abajo al espacio objetivo, por encima de los
+  autos vecinos; sube y baja y siempre mira al conductor, y sigue al espacio cuando cambia la dificultad
+  (también en la pendiente). Desaparece apenas el auto cruza la línea del espacio.
+  Se agrega en el generador con `AddTargetMarker(spot, offsetLocal)`.
+- **Batería:** la dificultad cambia el ancho del espacio A4 (`PerpendicularParkingCourse`, en el objeto
+  `ParkingLot`): mueve las líneas amarillas, la línea de fondo y los dos autos vecinos, y el ancho que usa
+  `ParkingJudgment`. Media (2.5 m) es el espacio original; el auto mide 1.86 m.
+- **Paralelo:** calle de 10 m, hueco junto a la solera derecha de 7.5 / 6.3 / 5.6 m (fácil / media /
+  difícil; el auto mide 4.26 m). El auto parte en el carril derecho antes de la fila: hay que pasar
+  de largo y entrar en reversa. Evaluación (`ParallelParkingJudgment`): "bien estacionado" si queda
+  dentro del hueco, a ≤ 30 cm de la solera y a ≤ 5° de paralelo; informa distancia a la solera,
+  margen delante y detrás, y ángulo.
+- **Pendiente:** la misma calle del paralelo, en subida hacia +X. `SlopeCourse` (objeto `SlopeCourse`)
+  inclina en juego todo lo que cuelga de `SlopeRoot` (4° / 7° / 10° según la dificultad). El auto parte en un
+  **tramo plano** (`FlatStart`, x = -52) antes de la "bisagra" (x = -40, origen de `SlopeRoot`), así no arranca
+  rodando cuesta abajo; sube hasta pasar el hueco y entra en reversa, cuesta abajo. Para subir la rampa,
+  `VehiclePhysics.alignPitchToGround` (activado por `SlopeCourse`) hace que el auto cabecee según el suelo.
+  Edificios, postes y árboles cuelgan de `Upright` y se mantienen verticales. Como se mueven al iniciar,
+  **nada bajo `SlopeRoot` puede ser estático**. Se evalúa con `ParallelParkingJudgment`. La física del
+  auto rueda cuesta abajo si se suelta el freno estando en Neutro o sin acelerar (a propósito); el freno de mano (Y) lo detiene y termina el intento.
+- **Generar las escenas** (las escenas se crean desde el Editor; los `.unity` no se escriben a mano):
+  menú `VRCar → 3. Crear menú de escenarios`, `4. Crear escena: estacionamiento en paralelo`,
+  `5. Crear escena: estacionar en pendiente`, `6. Crear TODAS las escenas`; o por el puente
+  (`Temp/vrcar_cmd.txt`): `scene-menu`, `scene-parallel`, `scene-slope`, `scenes`.
+  Cada generador deja las escenas existentes en el build (menú primero).
+- **Para agregar un escenario:** una entrada en `ScenarioCatalog`, un generador `SceneSetup.<Nombre>.cs`
+  (clase parcial; reutiliza `CreateVehicle`, `CreateXROrigin`, `CreateMirrors`, `CreateHUD`), el nombre
+  de su escena en `SceneSetup.ScenePathsInOrder()` y el componente `ExperienceController` en su GameManager (y un `IParkingScore` si el escenario tiene precisión).
+
 ## Assets vendorizados
 
 - `report/IEEEtran.cls` — clase oficial IEEE, extraída de

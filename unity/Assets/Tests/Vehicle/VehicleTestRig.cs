@@ -23,6 +23,7 @@ namespace VRCar.Tests.Vehicle
         public static void PlaceAtRest(GameObject car, VehiclePhysics physics)
         {
             car.transform.SetPositionAndRotation(new Vector3(0f, physics.restPivotHeight, 0f), Quaternion.identity);
+            physics.SetGear(GearMode.Drive);   // el auto real parte en Neutro; los tests parten en D para poder avanzar (los de marchas lo cambian)
             var rb = car.GetComponent<Rigidbody>();
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;

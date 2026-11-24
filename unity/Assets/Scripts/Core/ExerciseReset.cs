@@ -10,6 +10,7 @@ namespace VRCar.Core
     public class ExerciseReset : MonoBehaviour
     {
         public float holdSeconds = 1f;
+        public string resetMessage = "Ejercicio reiniciado: estaciona en el espacio A4";
         private Vector3 startPos;
         private Quaternion startRot;
         private bool captured;
@@ -31,8 +32,9 @@ namespace VRCar.Core
             if (rb != null) { rb.position = startPos; rb.rotation = startRot; }
             transform.SetPositionAndRotation(startPos, startRot);
             GetComponent<VehiclePhysics>()?.ResetDrivingState();
+            FindFirstObjectByType<ExperienceController>()?.ResetStats();   // choques y tiempo vuelven a cero
             Physics.SyncTransforms();
-            FindFirstObjectByType<UI.HUDManager>()?.ShowMessage("Ejercicio reiniciado: estaciona en el espacio A4");
+            FindFirstObjectByType<UI.HUDManager>()?.ShowMessage(resetMessage);
         }
 
         private void Update()

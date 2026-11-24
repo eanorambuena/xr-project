@@ -6,7 +6,7 @@ using UnityEngine;
 /// <summary>
 /// Puente de automatización: ejecuta comandos escritos en Temp/vrcar_cmd.txt
 /// (una línea por comando). Útil para automatizar el editor desde scripts externos.
-/// Comandos: refresh, xr, scene, tests, play, stop, open-scene
+/// Comandos: refresh, xr, scene, scene-menu, scene-parallel, scene-slope, scenes (todas), tests, play, stop, open-scene
 /// El resultado se agrega a Temp/vrcar_cmd.log
 /// </summary>
 [InitializeOnLoad]
@@ -80,6 +80,10 @@ public static class EditorCommandBridge
             case "refresh": AssetDatabase.Refresh(); break;
             case "xr": XRProjectSetup.ConfigureXR(); break;
             case "scene": SceneSetup.CreateScene(interactive: false); break;
+            case "scene-menu": SceneSetup.CreateMenuScene(interactive: false); break;
+            case "scene-parallel": SceneSetup.CreateParallelScene(interactive: false); break;
+            case "scene-slope": SceneSetup.CreateSlopeScene(interactive: false); break;
+            case "scenes": SceneSetup.CreateAllScenes(interactive: false); break;
             case "open-scene": UnityEditor.SceneManagement.EditorSceneManager.OpenScene(SceneSetup.ScenePath); break;
             case "tests": EditorApplication.ExecuteMenuItem("VRCar/Run EditMode Tests"); break;
             case "play": EditorApplication.isPlaying = true; break;
@@ -215,6 +219,7 @@ public static class EditorCommandBridge
         var physics = UnityEngine.Object.FindFirstObjectByType<VRCar.Vehicle.VehiclePhysics>();
         var mapper = physics.GetComponent<VRCar.Vehicle.InputMapper>();
         if (mapper != null) mapper.enabled = false;
+        physics.SetGear(VRCar.Vehicle.GearMode.Drive);   // el auto parte en Neutro
         physics.accelerationInput = 0.6f;
         Log($"autodrive: speed={physics.GetCurrentSpeedKmh():F1} km/h pos={physics.transform.position}");
     }

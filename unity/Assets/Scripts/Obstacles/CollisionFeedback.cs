@@ -61,7 +61,7 @@ namespace VRCar.Obstacles
         {
             if (collision.gameObject.CompareTag("Obstacle"))
             {
-                ApplyCollisionFeedback();
+                ApplyCollisionFeedback(!IsCurb(collision.collider));
                 isColliding = true;
             }
         }
@@ -82,7 +82,9 @@ namespace VRCar.Obstacles
         /// <summary>
         /// Aplicar feedback de colisión (sonido + color rojo)
         /// </summary>
-        private void ApplyCollisionFeedback()
+        private static bool IsCurb(Collider c) => c != null && c.GetComponentInParent<CurbSurface>() != null;
+
+        private void ApplyCollisionFeedback(bool countsAsCrash = true)
         {
             // Cambiar color a rojo (guardando el color actual si recién empieza la colisión)
             if (VehicleMaterial != null)
@@ -91,7 +93,7 @@ namespace VRCar.Obstacles
                 VehicleMaterial.color = Color.red;
             }
 
-            ObstacleHit?.Invoke();
+            if (countsAsCrash) ObstacleHit?.Invoke();   // rozar la cuneta suena y vibra, pero no suma un choque
             PulseControllers(0.8f, 0.25f);
 
             // Reproducir sonido de colisión (si no hay clip asignado se genera un "beep")
@@ -117,11 +119,11 @@ namespace VRCar.Obstacles
         /// <summary>
         /// Simular colisión (para testing)
         /// </summary>
-        public void SimulateCollision(string tagName)
+        public void SimulateCollision(string tagName, bool isCurb = false)
         {
             if (tagName == "Obstacle")
             {
-                ApplyCollisionFeedback();
+                ApplyCollisionFeedback(!isCurb);
                 isColliding = true;
             }
         }

@@ -5,7 +5,7 @@ using VRCar.Vehicle;
 namespace VRCar.Tests.Vehicle
 {
     /// <summary>
-    /// Tests de calibración del viraje y de la reversa sin caja de cambios.
+    /// Tests de calibración del viraje, de la caja R / N / D y del freno de mano.
     /// Referencia: Peugeot 308 — batalla 2.613 m, trocha 1.56 m, diámetro de giro 10.4 m.
     /// </summary>
     public class VehicleSteeringTests
@@ -75,21 +75,71 @@ namespace VRCar.Tests.Vehicle
         // FullLock_TurningRadius_MatchesPeugeot308: ahora en VehicleWheelPhysicsTests (dinámica libre, sin forzar la velocidad)
 
         [Test]
-        public void HoldingBrake_WhenStopped_EngagesReverse()
+        public void HoldingBrake_WhenStopped_DoesNotEngageReverse()
         {
             physics.brakeInput = 1f;
-            Step(Frames(0.3f));
-            Assert.IsFalse(physics.IsReversing, "Un toque de freno no activa la reversa");
-            Step(Frames(0.6f));
+            Step(Frames(2f));
+            Assert.IsFalse(physics.IsReversing, "El freno es solo freno: no activa la reversa");
+            Assert.AreEqual(0f, physics.SignedSpeed, 0.05f);
+        }
+
+        [Test]
+        public void NewVehicle_StartsInNeutral_AndTheAcceleratorDoesNotMoveIt()
+        {
+            var fresh = new GameObject("FreshVehicle");
+            fresh.AddComponent<Rigidbody>();
+            var p = fresh.AddComponent<VehiclePhysics>();
+            p.Initialize();
+            Assert.AreEqual(GearMode.Neutral, p.CurrentGear);
+            Assert.IsTrue(p.IsNeutral);
+            Object.DestroyImmediate(fresh);
+
+            physics.SetGear(GearMode.Neutral);
+            physics.accelerationInput = 1f;
+            Step(Frames(2f));
+            Assert.AreEqual(0f, physics.SignedSpeed, 0.05f, "En Neutro el acelerador no empuja el auto");
+        }
+
+        [Test]
+        public void ShiftGear_GoesThroughNeutral_BothWays()
+        {
+            physics.SetGear(GearMode.Reverse);
+            Assert.IsTrue(physics.ShiftGearUp());
+            Assert.AreEqual(GearMode.Neutral, physics.CurrentGear);
+            Assert.IsTrue(physics.ShiftGearUp());
+            Assert.AreEqual(GearMode.Drive, physics.CurrentGear);
+            Assert.IsFalse(physics.ShiftGearUp(), "D es la última marcha");
+            Assert.IsTrue(physics.ShiftGearDown());
+            Assert.AreEqual(GearMode.Neutral, physics.CurrentGear);
+            Assert.IsTrue(physics.ShiftGearDown());
+            Assert.AreEqual(GearMode.Reverse, physics.CurrentGear);
+            Assert.IsFalse(physics.ShiftGearDown(), "R es la primera marcha");
+        }
+
+        [Test]
+        public void ShiftGear_IsRefusedWhileTheCarIsMoving()
+        {
+            rb.linearVelocity = go.transform.forward * 5f;
+            physics.SetGear(GearMode.Drive);
+            Assert.IsFalse(physics.ShiftGearDown(), "En movimiento no se cambia de marcha");
+            Assert.AreEqual(GearMode.Drive, physics.CurrentGear);
+        }
+
+        [Test]
+        public void Reverse_AcceleratorGoesBackwards()
+        {
+            physics.SetGear(GearMode.Reverse);
             Assert.IsTrue(physics.IsReversing);
-            Step(Frames(1f));
+            physics.accelerationInput = 1f;
+            Step(Frames(1.5f));
             Assert.Less(physics.SignedSpeed, -0.1f, "En reversa el auto retrocede");
         }
 
         [Test]
         public void Reverse_IsSlow()
         {
-            physics.brakeInput = 1f;
+            physics.SetGear(GearMode.Reverse);
+            physics.accelerationInput = 1f;
             Step(Frames(8f));
             Assert.GreaterOrEqual(physics.SignedSpeed, -physics.maxReverseSpeed - 0.01f);
         }
@@ -97,7 +147,8 @@ namespace VRCar.Tests.Vehicle
         [Test]
         public void Reverse_RightSteer_TurnsTailRight()
         {
-            physics.brakeInput = 1f;
+            physics.SetGear(GearMode.Reverse);
+            physics.accelerationInput = 1f;
             physics.steerInput = 1f;
             Step(Frames(3f));
             // Retrocediendo con el volante a la derecha, la trompa gira a la izquierda (yaw negativo)
@@ -105,42 +156,80 @@ namespace VRCar.Tests.Vehicle
         }
 
         [Test]
-        public void ReleasingBrake_WhenStopped_ExitsReverse()
+        public void Reverse_BrakeStopsTheCar_WithoutLurchingForward()
         {
-            physics.brakeInput = 1f;
-            Step(Frames(1f));
-            Assert.IsTrue(physics.IsReversing);
-            physics.brakeInput = 0f;
-            physics.accelerationInput = 1f; // en reversa, el acelerador frena
-            Step(Frames(3f));
-            physics.accelerationInput = 0f;
-            Step(Frames(1f));
-            Assert.IsFalse(physics.IsReversing);
-        }
-
-        [Test]
-        public void Reverse_StoppingWithAccelerator_DoesNotLurchForward()
-        {
-            // En reversa el gatillo derecho frena. Al detenerse, mantenerlo NO debe sacar el auto hacia adelante.
-            physics.brakeInput = 1f;
+            physics.SetGear(GearMode.Reverse);
+            physics.accelerationInput = 1f;
             Step(Frames(2f));
             Assert.Less(physics.SignedSpeed, -0.3f);
-            physics.brakeInput = 0f;
-            physics.accelerationInput = 1f;
+            physics.accelerationInput = 0f;
+            physics.brakeInput = 1f;
             Step(Frames(3f));
-            Assert.IsTrue(physics.IsReversing, "Sigue en reversa mientras se mantenga un pedal");
+            Assert.IsTrue(physics.IsReversing);
             Assert.AreEqual(0f, physics.SignedSpeed, 0.05f, "Queda detenido, sin salir hacia adelante");
         }
 
         [Test]
-        public void Braking_DoesNotEngageReverse_WhileMoving()
+        public void Braking_DoesNotChangeGear_WhileMoving()
         {
             rb.linearVelocity = go.transform.forward * 5f;
             physics.brakeInput = 1f;
             Step(Frames(0.5f));
+            Assert.AreEqual(GearMode.Drive, physics.CurrentGear);
             Assert.IsFalse(physics.IsReversing);
             Assert.Greater(physics.SignedSpeed, 0f);
         }
+
+        [Test]
+        public void Handbrake_StopsTheCar_AndKeepsItStopped()
+        {
+            physics.accelerationInput = 1f;
+            Step(Frames(1.5f));
+            Assert.Greater(physics.SignedSpeed, 0.5f);
+
+            physics.SetHandbrake(true);
+            Assert.IsTrue(physics.IsHandbrakeEngaged);
+            Step(Frames(2f));
+            Assert.AreEqual(0f, rb.linearVelocity.magnitude, 0.05f, "Con el freno de mano el auto queda detenido aunque se acelere");
+
+            physics.SetHandbrake(false);
+            Step(Frames(1f));
+            Assert.Greater(physics.SignedSpeed, 0.1f, "Al soltarlo vuelve a avanzar");
+        }
+
+        [Test]
+        public void Handbrake_FiresFinished_OnlyAfterTheCarHasMoved()
+        {
+            physics.ResetDrivingState();                  // la distancia recorrida parte de cero
+            physics.SetGear(GearMode.Drive);
+            int fired = 0;
+            physics.OnHandbrakeFinished += () => fired++;
+
+            physics.SetHandbrake(true);
+            Assert.AreEqual(0, fired, "Sin haberse movido no cierra el intento");
+            physics.SetHandbrake(false);
+
+            physics.accelerationInput = 1f;
+            Step(Frames(2f));
+            physics.accelerationInput = 0f;
+            physics.SetHandbrake(true);
+            Assert.AreEqual(1, fired, "Tras moverse, el freno de mano cierra el intento");
+
+            physics.SetHandbrake(false);
+            physics.SetHandbrake(true);
+            Assert.AreEqual(1, fired, "Solo una vez por intento");
+        }
+
+        [Test]
+        public void ResetDrivingState_ReturnsToNeutral_AndReleasesTheHandbrake()
+        {
+            physics.SetGear(GearMode.Reverse);
+            physics.SetHandbrake(true);
+            physics.ResetDrivingState();
+            Assert.AreEqual(GearMode.Neutral, physics.CurrentGear);
+            Assert.IsFalse(physics.IsHandbrakeEngaged);
+        }
+
     
         [Test]
         public void Brake_HoldsCarCompletelyStopped_NoCreep()

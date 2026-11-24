@@ -38,6 +38,18 @@ namespace VRCar.Tests.Obstacles
             collisionFeedback.SetReferences(vehicleRenderer, audioSource);
         }
 
+        [Test]
+        public void CurbContact_GivesFeedback_ButDoesNotCountAsACrash()
+        {
+            int hits = 0;
+            collisionFeedback.ObstacleHit += () => hits++;
+            collisionFeedback.SimulateCollision("Obstacle", true);    // cuneta
+            Assert.AreEqual(0, hits, "Rozar la cuneta no es un choque");
+            collisionFeedback.SimulateCollisionExit("Obstacle");
+            collisionFeedback.SimulateCollision("Obstacle");          // otro obstáculo
+            Assert.AreEqual(1, hits);
+        }
+
         [TearDown]
         public void TearDown()
         {

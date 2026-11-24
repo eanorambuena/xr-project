@@ -31,6 +31,8 @@ namespace VRCar.Tests.Core
             Assert.AreEqual(Vector3.zero, rb.linearVelocity);
             Assert.AreEqual(0f, physics.CurrentSteerAngle);
             Assert.IsFalse(physics.IsReversing);
+            Assert.AreEqual(GearMode.Neutral, physics.CurrentGear, "Reiniciar deja la caja en Neutro");
+            Assert.IsFalse(physics.IsHandbrakeEngaged);
         }
     }
 }
