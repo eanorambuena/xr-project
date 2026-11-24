@@ -111,9 +111,7 @@ namespace VRCar.Vehicle
             Vector3 reflectedEye = ReflectPoint(eyePos, center, normal);
             mirrorCamera.transform.SetPositionAndRotation(reflectedEye, Quaternion.LookRotation(normal, transform.up));
 
-            float mag = Mathf.Max(0.25f, sideMagnification);
-            Vector3 halfRight = transform.right * transform.lossyScale.x * 0.5f / mag;
-            Vector3 halfUp = transform.up * transform.lossyScale.y * 0.5f / mag;
+            ViewHalfExtents(transform, sideMagnification, out Vector3 halfRight, out Vector3 halfUp);
 
             mirrorCamera.projectionMatrix = GlassFrustum(mirrorCamera.transform, center, halfRight, halfUp, 300f, out float near);
             mirrorCamera.nearClipPlane = near;
@@ -124,6 +122,17 @@ namespace VRCar.Vehicle
             QualitySettings.shadows = ShadowQuality.Disable;
             mirrorCamera.Render();
             QualitySettings.shadows = prevShadows;
+        }
+
+        /// <summary>
+        /// Semiejes del rectángulo por el que mira la cámara del espejo. Con aumento > 1 el rectángulo es más grande que el
+        /// vidrio, así que el espejo muestra un campo más amplio (como un espejo lateral convexo), no un zoom.
+        /// </summary>
+        public static void ViewHalfExtents(Transform glass, float magnification, out Vector3 halfRight, out Vector3 halfUp)
+        {
+            float mag = Mathf.Max(0.25f, magnification);
+            halfRight = glass.right * glass.lossyScale.x * 0.5f * mag;
+            halfUp = glass.up * glass.lossyScale.y * 0.5f * mag;
         }
 
         public static Matrix4x4 GlassFrustum(Transform viewer, Vector3 center, Vector3 halfRight, Vector3 halfUp, float far, out float near)

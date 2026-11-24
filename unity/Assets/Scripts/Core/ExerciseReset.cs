@@ -15,6 +15,8 @@ namespace VRCar.Core
         private Quaternion startRot;
         private bool captured;
         private float held;
+        private ExperienceController experience;
+        private bool experienceLookedUp;
 
         public void CaptureStart()
         {
@@ -39,6 +41,10 @@ namespace VRCar.Core
 
         private void Update()
         {
+            // Con el intento terminado (pantalla de resultados) el reinicio lo maneja ExperienceController (A = reintentar)
+            if (!experienceLookedUp) { experience = FindFirstObjectByType<ExperienceController>(); experienceLookedUp = true; }
+            if (experience != null && experience.CurrentPhase == ExperienceController.Phase.Finished) { held = 0f; return; }
+
             bool key = UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.rKey.wasPressedThisFrame;
             if (key) { ResetExercise(); return; }
             bool pressed = false;

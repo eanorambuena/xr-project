@@ -27,6 +27,22 @@ namespace VRCar.Tests.Vehicle
         }
 
         [Test]
+        public void SideMagnification_AboveOne_WidensTheView()
+        {
+            // Un espejo lateral convexo muestra MÁS que uno plano: con aumento > 1 el encuadre debe abarcar más que el vidrio
+            var glass = new GameObject("Glass").transform;
+            glass.localScale = new Vector3(0.2f, 0.1f, 1f);
+            PlanarMirror.ViewHalfExtents(glass, 1f, out Vector3 flatRight, out Vector3 flatUp);
+            PlanarMirror.ViewHalfExtents(glass, 1.12f, out Vector3 wideRight, out Vector3 wideUp);
+            Assert.AreEqual(0.1f, flatRight.magnitude, 1e-5f, "Sin aumento, el encuadre es exactamente el vidrio");
+            Assert.AreEqual(0.05f, flatUp.magnitude, 1e-5f);
+            Assert.Greater(wideRight.magnitude, flatRight.magnitude, "Aumento > 1 amplía el campo (no hace zoom)");
+            Assert.Greater(wideUp.magnitude, flatUp.magnitude);
+            Assert.AreEqual(1.12f, wideRight.magnitude / flatRight.magnitude, 1e-4f);
+            Object.DestroyImmediate(glass.gameObject);
+        }
+
+        [Test]
         public void GlassFrustum_NearPlaneIsTheGlass_AndCoversCorners()
         {
             var viewer = new GameObject("Viewer").transform;
